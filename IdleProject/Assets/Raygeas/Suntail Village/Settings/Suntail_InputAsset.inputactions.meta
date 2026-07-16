@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: ad13ee6377a9ab542bed95060948801a
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 8404be70184654265930450def6a9037, type: 3}
+  generateWrapperCode: 0
+  wrapperCodePath: 
+  wrapperClassName: 
+  wrapperCodeNamespace: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203303
+  packageName: SUNTAIL - Stylized Fantasy Village
+  packageVersion: 1.1.6
+  assetPath: Assets/Raygeas/Suntail Village/Settings/Suntail_InputAsset.inputactions
+  uploadId: 821790

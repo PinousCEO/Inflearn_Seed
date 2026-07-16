@@ -22,6 +22,9 @@ namespace IdleBattle
         private Vector3 destination;
         private Material playerMaterial, monsterMaterial, markerMaterial;
         private GameObject monsterPrefab;
+        private Terrain terrain;
+        private Vector2 worldMin = new Vector2(-37f, -37f);
+        private Vector2 worldMax = new Vector2(37f, 37f);
         private int wave, defeated;
         private int playerHealth = 100;
         private float attackTimer;
@@ -40,18 +43,33 @@ namespace IdleBattle
 
         private void SetupWorld()
         {
-            foreach (var camera in FindObjectsByType<Camera>(FindObjectsSortMode.None)) camera.gameObject.SetActive(false);
-            foreach (var light in FindObjectsByType<Light>(FindObjectsSortMode.None)) light.gameObject.SetActive(false);
+            terrain = Terrain.activeTerrain;
+            if (terrain != null)
+            {
+                var terrainPosition = terrain.transform.position;
+                var terrainSize = terrain.terrainData.size;
+                // 가장자리 산과 장식물 쪽으로 전투가 번지지 않도록 약간의 여백을 둡니다.
+                var margin = Mathf.Min(12f, Mathf.Min(terrainSize.x, terrainSize.z) * .08f);
+                worldMin = new Vector2(terrainPosition.x + margin, terrainPosition.z + margin);
+                worldMax = new Vector2(terrainPosition.x + terrainSize.x - margin, terrainPosition.z + terrainSize.z - margin);
+            }
+            else
+            {
+                foreach (var light in FindObjectsByType<Light>(FindObjectsSortMode.None)) light.gameObject.SetActive(false);
+            }
 
             playerMaterial = MakeMaterial(new Color(.15f, .65f, 1f));
             monsterMaterial = MakeMaterial(new Color(.9f, .2f, .25f));
             markerMaterial = MakeMaterial(new Color(.95f, .73f, .12f, .75f));
             monsterPrefab = LoadPrefab("01_Prefabs/Monster", "Assets/01_Prefabs/Monster.prefab");
 
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "Battle Ground";
-            ground.transform.localScale = new Vector3(8, 1, 8);
-            ground.GetComponent<Renderer>().material = MakeMaterial(new Color(.17f, .27f, .2f));
+            if (terrain == null)
+            {
+                var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                ground.name = "Battle Ground";
+                ground.transform.localScale = new Vector3(8, 1, 8);
+                ground.GetComponent<Renderer>().material = MakeMaterial(new Color(.17f, .27f, .2f));
+            }
 
             var characterPrefab = LoadPrefab("01_Prefabs/Character", "Assets/01_Prefabs/Character.prefab");
             GameObject hero;
@@ -59,15 +77,15 @@ namespace IdleBattle
             {
                 hero = Instantiate(characterPrefab);
                 hero.name = "Character";
-                hero.transform.position = Vector3.zero;
-                PlaceCharacterOnGround(hero);
+                hero.transform.position = GroundPoint(Vector3.zero);
+                PlaceCharacterOnGround(hero, hero.transform.position.y);
             }
             else
             {
                 Debug.LogWarning("Assets/01_Prefabs/Character.prefab을 찾지 못해 Capsule을 대신 사용합니다.");
                 hero = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 hero.name = "Character (Fallback)";
-                hero.transform.position = new Vector3(0, 1, 0);
+                hero.transform.position = GroundPoint(Vector3.zero) + Vector3.up;
                 hero.GetComponent<Renderer>().material = playerMaterial;
             }
             player = hero.transform;
@@ -81,21 +99,33 @@ namespace IdleBattle
                 relay.owner = this;
                 playerAnimator.SetBool("Run", false);
             }
-            playerGroundY = player.position.y;
+            playerGroundY = player.position.y - GroundPoint(player.position).y;
+            ConfigurePlayerCamera();
 
-            var lightObject = new GameObject("Sun");
-            var sun = lightObject.AddComponent<Light>();
-            sun.type = LightType.Directional;
-            sun.intensity = 1.25f;
-            sun.color = new Color(1f, .94f, .82f);
-            lightObject.transform.rotation = Quaternion.Euler(48, -35, 0);
+            if (terrain == null)
+            {
+                var lightObject = new GameObject("Sun");
+                var sun = lightObject.AddComponent<Light>();
+                sun.type = LightType.Directional;
+                sun.intensity = 1.25f;
+                sun.color = new Color(1f, .94f, .82f);
+                lightObject.transform.rotation = Quaternion.Euler(48, -35, 0);
+            }
 
-            var cameraObject = new GameObject("Idle Camera");
-            var cam = cameraObject.AddComponent<Camera>();
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(.055f, .075f, .11f);
-            cam.fieldOfView = 48;
-            cameraObject.AddComponent<FollowCamera>().target = player;
+        }
+
+        private void ConfigurePlayerCamera()
+        {
+            var playerCamera = Camera.main;
+            if (playerCamera == null)
+            {
+                Debug.LogWarning("MainCamera 태그가 지정된 기존 카메라를 찾지 못했습니다.");
+                return;
+            }
+
+            var follow = playerCamera.GetComponent<PlayerCameraFollow>();
+            if (follow == null) follow = playerCamera.gameObject.AddComponent<PlayerCameraFollow>();
+            follow.SetTarget(player);
         }
 
         private static GameObject LoadPrefab(string resourcesPath, string assetPath)
@@ -108,13 +138,13 @@ namespace IdleBattle
             return prefab;
         }
 
-        private static void PlaceCharacterOnGround(GameObject hero)
+        private static void PlaceCharacterOnGround(GameObject hero, float groundHeight = 0f)
         {
             var renderers = hero.GetComponentsInChildren<Renderer>();
             if (renderers.Length == 0) return;
             var bounds = renderers[0].bounds;
             for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-            hero.transform.position += Vector3.up * -bounds.min.y;
+            hero.transform.position += Vector3.up * (groundHeight - bounds.min.y);
         }
 
         private void Update()
@@ -174,10 +204,11 @@ namespace IdleBattle
         private void MoveTowards(Vector3 target)
         {
             SetRunning(true);
-            var flatTarget = new Vector3(target.x, playerGroundY, target.z);
+            var flatTarget = GroundPoint(target) + Vector3.up * playerGroundY;
             Face(flatTarget);
             player.position = Vector3.MoveTowards(player.position, flatTarget, MoveSpeed * Time.deltaTime);
-            player.position = new Vector3(Mathf.Clamp(player.position.x, -37, 37), playerGroundY, Mathf.Clamp(player.position.z, -37, 37));
+            var clamped = ClampToWorld(player.position);
+            player.position = GroundPoint(clamped) + Vector3.up * playerGroundY;
         }
 
         private void Face(Vector3 target)
@@ -290,8 +321,8 @@ namespace IdleBattle
             var angle = Random.Range(0f, Mathf.PI * 2);
             destination = Flat(player != null ? player.position : Vector3.zero)
                 + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * SpawnRadius;
-            destination.x = Mathf.Clamp(destination.x, -32, 32);
-            destination.z = Mathf.Clamp(destination.z, -32, 32);
+            destination = ClampToWorld(destination);
+            destination = GroundPoint(destination);
 
             var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             marker.name = "Next Monster Area";
@@ -317,19 +348,19 @@ namespace IdleBattle
                 {
                     enemy = Instantiate(monsterPrefab);
                     enemy.transform.position = position;
-                    PlaceCharacterOnGround(enemy);
+                    PlaceCharacterOnGround(enemy, GroundPoint(position).y);
                 }
                 else
                 {
                     Debug.LogWarning("Assets/01_Prefabs/Monster.prefab을 찾지 못해 Sphere를 대신 사용합니다.");
                     enemy = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    enemy.transform.position = position;
+                    enemy.transform.position = GroundPoint(position) + Vector3.up * .625f;
                     enemy.transform.localScale = Vector3.one * 1.25f;
                     enemy.GetComponent<Renderer>().material = monsterMaterial;
                 }
                 enemy.name = "Monster " + (i + 1);
                 var monster = enemy.AddComponent<Monster>();
-                monster.Initialize(1 + wave / 3, player, this);
+                monster.Initialize(1 + wave / 3, player, this, terrain);
                 monsters.Add(monster);
             }
             stateText = "새 몬스터 무리 발견";
@@ -358,6 +389,22 @@ namespace IdleBattle
 
         private static Vector3 Flat(Vector3 value) => new Vector3(value.x, 0, value.z);
 
+        private Vector3 ClampToWorld(Vector3 value)
+        {
+            value.x = Mathf.Clamp(value.x, worldMin.x, worldMax.x);
+            value.z = Mathf.Clamp(value.z, worldMin.y, worldMax.y);
+            return value;
+        }
+
+        private Vector3 GroundPoint(Vector3 value)
+        {
+            if (terrain != null)
+                value.y = terrain.SampleHeight(value) + terrain.transform.position.y;
+            else
+                value.y = 0f;
+            return value;
+        }
+
         public void TakePlayerDamage(int damage)
         {
             playerHealth = Mathf.Max(0, playerHealth - damage);
@@ -378,81 +425,4 @@ namespace IdleBattle
         }
     }
 
-    // Animation Event는 Animator가 붙은 GameObject에서 메서드를 찾으므로 중계 컴포넌트를 둡니다.
-    public sealed class AttackAnimationEventRelay : MonoBehaviour
-    {
-        [System.NonSerialized] public IdleBattleGame owner;
-        public void ATK()
-        {
-            if (owner != null) owner.ATK();
-        }
-    }
-
-    public sealed class Monster : MonoBehaviour
-    {
-        private int health;
-        private Transform target;
-        private IdleBattleGame owner;
-        private float groundY;
-        private float attackTimer;
-        private Vector3 originalScale;
-        public bool IsDead => health <= 0;
-        public void Initialize(int value, Transform player, IdleBattleGame game)
-        {
-            health = value;
-            target = player;
-            owner = game;
-            groundY = transform.position.y;
-            originalScale = transform.localScale;
-            attackTimer = Random.Range(.2f, .8f);
-        }
-        public void TakeDamage(int value)
-        {
-            health -= value;
-            transform.localScale = originalScale * Mathf.Lerp(.72f, 1f, Mathf.Clamp01(health));
-        }
-        private void Update()
-        {
-            if (target == null || IsDead) return;
-            attackTimer -= Time.deltaTime;
-            var direction = target.position - transform.position;
-            direction.y = 0;
-            var distance = direction.magnitude;
-            if (direction.sqrMagnitude > .001f)
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.deltaTime);
-
-            if (distance > 1.65f)
-            {
-                var next = Vector3.MoveTowards(transform.position, new Vector3(target.position.x, groundY, target.position.z), 2.25f * Time.deltaTime);
-                transform.position = next;
-            }
-            else if (attackTimer <= 0f)
-            {
-                attackTimer = 1.1f;
-                owner.TakePlayerDamage(2);
-                StartCoroutine(AttackPulse());
-            }
-        }
-
-        private IEnumerator AttackPulse()
-        {
-            var startScale = transform.localScale;
-            transform.localScale = startScale * 1.12f;
-            yield return new WaitForSeconds(.12f);
-            if (this != null) transform.localScale = startScale;
-        }
-    }
-
-    public sealed class FollowCamera : MonoBehaviour
-    {
-        public Transform target;
-        private Vector3 velocity;
-        private void LateUpdate()
-        {
-            if (target == null) return;
-            var desired = target.position + new Vector3(10, 14, -12);
-            transform.position = Vector3.SmoothDamp(transform.position, desired, ref velocity, .28f);
-            transform.rotation = Quaternion.LookRotation(target.position + Vector3.up * .3f - transform.position);
-        }
-    }
 }
