@@ -1,0 +1,8 @@
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\Temp\bin\Debug\Assembly-CSharp-Editor.dll
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\Temp\bin\Debug\Assembly-CSharp-Editor.pdb
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\Temp\bin\Debug\Assembly-CSharp.pdb
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp-Editor.csproj.AssemblyReference.cache
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp-Editor.csproj.CoreCompileInputs.cache
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly.1F1299F3.Up2Date
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp-Editor.dll
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp-Editor.pdb
