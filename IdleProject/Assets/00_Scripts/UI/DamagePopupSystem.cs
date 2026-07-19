@@ -13,11 +13,19 @@ namespace IdleBattle
     public sealed class DamagePopupSystem : MonoBehaviour
     {
         private const string PoolName = "Pool#[Text]";
-        private const float Duration = 0.85f;
+        private const float ShrinkDuration = 0.14f;
+        private const float HoldDuration = 0.22f;
+        private const float FadeDuration = 0.42f;
+        private const float StartScale = 1.55f;
+        private const float EndScale = 1f;
+        private const float HorizontalSpread = 58f;
+        private const float VerticalSpread = 32f;
+        private const float GoldenAngle = 137.5f;
 
         private readonly Stack<TextMeshProUGUI> available = new Stack<TextMeshProUGUI>();
         private readonly HashSet<TextMeshProUGUI> owned = new HashSet<TextMeshProUGUI>();
 
+        private uint popupSequence;
         private Canvas canvas;
         private RectTransform pool;
         private Camera worldCamera;
@@ -79,37 +87,68 @@ namespace IdleBattle
             text.alpha = 1f;
             text.raycastTarget = false;
 
+            var popupPosition = GetSpreadPosition(localPoint);
             var rect = text.rectTransform;
-            rect.anchoredPosition = localPoint;
-            rect.localScale = Vector3.one * 0.82f;
-            StartCoroutine(Animate(text, localPoint));
+            rect.anchoredPosition = popupPosition;
+            rect.localScale = Vector3.one * StartScale;
+            StartCoroutine(Animate(text, popupPosition));
+        }
+
+        private Vector2 GetSpreadPosition(Vector2 hitPosition)
+        {
+            // Stepping by the golden angle keeps consecutive hits apart instead
+            // of allowing purely random positions to repeatedly overlap.
+            var angle = popupSequence++ * GoldenAngle * Mathf.Deg2Rad;
+            var distance = Random.Range(0.72f, 1f);
+            var offset = new Vector2(
+                Mathf.Cos(angle) * HorizontalSpread,
+                Mathf.Sin(angle) * VerticalSpread) * distance;
+            return hitPosition + offset;
         }
 
         private IEnumerator Animate(TextMeshProUGUI text, Vector2 origin)
         {
             var elapsed = 0f;
-            var direction = Random.value < 0.5f ? -1f : 1f;
-            var horizontalDistance = Random.Range(28f, 52f) * direction;
-            var jumpHeight = Random.Range(92f, 122f);
 
-            while (elapsed < Duration)
+            // Diablo-style impact: the number appears oversized and quickly
+            // settles to its normal size without travelling in an arc.
+            while (elapsed < ShrinkDuration)
             {
                 if (text == null)
                     yield break;
 
                 elapsed += Time.deltaTime;
-                var t = Mathf.Clamp01(elapsed / Duration);
+                var t = Mathf.Clamp01(elapsed / ShrinkDuration);
+                var eased = 1f - Mathf.Pow(1f - t, 3f);
+                text.rectTransform.anchoredPosition = origin;
+                text.rectTransform.localScale =
+                    Vector3.one * Mathf.Lerp(StartScale, EndScale, eased);
+                text.alpha = 1f;
+                yield return null;
+            }
 
-                // 4t(1-t) forms a clean upward-and-downward parabolic arc.
-                var arc = 4f * t * (1f - t);
-                text.rectTransform.anchoredPosition =
-                    origin + new Vector2(horizontalDistance * t, jumpHeight * arc);
+            text.rectTransform.anchoredPosition = origin;
+            text.rectTransform.localScale = Vector3.one * EndScale;
 
-                var pop = t < 0.18f
-                    ? Mathf.Lerp(0.82f, 1.12f, t / 0.18f)
-                    : Mathf.Lerp(1.12f, 0.94f, (t - 0.18f) / 0.82f);
-                text.rectTransform.localScale = Vector3.one * pop;
-                text.alpha = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.32f, 1f, t));
+            elapsed = 0f;
+            while (elapsed < HoldDuration)
+            {
+                if (text == null)
+                    yield break;
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            elapsed = 0f;
+            while (elapsed < FadeDuration)
+            {
+                if (text == null)
+                    yield break;
+
+                elapsed += Time.deltaTime;
+                var t = Mathf.Clamp01(elapsed / FadeDuration);
+                text.alpha = 1f - Mathf.SmoothStep(0f, 1f, t);
                 yield return null;
             }
 
