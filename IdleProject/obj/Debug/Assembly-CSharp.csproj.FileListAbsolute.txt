@@ -4,3 +4,9 @@ C:\Users\dlfgu\Desktop\IdleProject\Temp\bin\Debug\Assembly-CSharp.dll
 C:\Users\dlfgu\Desktop\IdleProject\Temp\bin\Debug\Assembly-CSharp.pdb
 C:\Users\dlfgu\Desktop\IdleProject\obj\Debug\Assembly-CSharp.dll
 C:\Users\dlfgu\Desktop\IdleProject\obj\Debug\Assembly-CSharp.pdb
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\Temp\bin\Debug\Assembly-CSharp.dll
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\Temp\bin\Debug\Assembly-CSharp.pdb
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp.csproj.AssemblyReference.cache
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp.dll
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\IdleProject\obj\Debug\Assembly-CSharp.pdb
