@@ -11,6 +11,8 @@ namespace IdleBattle
 
         [SerializeField, Min(1)] private int maxHealth = 100;
         [SerializeField, Min(0)] private int currentHealth = 100;
+        [SerializeField, Min(1)] private int maxMana = 100;
+        [SerializeField, Min(0)] private int currentMana = 100;
 
         public static PlayerDataManager Instance
         {
@@ -27,13 +29,13 @@ namespace IdleBattle
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
         public bool IsDead => currentHealth <= 0;
+        public int CurrentMana => currentMana;
+        public int MaxMana => maxMana;
 
         public event Action<int, int> HealthChanged;
         public event Action<int> Damaged;
         public event Action Died;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Bootstrap() => _ = Instance;
+        public event Action<int, int> ManaChanged;
 
         private void Awake()
         {
@@ -47,6 +49,8 @@ namespace IdleBattle
             DontDestroyOnLoad(gameObject);
             maxHealth = Mathf.Max(1, maxHealth);
             currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+            maxMana = Mathf.Max(1, maxMana);
+            currentMana = Mathf.Clamp(currentMana, 0, maxMana);
         }
 
         private void OnDestroy()
@@ -90,6 +94,30 @@ namespace IdleBattle
             if (currentHealth == maxHealth) return;
             currentHealth = maxHealth;
             HealthChanged?.Invoke(currentHealth, maxHealth);
+        }
+
+        public bool TrySpendMana(int amount)
+        {
+            if (amount < 0 || currentMana < amount) return false;
+            currentMana -= amount;
+            ManaChanged?.Invoke(currentMana, maxMana);
+            return true;
+        }
+
+        public void RestoreMana(int amount)
+        {
+            if (amount <= 0) return;
+            var next = Mathf.Min(maxMana, currentMana + amount);
+            if (next == currentMana) return;
+            currentMana = next;
+            ManaChanged?.Invoke(currentMana, maxMana);
+        }
+
+        public void SetMaxMana(int value, bool fillMana = false)
+        {
+            maxMana = Mathf.Max(1, value);
+            currentMana = fillMana ? maxMana : Mathf.Clamp(currentMana, 0, maxMana);
+            ManaChanged?.Invoke(currentMana, maxMana);
         }
     }
 }
