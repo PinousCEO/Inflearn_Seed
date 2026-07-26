@@ -1,20 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace IdleBattle
 {
     public sealed class BattleGameController : MonoBehaviour
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Bootstrap()
-        {
-            if (FindFirstObjectByType<BattleGameController>() == null)
-                new GameObject("Battle Game Controller").AddComponent<BattleGameController>();
-        }
-
         private readonly List<EnemyController> enemies = new List<EnemyController>();
         private Transform player, destinationMarker;
         private GameObject skillEffect;
@@ -40,24 +35,23 @@ namespace IdleBattle
         private StageRule currentStageRule;
         private RectTransform stageSlider;
         private RectTransform stageSliderFill;
-        private RectTransform stageMarkerRoot;
-        private readonly List<Image> stageMarkers = new List<Image>();
-        private Sprite circleSprite;
         private float travelDistance;
         private float stageProgress;
         private int playerMana;
         private float attackTimer;
         private bool isSkillActive;
         private bool skillEventApplied;
+        private int nextSkillNum;
+        private SkillData[] skills = Array.Empty<SkillData>();
+        private float[] skillReadyTimes = Array.Empty<float>();
+        private SkillData activeSkill;
         private string stateText = "지역 탐색 중";
-        private GUIStyle titleStyle, labelStyle, centerStyle;
 
         private const float SpawnRadius = 10f;
         private const float MoveSpeed = 4.2f;
         private const float AttackRange = 2.1f;
         private const int PlayerAttackDamage = 1;
-        private const int MaxMana = 30;
-        private const int ManaPerAttack = 10;
+        private const int SkillAnimationCount = 4;
         private const float StageStatGrowth = 1.1f;
         private const int NormalEnemyBaseHealth = 3;
         private const int NormalEnemyBaseDamage = 2;
@@ -66,10 +60,27 @@ namespace IdleBattle
 
         private void Awake()
         {
+            LoadSkills();
             SetupWorld();
             SetupStage();
             SetupStageSlider();
             CreateDestination();
+        }
+
+        public event Action<SkillData, int> SkillCast;
+        public IReadOnlyList<SkillData> Skills => skills;
+        public float GetCooldownRemaining(int index) =>
+            index >= 0 && index < skillReadyTimes.Length
+                ? Mathf.Max(0f, skillReadyTimes[index] - Time.time)
+                : 0f;
+
+        private void LoadSkills()
+        {
+            skills = Resources.LoadAll<SkillData>("Data/Skills");
+            Array.Sort(skills, (a, b) => string.CompareOrdinal(a.SkillId, b.SkillId));
+            skillReadyTimes = new float[skills.Length];
+            if (skills.Length != 5)
+                Debug.LogWarning($"5개의 SkillData가 필요합니다. 현재 {skills.Length}개입니다.", this);
         }
 
         private void SetupStage()
@@ -109,72 +120,7 @@ namespace IdleBattle
             if (oldHorizontal != null)
                 oldHorizontal.gameObject.SetActive(false);
 
-            var markerRootObject = new GameObject("Normal Round Markers", typeof(RectTransform));
-            markerRootObject.layer = sliderObject.layer;
-            stageMarkerRoot = markerRootObject.GetComponent<RectTransform>();
-            stageMarkerRoot.SetParent(stageSlider, false);
-            stageMarkerRoot.anchorMin = Vector2.zero;
-            stageMarkerRoot.anchorMax = Vector2.one;
-            stageMarkerRoot.offsetMin = Vector2.zero;
-            stageMarkerRoot.offsetMax = Vector2.zero;
-            circleSprite = CreateCircleSprite();
-            RebuildStageMarkers();
             UpdateStageSlider(0f);
-        }
-
-        private static Sprite CreateCircleSprite()
-        {
-            const int size = 32;
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.name = "Stage Round Circle";
-            var pixels = new Color32[size * size];
-            var center = (size - 1) * .5f;
-            var radiusSquared = center * center;
-            for (var y = 0; y < size; y++)
-            for (var x = 0; x < size; x++)
-            {
-                var dx = x - center;
-                var dy = y - center;
-                pixels[y * size + x] = dx * dx + dy * dy <= radiusSquared
-                    ? new Color32(255, 255, 255, 255)
-                    : new Color32(255, 255, 255, 0);
-            }
-            texture.SetPixels32(pixels);
-            texture.Apply();
-            return Sprite.Create(texture, new Rect(0, 0, size, size), Vector2.one * .5f, size);
-        }
-
-        private void RebuildStageMarkers()
-        {
-            foreach (var marker in stageMarkers)
-                if (marker != null) Destroy(marker.gameObject);
-            stageMarkers.Clear();
-            if (stageMarkerRoot == null || currentStageRule == null) return;
-
-            var count = currentStageRule.NormalRoundCount + 1;
-            for (var i = 0; i < count; i++)
-            {
-                var markerObject = new GameObject(
-                    i == count - 1 ? "Boss Round" : $"Normal Round {i + 1}",
-                    typeof(RectTransform),
-                    typeof(CanvasRenderer),
-                    typeof(Image));
-                markerObject.layer = stageMarkerRoot.gameObject.layer;
-                var rect = markerObject.GetComponent<RectTransform>();
-                rect.SetParent(stageMarkerRoot, false);
-                var position = (i + 1f) / count;
-                rect.anchorMin = new Vector2(position, .5f);
-                rect.anchorMax = new Vector2(position, .5f);
-                rect.sizeDelta = i == count - 1
-                    ? new Vector2(30f, 30f)
-                    : new Vector2(22f, 22f);
-                rect.anchoredPosition = Vector2.zero;
-                var image = markerObject.GetComponent<Image>();
-                image.sprite = circleSprite;
-                image.raycastTarget = false;
-                stageMarkers.Add(image);
-            }
-            RefreshMarkerColors();
         }
 
         private void UpdateStageSlider(float progress)
@@ -182,19 +128,6 @@ namespace IdleBattle
             stageProgress = Mathf.Clamp01(progress);
             if (stageSliderFill != null && stageSlider != null)
                 stageSliderFill.sizeDelta = new Vector2(stageSlider.rect.width * stageProgress, stageSliderFill.sizeDelta.y);
-            RefreshMarkerColors();
-        }
-
-        private void RefreshMarkerColors()
-        {
-            for (var i = 0; i < stageMarkers.Count; i++)
-            {
-                if (stageMarkers[i] == null) continue;
-                var markerProgress = (i + 1f) / stageMarkers.Count;
-                stageMarkers[i].color = stageProgress >= markerProgress
-                    ? new Color(.25f, .9f, .45f, 1f)
-                    : new Color(1f, .82f, .2f, 1f);
-            }
         }
 
         private void SetupWorld()
@@ -474,40 +407,41 @@ namespace IdleBattle
                 yield break;
             }
 
-            var previousState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
             playerAnimator.ResetTrigger("Attack");
             playerAnimator.SetTrigger("Attack");
 
             var enterTimeout = 1f;
-            while (enterTimeout > 0f && playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash == previousState)
+            while (enterTimeout > 0f)
             {
+                var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
+                if (state.IsName("Attack")) break;
+
                 enterTimeout -= Time.deltaTime;
                 yield return null;
             }
 
-            var attackState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
             var finishTimeout = 5f;
             while (finishTimeout > 0f)
             {
                 finishTimeout -= Time.deltaTime;
                 var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
-                if (state.fullPathHash != attackState || (!playerAnimator.IsInTransition(0) && state.normalizedTime >= .98f))
-                    break;
-                yield return null;
-            }
+                if (isSkillActive || !state.IsName("Attack")) break;
 
-            // Attack -> Run 전이 조건이 Run == true이므로 공격 재생이 끝난 뒤 켭니다.
-            SetRunning(true);
-            var transitionTimeout = 1f;
-            while (transitionTimeout > 0f && playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash == attackState)
-            {
-                transitionTimeout -= Time.deltaTime;
+                Face(attackTarget.transform.position);
                 yield return null;
             }
 
             isAttacking = false;
             attackTarget = null;
-            if (playerEquipment != null) playerEquipment.SheatheWeapon();
+
+            if (!isSkillActive)
+            {
+                var nextTarget = FindNearestEnemy();
+                var shouldRun = nextTarget == null ||
+                                Vector3.Distance(Flat(player.position), Flat(nextTarget.transform.position)) > AttackRange;
+                SetRunning(shouldRun);
+                if (shouldRun && playerEquipment != null) playerEquipment.SheatheWeapon();
+            }
         }
 
         private void SetRunning(bool value)
@@ -526,15 +460,26 @@ namespace IdleBattle
         {
             if (target == null) return;
             DamageEnemy(target, PlayerAttackDamage);
-            AddMana(ManaPerAttack);
+            TryActivateRandomSkill();
         }
 
-        private void AddMana(int amount)
+        private void TryActivateRandomSkill()
         {
-            playerMana = Mathf.Min(MaxMana, playerMana + amount);
-            if (playerMana < MaxMana || isSkillActive) return;
-
-            playerMana = 0;
+            if (isSkillActive || skills.Length == 0) return;
+            var candidates = new List<int>();
+            var playerData = PlayerDataManager.Instance;
+            for (var i = 0; i < skills.Length; i++)
+                if (skills[i] != null &&
+                    Time.time >= skillReadyTimes[i] &&
+                    playerData.CurrentMana >= Mathf.CeilToInt(skills[i].ResourceCost))
+                    candidates.Add(i);
+            if (candidates.Count == 0) return;
+            var index = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+            var skill = skills[index];
+            if (!playerData.TrySpendMana(Mathf.CeilToInt(skill.ResourceCost))) return;
+            skillReadyTimes[index] = Time.time + skill.Cooldown;
+            activeSkill = skill;
+            SkillCast?.Invoke(skill, index);
             StartCoroutine(ActivateSkill());
         }
 
@@ -552,6 +497,10 @@ namespace IdleBattle
             }
 
             var previousState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+            playerAnimator.SetInteger("Num", activeSkill != null
+                ? activeSkill.AnimationIndex
+                : nextSkillNum);
+            nextSkillNum = (nextSkillNum + 1) % SkillAnimationCount;
             playerAnimator.ResetTrigger("Skill");
             playerAnimator.SetTrigger("Skill");
 
@@ -568,13 +517,21 @@ namespace IdleBattle
             {
                 finishTimeout -= Time.deltaTime;
                 var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
+                if (!skillEventApplied &&
+                    !playerAnimator.IsInTransition(0) &&
+                    state.normalizedTime >= .3f)
+                    Skill();
+
                 if (state.fullPathHash != skillState ||
                     (!playerAnimator.IsInTransition(0) && state.normalizedTime >= .98f))
                     break;
                 yield return null;
             }
 
+            if (!skillEventApplied)
+                Skill();
             isSkillActive = false;
+            activeSkill = null;
         }
 
         // Character의 Skill 애니메이션 Event가 이 시점에 이펙트와 광역 피해를 실행합니다.
@@ -586,11 +543,17 @@ namespace IdleBattle
             PlaySkillEffectOnce();
             var targets = enemies.ToArray();
             foreach (var enemy in targets)
-                DamageEnemy(enemy, PlayerAttackDamage);
+                DamageEnemy(enemy, activeSkill != null ? activeSkill.Damage : PlayerAttackDamage);
         }
 
         private void PlaySkillEffectOnce()
         {
+            if (activeSkill != null && activeSkill.EffectPrefab != null)
+            {
+                var effect = Instantiate(activeSkill.EffectPrefab, player.position, player.rotation);
+                Destroy(effect, Mathf.Max(2f, activeSkill.Duration + 1f));
+                return;
+            }
             if (skillEffect == null) return;
 
             skillEffect.SetActive(true);
@@ -652,7 +615,6 @@ namespace IdleBattle
                 enabled = false;
                 return;
             }
-            RebuildStageMarkers();
             UpdateStageSlider(0f);
         }
 
@@ -754,22 +716,6 @@ namespace IdleBattle
         private void LateUpdate()
         {
             if (destinationMarker != null) destinationMarker.Rotate(0, 35 * Time.deltaTime, 0, Space.World);
-        }
-
-        private void OnGUI()
-        {
-            if (titleStyle == null)
-            {
-                titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 27, fontStyle = FontStyle.Bold, normal = { textColor = Color.white } };
-                labelStyle = new GUIStyle(GUI.skin.label) { fontSize = 17, normal = { textColor = new Color(.75f, .86f, 1f) } };
-                centerStyle = new GUIStyle(labelStyle) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
-            }
-            GUI.Box(new Rect(22, 20, 285, 126), GUIContent.none);
-            GUI.Label(new Rect(42, 31, 245, 38), "IDLE HUNTER", titleStyle);
-            GUI.Label(new Rect(42, 72, 245, 26), $"STAGE {currentStage}  ROUND {completedNormalRounds + 1}/{currentStageRule.BossRoundNumber}  HP {PlayerDataManager.Instance.CurrentHealth}", labelStyle);
-            GUI.Label(new Rect(42, 105, 245, 26), stateText, centerStyle);
-            GUI.Box(new Rect(Screen.width - 270, 20, 248, 68), GUIContent.none);
-            GUI.Label(new Rect(Screen.width - 255, 32, 218, 44), "캐릭터가 자동으로\n탐색하고 전투합니다", centerStyle);
         }
 
         private static Vector3 Flat(Vector3 value) => new Vector3(value.x, 0, value.z);
