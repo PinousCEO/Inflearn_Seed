@@ -24,6 +24,6 @@ MonoBehaviour:
   castTime: 0.2
   duration: 2
   effectPrefab: {fileID: 1953358371911353452, guid: c7cb4c346dc7414e9881d35abd659109, type: 3}
-  damage: 9
+  damage: 90
   animationIndex: 3
   abilities: []
