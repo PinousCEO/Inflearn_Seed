@@ -73,7 +73,7 @@ namespace IdleBattle
         [SerializeField, Min(0f)] private float castTime;
         [SerializeField, Min(0f)] private float duration;
         [SerializeField] private GameObject effectPrefab;
-        [SerializeField, Min(1)] private int damage = 3;
+        [SerializeField, Min(1)] private int damage = 30;
         [SerializeField, Range(0, 3)] private int animationIndex;
 
         [Header("스킬 능력")]
@@ -131,7 +131,7 @@ namespace IdleBattle
             castTime = 0f;
             duration = 0f;
             effectPrefab = null;
-            damage = 3;
+            damage = 30;
             animationIndex = 0;
             abilities = new List<SkillAbility>();
         }

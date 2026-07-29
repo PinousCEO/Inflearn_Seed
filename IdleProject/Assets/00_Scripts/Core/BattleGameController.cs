@@ -50,11 +50,11 @@ namespace IdleBattle
         private const float SpawnRadius = 10f;
         private const float MoveSpeed = 4.2f;
         private const float AttackRange = 2.1f;
-        private const int PlayerAttackDamage = 1;
+        private const int PlayerAttackDamage = 10;
         private const int SkillAnimationCount = 4;
         private const float StageStatGrowth = 1.1f;
-        private const int NormalEnemyBaseHealth = 3;
-        private const int NormalEnemyBaseDamage = 2;
+        private const int NormalEnemyBaseHealth = 50;
+        private const int NormalEnemyBaseDamage = 20;
         private const int BossHealthMultiplier = 4;
         private const int BossDamageMultiplier = 2;
 
