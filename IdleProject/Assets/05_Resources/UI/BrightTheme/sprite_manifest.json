@@ -1,0 +1,101 @@
+{
+  "source_reference_size": [
+    942,
+    1670
+  ],
+  "pixels_per_unit": 100,
+  "nine_slice": [
+    {
+      "file": "Common/Frames/Panel_Slate.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Panel_Slate_Translucent.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Panel_Light.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Chip_Dark.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Button_Coral.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Tab_Idle.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Tab_Selected.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Slot_Item.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    {
+      "file": "Common/Frames/Slot_Skill.png",
+      "border": [
+        12,
+        12,
+        12,
+        12
+      ]
+    }
+  ],
+  "notes": [
+    "Common frames are canonical redraws, not crops containing baked text.",
+    "Use Image.Type=Sliced for files listed under nine_slice.",
+    "Generated equipment artwork is intentionally excluded; reuse Equipments/Item_*.png."
+  ],
+  "equipment_compatibility": {
+    "sample_count": 10,
+    "mean_brightness": 81.8,
+    "mean_saturation_range": 47.1,
+    "assessment": "Compatible: existing equipment uses transparent, centered, cartoon-rendered silhouettes. Neutral slate slots reduce the realism mismatch of generated reference items. Reuse existing Item_*.png assets rather than extracting the generated equipment artwork."
+  }
+}
