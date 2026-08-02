@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace IdleBattle
 {
@@ -28,6 +29,7 @@ namespace IdleBattle
         private uint popupSequence;
         private Canvas canvas;
         private RectTransform pool;
+        private RectTransform mainBounds;
         private Camera worldCamera;
         private Camera canvasCamera;
         private GameObject damagePrefab;
@@ -42,19 +44,28 @@ namespace IdleBattle
                 return false;
             }
 
+            mainBounds = canvas.transform.Find("Main") as RectTransform;
+            var poolParent = mainBounds != null ? mainBounds : canvas.transform as RectTransform;
             pool = FindPool(canvas.transform);
             if (pool == null)
             {
                 var poolObject = new GameObject(PoolName, typeof(RectTransform));
                 poolObject.layer = canvas.gameObject.layer;
                 pool = poolObject.GetComponent<RectTransform>();
-                pool.SetParent(canvas.transform, false);
-                pool.anchorMin = Vector2.zero;
-                pool.anchorMax = Vector2.one;
-                pool.offsetMin = Vector2.zero;
-                pool.offsetMax = Vector2.zero;
-                pool.SetAsLastSibling();
             }
+
+            // Damage belongs to the battle screen, not to the global Canvas.
+            // Parenting it below Main also hides every active popup immediately
+            // when another screen (Equipment, Skill, etc.) is selected.
+            if (poolParent != null && pool.parent != poolParent)
+                pool.SetParent(poolParent, false);
+            pool.anchorMin = Vector2.zero;
+            pool.anchorMax = Vector2.one;
+            pool.offsetMin = Vector2.zero;
+            pool.offsetMax = Vector2.zero;
+            pool.SetAsLastSibling();
+            if (!pool.TryGetComponent<RectMask2D>(out _))
+                pool.gameObject.AddComponent<RectMask2D>();
 
             canvasCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay
                 ? null
@@ -87,11 +98,23 @@ namespace IdleBattle
             text.alpha = 1f;
             text.raycastTarget = false;
 
-            var popupPosition = GetSpreadPosition(localPoint);
             var rect = text.rectTransform;
+            var popupPosition = ClampToMain(GetSpreadPosition(localPoint), rect);
             rect.anchoredPosition = popupPosition;
             rect.localScale = Vector3.one * StartScale;
             StartCoroutine(Animate(text, popupPosition));
+        }
+
+        private Vector2 ClampToMain(Vector2 position, RectTransform popup)
+        {
+            if (pool == null || popup == null) return position;
+            var bounds = pool.rect;
+            var halfWidth = popup.rect.width * Mathf.Max(popup.pivot.x, 1f - popup.pivot.x) * StartScale;
+            var halfHeight = popup.rect.height * Mathf.Max(popup.pivot.y, 1f - popup.pivot.y) * StartScale;
+            const float padding = 8f;
+            position.x = Mathf.Clamp(position.x, bounds.xMin + halfWidth + padding, bounds.xMax - halfWidth - padding);
+            position.y = Mathf.Clamp(position.y, bounds.yMin + halfHeight + padding, bounds.yMax - halfHeight - padding);
+            return position;
         }
 
         private Vector2 GetSpreadPosition(Vector2 hitPosition)

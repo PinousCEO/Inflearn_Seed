@@ -1,0 +1,81 @@
+{
+  "source_reference": [
+    "Skill_FiveTiers_Selected.png",
+    "Skill_FiveTiers_Empty.png"
+  ],
+  "excluded": "Skill artwork and all text",
+  "nine_slice_borders": {
+    "Frames/Panel_Tier.png": [
+      16,
+      16,
+      16,
+      16
+    ],
+    "Frames/Panel_SkillInfo.png": [
+      16,
+      16,
+      16,
+      16
+    ],
+    "Frames/SkillSlot_Normal.png": [
+      16,
+      16,
+      16,
+      16
+    ],
+    "Frames/SkillSlot_Selected.png": [
+      16,
+      16,
+      16,
+      16
+    ],
+    "Frames/SkillSlot_Locked.png": [
+      16,
+      16,
+      16,
+      16
+    ],
+    "Frames/LevelRequirement_Unlocked.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/LevelRequirement_Locked.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Level_Badge.png": [
+      10,
+      10,
+      10,
+      10
+    ],
+    "Frames/Button_LevelUp_Normal.png": [
+      18,
+      18,
+      18,
+      18
+    ],
+    "Frames/Button_LevelUp_Pressed.png": [
+      18,
+      18,
+      18,
+      18
+    ],
+    "Frames/Button_LevelUp_Disabled.png": [
+      18,
+      18,
+      18,
+      18
+    ],
+    "Frames/Button_Reset.png": [
+      16,
+      16,
+      16,
+      16
+    ]
+  }
+}

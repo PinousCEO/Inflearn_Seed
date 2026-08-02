@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace IdleBattle
@@ -21,6 +22,11 @@ namespace IdleBattle
         Legendary
     }
 
+    public enum EquipmentSlot
+    {
+        None, Weapon, Helmet, Armor, Belt, Gloves, Boots, Ring, Necklace
+    }
+
     [CreateAssetMenu(
         fileName = "ItemData",
         menuName = "Idle Battle/Item Data")]
@@ -36,6 +42,9 @@ namespace IdleBattle
         [SerializeField, Min(0)] private int sellPrice;
         [SerializeField, Min(1)] private int maxStack = 1;
         [SerializeField, Range(0f, 100f)] private float dropRatePercent;
+        [Header("Equipment Stats")]
+        [SerializeField] private EquipmentSlot equipmentSlot;
+        [SerializeField] private List<StatModifier> statModifiers = new();
 
         public string ItemId => itemId;
         public string DisplayName => displayName;
@@ -47,6 +56,8 @@ namespace IdleBattle
         public int SellPrice => sellPrice;
         public int MaxStack => maxStack;
         public float DropRatePercent => dropRatePercent;
+        public EquipmentSlot Slot => equipmentSlot;
+        public IReadOnlyList<StatModifier> StatModifiers => statModifiers;
 
         public void Initialize(string id, string initialName)
         {

@@ -1,0 +1,122 @@
+{
+  "source_reference": "BrightReferences/Equipment_SevenKnights_Rebuilt.png",
+  "usage": "Independent text-free sprites; compose icons, labels and item art in Unity.",
+  "decorations": [
+    "Decorations/Board_Ornament.png",
+    "Decorations/Title_Rule.png",
+    "Decorations/Title_Sparkle.png",
+    "Decorations/Title_Diamond.png",
+    "Decorations/Detail_Divider.png",
+    "Decorations/Paperdoll_Rune.png",
+    "Decorations/Paperdoll_Pedestal.png"
+  ],
+  "scrollbar": [
+    "Scrollbar/Scrollbar_Track.png",
+    "Scrollbar/Scrollbar_Handle.png",
+    "Scrollbar/Scrollbar_Grip.png"
+  ],
+  "nine_slice_borders": {
+    "Frames/Panel_Stats.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Panel_Inventory.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Panel_Paperdoll.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Panel_ItemDetail.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Button_Action_Normal.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Button_Action_Pressed.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Button_Action_Disabled.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Button_Icon_Normal.png": [
+      20,
+      20,
+      20,
+      20
+    ],
+    "Frames/Button_Icon_Pressed.png": [
+      20,
+      20,
+      20,
+      20
+    ],
+    "Frames/Equipment_Tab_Normal.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/Equipment_Tab_Selected.png": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "Frames/CapacityBar.png": [
+      20,
+      20,
+      20,
+      20
+    ],
+    "Frames/Equipment_Slot_Normal.png": [
+      18,
+      18,
+      18,
+      18
+    ],
+    "Frames/Equipment_Slot_Armor.png": [
+      18,
+      18,
+      18,
+      18
+    ],
+    "Frames/Equipment_Slot_Selected.png": [
+      18,
+      18,
+      18,
+      18
+    ],
+    "Scrollbar/Scrollbar_Track.png": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Scrollbar/Scrollbar_Handle.png": [
+      12,
+      12,
+      12,
+      12
+    ]
+  }
+}
