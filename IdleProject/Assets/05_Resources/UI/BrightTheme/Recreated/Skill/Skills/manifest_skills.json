@@ -1,0 +1,28 @@
+{
+  "iconSize": [512, 512],
+  "format": "RGB PNG (opaque full-bleed background)",
+  "skillCount": 20,
+  "directSummonCount": 3,
+  "skills": [
+    { "index": 1, "tier": 1, "id": "Cleave", "displayName": "가르기", "file": "Skill_01_Cleave.png", "directSummon": false },
+    { "index": 2, "tier": 1, "id": "BeastClaw", "displayName": "맹수의 발톱", "file": "Skill_02_BeastClaw.png", "directSummon": false },
+    { "index": 3, "tier": 1, "id": "ShieldBash", "displayName": "방패 가격", "file": "Skill_03_ShieldBash.png", "directSummon": false },
+    { "index": 4, "tier": 1, "id": "ExecutionerStrike", "displayName": "처형자의 일격", "file": "Skill_04_ExecutionerStrike.png", "directSummon": false },
+    { "index": 5, "tier": 2, "id": "Whirlwind", "displayName": "소용돌이", "file": "Skill_05_Whirlwind.png", "directSummon": false },
+    { "index": 6, "tier": 2, "id": "WolfPack", "displayName": "늑대 무리", "file": "Skill_06_WolfPack.png", "directSummon": true },
+    { "index": 7, "tier": 2, "id": "ShieldSweep", "displayName": "방패 휩쓸기", "file": "Skill_07_ShieldSweep.png", "directSummon": false },
+    { "index": 8, "tier": 2, "id": "BloodRend", "displayName": "피의 절단", "file": "Skill_08_BloodRend.png", "directSummon": false },
+    { "index": 9, "tier": 3, "id": "IronSkin", "displayName": "강철 피부", "file": "Skill_09_IronSkin.png", "directSummon": false },
+    { "index": 10, "tier": 3, "id": "PredatorRoar", "displayName": "포식자의 함성", "file": "Skill_10_PredatorRoar.png", "directSummon": false },
+    { "index": 11, "tier": 3, "id": "ShieldFormation", "displayName": "방패 진형", "file": "Skill_11_ShieldFormation.png", "directSummon": false },
+    { "index": 12, "tier": 3, "id": "Bloodthirst", "displayName": "피의 갈증", "file": "Skill_12_Bloodthirst.png", "directSummon": false },
+    { "index": 13, "tier": 4, "id": "LeapAssault", "displayName": "도약 강습", "file": "Skill_13_LeapAssault.png", "directSummon": false },
+    { "index": 14, "tier": 4, "id": "GreatBearSummon", "displayName": "큰곰의 부름", "file": "Skill_14_GreatBearSummon.png", "directSummon": true },
+    { "index": 15, "tier": 4, "id": "ShieldCharge", "displayName": "방패 돌진", "file": "Skill_15_ShieldCharge.png", "directSummon": false },
+    { "index": 16, "tier": 4, "id": "ChainHarpoon", "displayName": "사슬 작살", "file": "Skill_16_ChainHarpoon.png", "directSummon": false },
+    { "index": 17, "tier": 5, "id": "StormWhirlwind", "displayName": "폭풍의 소용돌이", "file": "Skill_17_StormWhirlwind.png", "directSummon": false },
+    { "index": 18, "tier": 5, "id": "BeastLegion", "displayName": "야수 군단", "file": "Skill_18_BeastLegion.png", "directSummon": true },
+    { "index": 19, "tier": 5, "id": "UnbreakableFortress", "displayName": "불굴의 성채", "file": "Skill_19_UnbreakableFortress.png", "directSummon": false },
+    { "index": 20, "tier": 5, "id": "EarthShatter", "displayName": "대지 파쇄", "file": "Skill_20_EarthShatter.png", "directSummon": false }
+  ]
+}

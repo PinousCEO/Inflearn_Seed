@@ -1,0 +1,226 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: StatCatalog
+  m_EditorClassIdentifier: Assembly-CSharp:IdleBattle:StatCatalog
+  definitions:
+  - type: 0
+    displayName: "\uACF5\uACA9\uB825"
+    category: 0
+    description: "\uAE30\uBCF8 \uACF5\uACA9\uACFC \uACF5\uACA9\uB825 \uACC4\uC218\uB97C
+      \uC0AC\uC6A9\uD558\uB294 \uC2A4\uD0AC\uC758 \uAE30\uC900 \uD53C\uD574."
+    valueFormat: N0
+    appendPercent: 0
+    defaultValue: 10
+    minimumValue: 0
+    maximumValue: 999999
+    showInEquipmentSummary: 1
+  - type: 1
+    displayName: "\uBC29\uC5B4\uB825"
+    category: 0
+    description: "\uBB3C\uB9AC \uD53C\uD574 \uAC10\uC18C \uACC4\uC0B0\uC5D0 \uC0AC\uC6A9."
+    valueFormat: N0
+    appendPercent: 0
+    defaultValue: 0
+    minimumValue: 0
+    maximumValue: 999999
+    showInEquipmentSummary: 1
+  - type: 2
+    displayName: "\uCD5C\uB300 \uCCB4\uB825"
+    category: 0
+    description: "\uC0DD\uC874 \uAC00\uB2A5\uD55C \uCD5C\uB300 \uCCB4\uB825."
+    valueFormat: N0
+    appendPercent: 0
+    defaultValue: 100
+    minimumValue: 1
+    maximumValue: 999999
+    showInEquipmentSummary: 1
+  - type: 3
+    displayName: "\uCD5C\uB300 \uB9C8\uB098"
+    category: 0
+    description: "\uC2A4\uD0AC \uC0AC\uC6A9\uC5D0 \uC4F0\uB294 \uCD5C\uB300 \uC790\uC6D0."
+    valueFormat: N0
+    appendPercent: 0
+    defaultValue: 100
+    minimumValue: 0
+    maximumValue: 999999
+    showInEquipmentSummary: 1
+  - type: 4
+    displayName: "\uCE58\uBA85\uD0C0 \uD655\uB960"
+    category: 1
+    description: "\uACF5\uACA9\uACFC \uC2A4\uD0AC\uC774 \uCE58\uBA85\uD0C0\uAC00
+      \uB420 \uD655\uB960."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 5
+    minimumValue: 0
+    maximumValue: 100
+    showInEquipmentSummary: 1
+  - type: 5
+    displayName: "\uCE58\uBA85\uD0C0 \uD53C\uD574"
+    category: 1
+    description: "\uCE58\uBA85\uD0C0 \uBC1C\uC0DD \uC2DC \uC801\uC6A9\uB418\uB294
+      \uCD1D \uD53C\uD574 \uBC30\uC728."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 150
+    minimumValue: 100
+    maximumValue: 999999
+    showInEquipmentSummary: 1
+  - type: 6
+    displayName: "\uACF5\uACA9 \uC18D\uB3C4"
+    category: 1
+    description: "\uAE30\uBCF8 \uACF5\uACA9 \uB3D9\uC791 \uC18D\uB3C4 \uC99D\uAC00\uC728."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: -80
+    maximumValue: 999999
+    showInEquipmentSummary: 1
+  - type: 7
+    displayName: "\uC7AC\uC0AC\uC6A9 \uB300\uAE30\uC2DC\uAC04 \uAC10\uC18C"
+    category: 1
+    description: "\uC2A4\uD0AC \uC7AC\uC0AC\uC6A9 \uB300\uAE30\uC2DC\uAC04 \uAC10\uC18C\uC728.
+      \uAD8C\uC7A5 \uC0C1\uD55C 60%."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: 0
+    maximumValue: 60
+    showInEquipmentSummary: 1
+  - type: 8
+    displayName: "\uC2A4\uD0AC \uD53C\uD574"
+    category: 1
+    description: "\uBAA8\uB4E0 \uC2A4\uD0AC \uD53C\uD574 \uC99D\uAC00\uC728."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: -100
+    maximumValue: 999999
+    showInEquipmentSummary: 0
+  - type: 9
+    displayName: "\uBC29\uC5B4 \uAD00\uD1B5"
+    category: 1
+    description: "\uC801\uC758 \uBB3C\uB9AC \uBC29\uC5B4\uB825\uC744 \uBB34\uC2DC\uD558\uB294
+      \uBE44\uC728."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: 0
+    maximumValue: 80
+    showInEquipmentSummary: 0
+  - type: 10
+    displayName: "\uD654\uC5FC \uC800\uD56D"
+    category: 2
+    description: "\uBC1B\uB294 \uD654\uC5FC \uD53C\uD574 \uAC10\uC18C. \uAD8C\uC7A5
+      \uC0C1\uD55C 75%."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: -100
+    maximumValue: 75
+    showInEquipmentSummary: 0
+  - type: 11
+    displayName: "\uB0C9\uAE30 \uC800\uD56D"
+    category: 2
+    description: "\uBC1B\uB294 \uB0C9\uAE30 \uD53C\uD574 \uAC10\uC18C. \uAD8C\uC7A5
+      \uC0C1\uD55C 75%."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: -100
+    maximumValue: 75
+    showInEquipmentSummary: 0
+  - type: 12
+    displayName: "\uBC88\uAC1C \uC800\uD56D"
+    category: 2
+    description: "\uBC1B\uB294 \uBC88\uAC1C \uD53C\uD574 \uAC10\uC18C. \uAD8C\uC7A5
+      \uC0C1\uD55C 75%."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: -100
+    maximumValue: 75
+    showInEquipmentSummary: 0
+  - type: 13
+    displayName: "\uD63C\uB3C8 \uC800\uD56D"
+    category: 2
+    description: "\uB3C5\xB7\uC800\uC8FC\xB7\uD63C\uB3C8 \uACC4\uC5F4 \uD53C\uD574
+      \uAC10\uC18C. \uAD8C\uC7A5 \uC0C1\uD55C 75%."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: -100
+    maximumValue: 75
+    showInEquipmentSummary: 0
+  - type: 14
+    displayName: "\uCCB4\uB825 \uC7AC\uC0DD"
+    category: 3
+    description: "\uCD08\uB2F9 \uD68C\uBCF5\uD558\uB294 \uCCB4\uB825."
+    valueFormat: 0.#
+    appendPercent: 0
+    defaultValue: 0
+    minimumValue: 0
+    maximumValue: 999999
+    showInEquipmentSummary: 0
+  - type: 15
+    displayName: "\uB9C8\uB098 \uC7AC\uC0DD"
+    category: 3
+    description: "\uCD08\uB2F9 \uD68C\uBCF5\uD558\uB294 \uB9C8\uB098."
+    valueFormat: 0.#
+    appendPercent: 0
+    defaultValue: 1
+    minimumValue: 0
+    maximumValue: 999999
+    showInEquipmentSummary: 0
+  - type: 16
+    displayName: "\uC790\uC6D0 \uC18C\uBAA8 \uAC10\uC18C"
+    category: 3
+    description: "\uC2A4\uD0AC \uB9C8\uB098 \uC18C\uBAA8 \uAC10\uC18C\uC728."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: 0
+    maximumValue: 60
+    showInEquipmentSummary: 0
+  - type: 17
+    displayName: "\uC774\uB3D9 \uC18D\uB3C4"
+    category: 4
+    description: "\uC804\uD22C \uC911 \uC774\uB3D9 \uC18D\uB3C4 \uC99D\uAC00\uC728."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: -80
+    maximumValue: 999999
+    showInEquipmentSummary: 0
+  - type: 18
+    displayName: "\uC544\uC774\uD15C \uBC1C\uACAC"
+    category: 4
+    description: "\uD76C\uADC0 \uB4F1\uAE09 \uC7A5\uBE44\uAC00 \uB4F1\uC7A5\uD560
+      \uC0C1\uB300 \uAC00\uC911\uCE58\uB97C \uC99D\uAC00\uC2DC\uD0B4."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: 0
+    maximumValue: 999999
+    showInEquipmentSummary: 1
+  - type: 19
+    displayName: "\uC0DD\uBA85\uB825 \uD761\uC218"
+    category: 4
+    description: "\uAC00\uD55C \uD53C\uD574 \uC77C\uBD80\uB97C \uCCB4\uB825\uC73C\uB85C
+      \uD68C\uBCF5."
+    valueFormat: 0.#
+    appendPercent: 1
+    defaultValue: 0
+    minimumValue: 0
+    maximumValue: 20
+    showInEquipmentSummary: 0

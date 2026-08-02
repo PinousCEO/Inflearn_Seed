@@ -1,0 +1,20 @@
+{
+  "art_source": "exact crops from the five approved BrightReferences",
+  "generated_artwork": false,
+  "equipment_items": "../Equipment/Items",
+  "groups": {
+    "Common": 12,
+    "Dungeon": 12,
+    "Frames": 12,
+    "Main": 13,
+    "Shop": 8,
+    "Skill": 16,
+    "Sliders": 10,
+    "States": 19
+  },
+  "rules": [
+    "All text and changing numbers use TextMeshPro.",
+    "Equipment artwork uses the preserved 75 cartoon items.",
+    "Slider layers in each set share identical dimensions."
+  ]
+}
