@@ -12,11 +12,9 @@ namespace IdleBattle
     {
         private readonly List<EnemyController> enemies = new List<EnemyController>();
         private Transform player, destinationMarker;
-        private GameObject skillEffect;
+        private readonly List<GameObject> skillEffects = new List<GameObject>();
         private Animator playerAnimator;
         private CharacterEquipmentPresenter playerEquipment;
-        private EnemyController attackTarget;
-        private bool isAttacking;
         private float playerGroundY;
         private Vector3 destination;
         private Material playerMaterial, enemyMaterial, markerMaterial;
@@ -38,20 +36,22 @@ namespace IdleBattle
         private float travelDistance;
         private float stageProgress;
         private int playerMana;
-        private float attackTimer;
         private bool isSkillActive;
         private bool skillEventApplied;
+        private float animatorSpeedBeforeSkill = 1f;
         private int nextSkillNum;
         private SkillData[] skills = Array.Empty<SkillData>();
         private float[] skillReadyTimes = Array.Empty<float>();
         private SkillData activeSkill;
+        private int activeSkillIndex = -1;
         private string stateText = "지역 탐색 중";
 
         private const float SpawnRadius = 10f;
         private const float MoveSpeed = 4.2f;
         private const float AttackRange = 2.1f;
-        private const int PlayerAttackDamage = 10;
         private const int SkillAnimationCount = 4;
+        private const float SkillAnimationSpeed = 1.35f;
+        private const float SkillEventFallbackNormalizedTime = .75f;
         private const float StageStatGrowth = 1.1f;
         private const int NormalEnemyBaseHealth = 50;
         private const int NormalEnemyBaseDamage = 20;
@@ -173,8 +173,8 @@ namespace IdleBattle
                 hero.name = "Character";
                 // Skill 파티클의 큰 Renderer bounds가 캐릭터의 지면 배치에 포함되지 않게
                 // 높이를 계산하기 전에 먼저 비활성화합니다.
-                var initialSkillEffect = FindChildByName(hero.transform, "Skill");
-                if (initialSkillEffect != null) initialSkillEffect.SetActive(false);
+                var initialSkillRoot = FindChildByName(hero.transform, "Skill0");
+                if (initialSkillRoot != null) initialSkillRoot.SetActive(false);
                 hero.transform.position = GroundPoint(Vector3.zero);
                 PlaceCharacterOnGround(hero, hero.transform.position.y);
             }
@@ -187,11 +187,7 @@ namespace IdleBattle
                 hero.GetComponent<Renderer>().material = playerMaterial;
             }
             player = hero.transform;
-            skillEffect = FindChildByName(hero.transform, "Skill");
-            if (skillEffect != null)
-                skillEffect.SetActive(false);
-            else
-                Debug.LogWarning("Character 프리팹에서 Skill을 찾지 못했습니다.");
+            CollectCharacterSkillEffects(hero.transform);
             playerAnimator = hero.GetComponentInChildren<Animator>();
             playerEquipment = hero.GetComponentInChildren<CharacterEquipmentPresenter>(true);
             if (playerAnimator == null)
@@ -304,19 +300,43 @@ namespace IdleBattle
             return null;
         }
 
+        private void CollectCharacterSkillEffects(Transform heroRoot)
+        {
+            skillEffects.Clear();
+            var skillRoot = FindChildByName(heroRoot, "Skill0");
+            if (skillRoot == null)
+            {
+                Debug.LogWarning("Character 프리팹에서 Skill0 스킬 목록을 찾지 못했습니다.", this);
+                return;
+            }
+
+            skillRoot.SetActive(true);
+            for (var i = 0; i < skillRoot.transform.childCount; i++)
+            {
+                var effect = skillRoot.transform.GetChild(i).gameObject;
+                effect.SetActive(false);
+                skillEffects.Add(effect);
+            }
+
+            if (skillEffects.Count != skills.Length)
+            {
+                Debug.LogWarning(
+                    $"SkillData({skills.Length})와 Character/Skill0 자식({skillEffects.Count}) 수가 다릅니다. " +
+                    "자식 오브젝트가 존재하는 스킬만 전투에서 사용합니다.",
+                    this);
+
+                var usableSkillCount = Mathf.Min(skills.Length, skillEffects.Count);
+                Array.Resize(ref skills, usableSkillCount);
+                Array.Resize(ref skillReadyTimes, usableSkillCount);
+            }
+        }
+
         private void Update()
         {
             enemies.RemoveAll(enemy => enemy == null);
-            attackTimer -= Time.deltaTime;
             if (isSkillActive)
             {
                 SetRunning(false);
-                return;
-            }
-            if (isAttacking)
-            {
-                // 공격 애니메이션 중에도 움직이는 대상의 방향을 계속 보정합니다.
-                if (attackTarget != null) Face(attackTarget.transform.position);
                 return;
             }
             if (enemies.Count == 0)
@@ -338,14 +358,10 @@ namespace IdleBattle
             }
             else
             {
-                stateText = "몬스터 공격 중";
+                stateText = "스킬 사용 대기 중";
                 SetRunning(false);
                 Face(target.transform.position);
-                if (attackTimer <= 0)
-                {
-                    attackTimer = .42f;
-                    StartCoroutine(PlayAttack(target));
-                }
+                TryActivateRandomSkill();
             }
         }
 
@@ -381,91 +397,19 @@ namespace IdleBattle
                 player.rotation = Quaternion.Slerp(player.rotation, Quaternion.LookRotation(direction), 12 * Time.deltaTime);
         }
 
-        private void FaceImmediately(Vector3 target)
-        {
-            var direction = Flat(target) - Flat(player.position);
-            if (direction.sqrMagnitude > .001f)
-                player.rotation = Quaternion.LookRotation(direction);
-        }
-
-        private IEnumerator PlayAttack(EnemyController target)
-        {
-            if (target == null) yield break;
-            isAttacking = true;
-            attackTarget = target;
-            if (playerEquipment != null) playerEquipment.DrawWeapon();
-            SetRunning(false);
-            FaceImmediately(target.transform.position);
-
-            if (playerAnimator == null)
-            {
-                ATK();
-                yield return new WaitForSeconds(.42f);
-                isAttacking = false;
-                attackTarget = null;
-                if (playerEquipment != null) playerEquipment.SheatheWeapon();
-                yield break;
-            }
-
-            playerAnimator.ResetTrigger("Attack");
-            playerAnimator.SetTrigger("Attack");
-
-            var enterTimeout = 1f;
-            while (enterTimeout > 0f)
-            {
-                var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
-                if (state.IsName("Attack")) break;
-
-                enterTimeout -= Time.deltaTime;
-                yield return null;
-            }
-
-            var finishTimeout = 5f;
-            while (finishTimeout > 0f)
-            {
-                finishTimeout -= Time.deltaTime;
-                var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
-                if (isSkillActive || !state.IsName("Attack")) break;
-
-                Face(attackTarget.transform.position);
-                yield return null;
-            }
-
-            isAttacking = false;
-            attackTarget = null;
-
-            if (!isSkillActive)
-            {
-                var nextTarget = FindNearestEnemy();
-                var shouldRun = nextTarget == null ||
-                                Vector3.Distance(Flat(player.position), Flat(nextTarget.transform.position)) > AttackRange;
-                SetRunning(shouldRun);
-                if (shouldRun && playerEquipment != null) playerEquipment.SheatheWeapon();
-            }
-        }
-
         private void SetRunning(bool value)
         {
             if (playerAnimator != null) playerAnimator.SetBool("Run", value);
         }
 
-        // Character의 Attack 애니메이션 Event(ATK)가 이 메서드까지 전달됩니다.
+        // 예전 Attack 클립의 Animation Event가 남아 있어도 기본 공격은 실행하지 않습니다.
         public void ATK()
         {
-            if (!isAttacking || attackTarget == null) return;
-            ApplyAttack(attackTarget);
         }
 
-        private void ApplyAttack(EnemyController target)
+        private bool TryActivateRandomSkill()
         {
-            if (target == null) return;
-            DamageEnemy(target, PlayerAttackDamage);
-            TryActivateRandomSkill();
-        }
-
-        private void TryActivateRandomSkill()
-        {
-            if (isSkillActive || skills.Length == 0) return;
+            if (isSkillActive || skills.Length == 0 || skillEffects.Count == 0) return false;
             var candidates = new List<int>();
             var playerData = PlayerDataManager.Instance;
             for (var i = 0; i < skills.Length; i++)
@@ -473,14 +417,16 @@ namespace IdleBattle
                     Time.time >= skillReadyTimes[i] &&
                     playerData.CurrentMana >= Mathf.CeilToInt(skills[i].ResourceCost))
                     candidates.Add(i);
-            if (candidates.Count == 0) return;
+            if (candidates.Count == 0) return false;
             var index = candidates[UnityEngine.Random.Range(0, candidates.Count)];
             var skill = skills[index];
-            if (!playerData.TrySpendMana(Mathf.CeilToInt(skill.ResourceCost))) return;
+            if (!playerData.TrySpendMana(Mathf.CeilToInt(skill.ResourceCost))) return false;
             skillReadyTimes[index] = Time.time + skill.Cooldown;
             activeSkill = skill;
+            activeSkillIndex = index;
             SkillCast?.Invoke(skill, index);
             StartCoroutine(ActivateSkill());
+            return true;
         }
 
         private IEnumerator ActivateSkill()
@@ -488,15 +434,18 @@ namespace IdleBattle
             isSkillActive = true;
             skillEventApplied = false;
             SetRunning(false);
+            if (playerEquipment != null) playerEquipment.DrawWeapon();
 
             if (playerAnimator == null)
             {
                 Skill();
-                isSkillActive = false;
+                FinishSkill();
                 yield break;
             }
 
             var previousState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+            animatorSpeedBeforeSkill = playerAnimator.speed;
+            playerAnimator.speed = animatorSpeedBeforeSkill * SkillAnimationSpeed;
             playerAnimator.SetInteger("Num", activeSkill != null
                 ? activeSkill.AnimationIndex
                 : nextSkillNum);
@@ -517,9 +466,13 @@ namespace IdleBattle
             {
                 finishTimeout -= Time.deltaTime;
                 var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
+                // Every authored skill clip has a Skill Animation Event at its
+                // actual contact frame. Only fall back late in the clip when an
+                // imported event is missing; firing at .3 made VFX/damage lead
+                // the weapon contact by a visible amount.
                 if (!skillEventApplied &&
                     !playerAnimator.IsInTransition(0) &&
-                    state.normalizedTime >= .3f)
+                    state.normalizedTime >= SkillEventFallbackNormalizedTime)
                     Skill();
 
                 if (state.fullPathHash != skillState ||
@@ -530,8 +483,16 @@ namespace IdleBattle
 
             if (!skillEventApplied)
                 Skill();
+            FinishSkill();
+        }
+
+        private void FinishSkill()
+        {
+            if (playerAnimator != null) playerAnimator.speed = animatorSpeedBeforeSkill;
             isSkillActive = false;
             activeSkill = null;
+            activeSkillIndex = -1;
+            if (playerEquipment != null) playerEquipment.SheatheWeapon();
         }
 
         // Character의 Skill 애니메이션 Event가 이 시점에 이펙트와 광역 피해를 실행합니다.
@@ -543,36 +504,34 @@ namespace IdleBattle
             PlaySkillEffectOnce();
             var targets = enemies.ToArray();
             foreach (var enemy in targets)
-                DamageEnemy(enemy, activeSkill != null ? activeSkill.Damage : PlayerAttackDamage);
+                DamageEnemy(enemy, activeSkill != null ? activeSkill.Damage : 1);
         }
 
         private void PlaySkillEffectOnce()
         {
-            if (activeSkill != null && activeSkill.EffectPrefab != null)
-            {
-                var effect = Instantiate(activeSkill.EffectPrefab, player.position, player.rotation);
-                Destroy(effect, Mathf.Max(2f, activeSkill.Duration + 1f));
-                return;
-            }
-            if (skillEffect == null) return;
+            if (activeSkillIndex < 0 || activeSkillIndex >= skillEffects.Count) return;
+            var effect = skillEffects[activeSkillIndex];
+            if (effect == null) return;
 
-            skillEffect.SetActive(true);
-            var particles = skillEffect.GetComponentsInChildren<ParticleSystem>(true);
+            effect.SetActive(true);
+            var particles = effect.GetComponentsInChildren<ParticleSystem>(true);
             foreach (var particle in particles)
             {
                 particle.Clear(true);
                 particle.Play(true);
             }
-            StartCoroutine(HideSkillEffectWhenFinished(particles));
+            StartCoroutine(HideSkillEffectWhenFinished(effect, particles));
         }
 
-        private IEnumerator HideSkillEffectWhenFinished(ParticleSystem[] particles)
+        private static IEnumerator HideSkillEffectWhenFinished(
+            GameObject effect,
+            ParticleSystem[] particles)
         {
             yield return null;
-            while (skillEffect != null && AreParticlesAlive(particles))
+            while (effect != null && AreParticlesAlive(particles))
                 yield return null;
 
-            if (skillEffect != null) skillEffect.SetActive(false);
+            if (effect != null) effect.SetActive(false);
         }
 
         private static bool AreParticlesAlive(ParticleSystem[] particles)

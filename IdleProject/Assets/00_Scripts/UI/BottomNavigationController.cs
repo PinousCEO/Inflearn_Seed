@@ -5,15 +5,19 @@ using UnityEngine.UI;
 
 namespace IdleBattle.UI
 {
-    /// <summary>Switches the persistent bottom navigation between Main and Equipment.</summary>
+    /// <summary>Switches the persistent bottom navigation between the four game screens.</summary>
     [DisallowMultipleComponent]
     public sealed class BottomNavigationController : MonoBehaviour
     {
         private const int EquipmentIndex = 0;
+        private const int DungeonIndex = 1;
         private const int MainIndex = 2;
+        private const int SkillIndex = 3;
 
         [SerializeField] private GameObject mainScreen;
         [SerializeField] private GameObject equipmentScreen;
+        [SerializeField] private GameObject skillScreen;
+        [SerializeField] private GameObject dungeonScreen;
         [SerializeField] private Sprite normalFrame;
         [SerializeField] private Sprite selectedFrame;
         [SerializeField] private Image selectionIndicator;
@@ -22,6 +26,9 @@ namespace IdleBattle.UI
         private readonly NavigationVisual[] visuals = new NavigationVisual[5];
         private Coroutine transitionRoutine;
         private int selectedIndex = MainIndex;
+        private GameObject userInfoPanel;
+        private Button infoButton;
+        private Button userInfoCloseButton;
 
         private static readonly Color NormalText = new(0.88f, 0.84f, 0.76f, 1f);
         private static readonly Color SelectedText = new(1f, 0.86f, 0.72f, 1f);
@@ -34,8 +41,10 @@ namespace IdleBattle.UI
             // persistent navigation above both regardless of scene save order.
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
+            ResolveScreens();
             CacheNavigation();
             WireButtons();
+            WireUserInfo();
             ShowImmediate(MainIndex);
         }
 
@@ -48,6 +57,20 @@ namespace IdleBattle.UI
                     visuals[i].Button.onClick.RemoveAllListeners();
                 }
             }
+
+            if (infoButton != null) infoButton.onClick.RemoveListener(ShowUserInfo);
+            if (userInfoCloseButton != null) userInfoCloseButton.onClick.RemoveListener(HideUserInfo);
+        }
+
+        private void ResolveScreens()
+        {
+            var canvas = transform.parent;
+            if (canvas == null) return;
+
+            if (mainScreen == null) mainScreen = canvas.Find("Main")?.gameObject;
+            if (equipmentScreen == null) equipmentScreen = canvas.Find("Equipment")?.gameObject;
+            if (skillScreen == null) skillScreen = canvas.Find("Skill")?.gameObject;
+            if (dungeonScreen == null) dungeonScreen = canvas.Find("Dungeon")?.gameObject;
         }
 
         private void CacheNavigation()
@@ -78,25 +101,66 @@ namespace IdleBattle.UI
 
         private void WireButtons()
         {
-            if (visuals[EquipmentIndex]?.Button != null)
+            var screenIndices = new[] { EquipmentIndex, DungeonIndex, MainIndex, SkillIndex };
+            foreach (var index in screenIndices)
             {
-                visuals[EquipmentIndex].Button.onClick.AddListener(() => Select(EquipmentIndex));
+                var capturedIndex = index;
+                if (visuals[capturedIndex]?.Button != null)
+                    visuals[capturedIndex].Button.onClick.AddListener(() => Select(capturedIndex));
             }
+        }
 
-            if (visuals[MainIndex]?.Button != null)
+        private void WireUserInfo()
+        {
+            if (equipmentScreen == null) return;
+
+            var equipment = equipmentScreen.transform;
+            userInfoPanel = equipment.Find("UserInfo")?.gameObject;
+            var info = equipment.Find("SafeArea/Character_Equipments/Character_Info/Chracter_Info/InfoBtn");
+            var close = equipment.Find("UserInfo/InfoPanel/CloseBtn");
+
+            infoButton = EnsureButton(info);
+            userInfoCloseButton = EnsureButton(close);
+            if (infoButton != null) infoButton.onClick.AddListener(ShowUserInfo);
+            if (userInfoCloseButton != null)
             {
-                visuals[MainIndex].Button.onClick.AddListener(() => Select(MainIndex));
+                userInfoCloseButton.onClick.AddListener(HideUserInfo);
             }
+            HideUserInfo();
+        }
+
+        private static Button EnsureButton(Transform target)
+        {
+            if (target == null) return null;
+            var button = target.GetComponent<Button>();
+            if (button == null) button = target.gameObject.AddComponent<Button>();
+            var graphic = target.GetComponent<Image>();
+            if (graphic != null) graphic.raycastTarget = true;
+            if (button.targetGraphic == null) button.targetGraphic = graphic;
+            button.enabled = true;
+            button.interactable = true;
+            return button;
+        }
+
+        private void ShowUserInfo()
+        {
+            if (userInfoPanel == null) return;
+            userInfoPanel.SetActive(true);
+            userInfoPanel.transform.SetAsLastSibling();
+        }
+
+        private void HideUserInfo()
+        {
+            if (userInfoPanel != null) userInfoPanel.SetActive(false);
         }
 
         public void Select(int index)
         {
-            if (index != EquipmentIndex && index != MainIndex) return;
-            if (index == selectedIndex && transitionRoutine == null)
-            {
-                StartCoroutine(BounceSelected(index));
-                return;
-            }
+            if (!IsScreenIndex(index)) return;
+            // Ignore repeated taps even while the first transition is running.
+            // Restarting a transition to the same screen makes previous and next
+            // reference the same object, which would deactivate it at completion.
+            if (index == selectedIndex) return;
 
             if (transitionRoutine != null) StopCoroutine(transitionRoutine);
             transitionRoutine = StartCoroutine(TransitionTo(index));
@@ -105,8 +169,7 @@ namespace IdleBattle.UI
         private void ShowImmediate(int index)
         {
             selectedIndex = index;
-            if (mainScreen != null) mainScreen.SetActive(index == MainIndex);
-            if (equipmentScreen != null) equipmentScreen.SetActive(index == EquipmentIndex);
+            SetOnlyScreenActive(index);
             ApplyNavigationState(index, false, index);
         }
 
@@ -114,10 +177,11 @@ namespace IdleBattle.UI
         {
             var previousIndex = selectedIndex;
             selectedIndex = index;
+            if (index != EquipmentIndex) HideUserInfo();
             ApplyNavigationState(index, true, previousIndex);
 
-            var previous = previousIndex == MainIndex ? mainScreen : equipmentScreen;
-            var next = index == MainIndex ? mainScreen : equipmentScreen;
+            var previous = ScreenFor(previousIndex);
+            var next = ScreenFor(index);
             if (next == null)
             {
                 transitionRoutine = null;
@@ -157,6 +221,38 @@ namespace IdleBattle.UI
             }
 
             transitionRoutine = null;
+        }
+
+        private void SetOnlyScreenActive(int activeIndex)
+        {
+            SetScreenActive(mainScreen, activeIndex == MainIndex);
+            SetScreenActive(equipmentScreen, activeIndex == EquipmentIndex);
+            SetScreenActive(skillScreen, activeIndex == SkillIndex);
+            SetScreenActive(dungeonScreen, activeIndex == DungeonIndex);
+            if (activeIndex != EquipmentIndex) HideUserInfo();
+        }
+
+        private static void SetScreenActive(GameObject screen, bool active)
+        {
+            if (screen != null) screen.SetActive(active);
+        }
+
+        private GameObject ScreenFor(int index)
+        {
+            return index switch
+            {
+                EquipmentIndex => equipmentScreen,
+                DungeonIndex => dungeonScreen,
+                MainIndex => mainScreen,
+                SkillIndex => skillScreen,
+                _ => null
+            };
+        }
+
+        private static bool IsScreenIndex(int index)
+        {
+            return index == EquipmentIndex || index == DungeonIndex ||
+                   index == MainIndex || index == SkillIndex;
         }
 
         private void ApplyNavigationState(int activeIndex, bool animate, int previousIndex)
