@@ -13,10 +13,10 @@ namespace IdleBattle.Editor
 
         private static readonly string[] SkillClipPaths =
         {
-            AnimationFolder + "/Skill01.fbx",
-            AnimationFolder + "/Skill02.fbx",
-            AnimationFolder + "/Skill03.fbx",
-            AnimationFolder + "/Skill05.fbx"
+            AnimationFolder + "/1-1.fbx",
+            AnimationFolder + "/1-2.fbx",
+            AnimationFolder + "/1-3.fbx",
+            AnimationFolder + "/1-4.fbx"
         };
 
         [InitializeOnLoadMethod]
@@ -101,7 +101,7 @@ namespace IdleBattle.Editor
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("Character Animator skills configured: Num 0~3 -> Skill01, Skill02, Skill03, Skill05.");
+            Debug.Log("Character Animator skills configured: Num 0~3 -> 1-1, 1-2, 1-3, 1-4.");
         }
 
         public static void ConfigureBatchMode()
