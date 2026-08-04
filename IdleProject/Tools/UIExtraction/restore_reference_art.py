@@ -1017,7 +1017,7 @@ def main():
         ("FeaturedBundle", (367, 366, 701, 590)), ("DailyGift", (48, 626, 128, 711)),
         ("EquipmentChest", (44, 782, 211, 958)), ("GemBundle", (493, 785, 659, 944)),
         ("GrowthElixir", (54, 1022, 197, 1212)), ("SkillBook", (493, 1026, 653, 1215)),
-        ("DungeonTicket", (51, 1279, 194, 1473)), ("ExpBooster", (508, 1277, 668, 1469)),
+        ("DungeonTicket", (51, 1279, 194, 1473)), ("ExpBooster", (493, 1277, 668, 1469)),
     ]
     for name, box in shops:
         art = b.flood_remove_background(shop_ref.crop(box), tolerance=38)

@@ -25,8 +25,11 @@ namespace IdleBattleEditor
             public readonly float Height;
             public readonly float Width;
             public readonly float Density;
+            public readonly float Lifetime;
+            public readonly float Speed;
 
-            public Tier(ItemRarity rarity, string name, string color, float height, float width, float density)
+            public Tier(ItemRarity rarity, string name, string color, float height, float width, float density,
+                float lifetime, float speed)
             {
                 Rarity = rarity;
                 Name = name;
@@ -35,16 +38,19 @@ namespace IdleBattleEditor
                 Height = height;
                 Width = width;
                 Density = density;
+                Lifetime = lifetime;
+                Speed = speed;
             }
         }
 
         private static readonly Tier[] Tiers =
         {
-            new(ItemRarity.Common, "Common", "#A8A8A8", .58f, .66f, .55f),
-            new(ItemRarity.Uncommon, "Uncommon", "#3D8FE8", .76f, .78f, .72f),
-            new(ItemRarity.Rare, "Rare", "#A64FE3", 1f, .94f, 1f),
-            new(ItemRarity.Epic, "Epic", "#E4A52E", 1.28f, 1.10f, 1.3f),
-            new(ItemRarity.Legendary, "Legendary", "#E74B43", 1.62f, 1.28f, 1.65f),
+            // Matches the Equipment States frames: white, blue, yellow, purple, orange.
+            new(ItemRarity.Common, "Common", "#E8E8E8", .94f, .96f, .52f, .90f, .92f),
+            new(ItemRarity.Uncommon, "Uncommon", "#4A9FE8", .97f, .98f, .72f, .95f, .96f),
+            new(ItemRarity.Rare, "Rare", "#F2C14E", 1f, 1f, 1f, 1f, 1f),
+            new(ItemRarity.Epic, "Epic", "#A765D1", 1.04f, 1.02f, 1.35f, 1.05f, 1.04f),
+            new(ItemRarity.Legendary, "Legendary", "#F07845", 1.08f, 1.04f, 1.70f, 1.10f, 1.08f),
         };
 
         [InitializeOnLoadMethod]
@@ -97,11 +103,15 @@ namespace IdleBattleEditor
                 if (!particle.gameObject.activeSelf) continue;
 
                 var main = particle.main;
-                var bright = Color.Lerp(tier.Color, Color.white, .24f);
-                var dim = new Color(tier.Color.r, tier.Color.g, tier.Color.b, .45f);
+                // Keep the frame hue clearly visible instead of washing it out to white.
+                var bright = Color.Lerp(tier.Color, Color.white, .08f);
+                var dim = new Color(tier.Color.r, tier.Color.g, tier.Color.b, .72f);
                 main.startColor = new ParticleSystem.MinMaxGradient(dim, bright);
                 main.maxParticles = Mathf.Max(8, Mathf.RoundToInt(main.maxParticles * tier.Density));
-                main.startSizeMultiplier *= isBeam ? tier.Width : Mathf.Lerp(.82f, 1.22f, (float)tier.Rarity / 4f);
+                // Rarity is expressed mainly through effect count/density, not footprint.
+                main.startSizeMultiplier *= isBeam ? tier.Width : Mathf.Lerp(.96f, 1.06f, (float)tier.Rarity / 4f);
+                main.startLifetimeMultiplier *= tier.Lifetime;
+                main.startSpeedMultiplier *= tier.Speed;
 
                 var emission = particle.emission;
                 if (emission.enabled)

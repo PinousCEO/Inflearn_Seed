@@ -22,6 +22,8 @@ namespace IdleBattle
         private ObjectPool<EnemyController> enemyPool;
         private Transform enemyPoolRoot;
         private DamagePopupSystem damagePopupSystem;
+        private ItemDropSystem itemDropSystem;
+        private ItemAcquisitionFeed itemAcquisitionFeed;
         private Terrain terrain;
         private Vector2 worldMin = new Vector2(-37f, -37f);
         private Vector2 worldMax = new Vector2(37f, 37f);
@@ -156,6 +158,14 @@ namespace IdleBattle
             if (damagePopupSystem == null)
                 damagePopupSystem = gameObject.AddComponent<DamagePopupSystem>();
             damagePopupSystem.Initialize(Camera.main);
+            itemDropSystem = GetComponent<ItemDropSystem>();
+            if (itemDropSystem == null)
+                itemDropSystem = gameObject.AddComponent<ItemDropSystem>();
+            itemDropSystem.Initialize(Camera.main);
+            itemAcquisitionFeed = GetComponent<ItemAcquisitionFeed>();
+            if (itemAcquisitionFeed == null)
+                itemAcquisitionFeed = gameObject.AddComponent<ItemAcquisitionFeed>();
+            itemAcquisitionFeed.Initialize();
 
             if (terrain == null)
             {
@@ -551,8 +561,11 @@ namespace IdleBattle
             target.TakeDamage(damage);
             if (!target.IsDead) return;
 
+            var dropPosition = GroundPoint(target.transform.position);
             enemies.Remove(target);
             defeated++;
+            if (itemDropSystem != null)
+                itemDropSystem.RollDrops(dropPosition);
             enemyPool.Release(target);
             if (enemies.Count == 0)
             {
