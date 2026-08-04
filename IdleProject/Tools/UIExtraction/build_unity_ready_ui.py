@@ -174,7 +174,7 @@ def main() -> None:
         ("GrowthElixir", (54, 1022, 197, 1212)),
         ("SkillBook", (493, 1026, 653, 1215)),
         ("DungeonTicket", (51, 1279, 194, 1473)),
-        ("ExpBooster", (508, 1277, 668, 1469)),
+        ("ExpBooster", (493, 1277, 668, 1469)),
     ]
     for name, box in shop_boxes:
         art = b.flood_remove_background(shop.crop(box), tolerance=38)

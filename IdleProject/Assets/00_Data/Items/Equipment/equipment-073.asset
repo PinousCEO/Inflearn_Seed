@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c790e33160be46519b0fa211b857911b, type: 3}
+  m_Name: equipment-073
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.ItemData
+  itemId: equipment-073
+  displayName: "\uC804\uC124\uC758 \uCC45\uB8E1 \uD5C8\uB9AC\uB760"
+  description: "\uC804\uC124\uC758 \uCC45\uB8E1 \uD5C8\uB9AC\uB760. \uC804\uD22C
+    \uC790\uC138\uB97C \uC548\uC815\uC2DC\uD0A4\uB294 \uD5C8\uB9AC \uC7A5\uBE44\uB2E4.
+    \uC804\uC124 \uC18D \uC601\uC6C5\uC758 \uD798\uC774 \uC544\uC9C1\uB3C4 \uC120\uBA85\uD558\uAC8C
+    \uB9E5\uB3D9\uD55C\uB2E4."
+  icon: {fileID: 21300000, guid: 49286f1229561714fa3a789d6b1fa3a5, type: 3}
+  itemType: 0
+  rarity: 4
+  buyPrice: 4500
+  sellPrice: 1375
+  maxStack: 1
+  dropRatePercent: 0.04
+  equipmentSlot: 4
+  statModifiers:
+  - type: 2
+    mode: 0
+    value: 60
+  - type: 18
+    mode: 1
+    value: 10

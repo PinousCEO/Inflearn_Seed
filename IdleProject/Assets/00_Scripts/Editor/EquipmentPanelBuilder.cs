@@ -424,11 +424,11 @@ namespace IdleBattle.Editor
         {
             return rarity switch
             {
-                0 => Hex("A8A8A8"),
-                1 => Hex("3D8FE8"),
-                2 => Hex("A64FE3"),
-                3 => Hex("E4A52E"),
-                _ => Hex("E74B43")
+                0 => Hex("E8E8E8"),
+                1 => Hex("4A9FE8"),
+                2 => Hex("F2C14E"),
+                3 => Hex("A765D1"),
+                _ => Hex("F07845")
             };
         }
 

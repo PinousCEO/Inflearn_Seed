@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c790e33160be46519b0fa211b857911b, type: 3}
+  m_Name: equipment-014
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.ItemData
+  itemId: equipment-014
+  displayName: "\uCCA0\uBCBD\uC758 \uBAA9\uAC78\uC774"
+  description: "\uCCA0\uBCBD\uC758 \uBAA9\uAC78\uC774. \uC7A0\uB4E0 \uB9C8\uB825\uC744
+    \uAE68\uC6B0\uB294 \uBAA9\uAC78\uC774\uB2E4."
+  icon: {fileID: 21300000, guid: c35d2e6206825d54f86222fc100778b1, type: 3}
+  itemType: 0
+  rarity: 1
+  buyPrice: 720
+  sellPrice: 220
+  maxStack: 1
+  dropRatePercent: 1.2
+  equipmentSlot: 8
+  statModifiers:
+  - type: 8
+    mode: 1
+    value: 6
