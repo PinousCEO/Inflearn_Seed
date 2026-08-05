@@ -18,11 +18,11 @@ MonoBehaviour:
     \uC704\uD55C \uBB34\uAE30\uB2E4."
   icon: {fileID: 21300000, guid: 4417a023e17128d4abf00bfd15be24e6, type: 3}
   itemType: 0
-  rarity: 1
+  rarity: 4
   buyPrice: 720
   sellPrice: 220
   maxStack: 1
-  dropRatePercent: 1.2
+  dropRatePercent: 8
   equipmentSlot: 1
   statModifiers:
   - type: 0

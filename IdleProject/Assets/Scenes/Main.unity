@@ -1706,6 +1706,7 @@ MonoBehaviour:
   equipmentScreen: {fileID: 801243698}
   skillScreen: {fileID: 0}
   dungeonScreen: {fileID: 0}
+  shopScreen: {fileID: 0}
   normalFrame: {fileID: 21300000, guid: e7ad423b30417414cbe17966bf1819b4, type: 3}
   selectedFrame: {fileID: 21300000, guid: cc378aa253c1afc429f05521e1d152f8, type: 3}
   selectionIndicator: {fileID: 1665623391}
@@ -25474,6 +25475,87 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 691374329}
   m_CullTransparentMesh: 1
+--- !u!1001 &692994049
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1241307230848147651, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: EmissionModule.enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1241307230848147651, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1241307230848147651, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: InitialModule.startSize.minScalar
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1241307230848147651, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705088, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_Name
+      value: HCFX_Dust_Storm_Left_02_Looping
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705088, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705089, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2574727718275705091, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
+      propertyPath: EmissionModule.enabled
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6d0f599f53ab3164ba51d07b4810b28a, type: 3}
 --- !u!1 &694591875
 GameObject:
   m_ObjectHideFlags: 0
@@ -75218,6 +75300,9 @@ MonoBehaviour:
   currentHealth: 5000
   maxMana: 5000
   currentMana: 5000
+  level: 1
+  experience: 0
+  coins: 0
 --- !u!1 &2104577009
 GameObject:
   m_ObjectHideFlags: 0
@@ -77246,7 +77331,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.PlayerCameraController
   target: {fileID: 0}
-  followOffset: {x: 10, y: 8, z: -7}
+  followOffset: {x: 10, y: 11, z: -10}
   smoothTime: 0.28
   lookAtHeight: -1
   snapOnTargetAssigned: 1
@@ -77263,3 +77348,4 @@ SceneRoots:
   - {fileID: 2057937332}
   - {fileID: 2100000011}
   - {fileID: 2100000021}
+  - {fileID: 692994049}

@@ -116,7 +116,9 @@ namespace IdleBattle.UI
         {
             var owned = dataManager.Inventory
                 .Select(pair => catalog.TryGet(pair.Key, out var item) ? new OwnedItem(item, pair.Value) : default)
-                .Where(value => value.Item != null && value.Amount > 0 && MatchesCategory(value.Item.Type))
+                .Where(value => value.Item != null && value.Amount > 0 && MatchesCategory(value.Item.Type) &&
+                    !(value.Item.Type == ItemType.Equipment &&
+                      FindFirstObjectByType<EquipmentLoadoutController>(FindObjectsInactive.Include)?.IsEquippedItem(value.Item.ItemId) == true))
                 .OrderByDescending(value => value.Item.Rarity)
                 .ThenBy(value => value.Item.ItemId)
                 .ToList();
@@ -179,6 +181,8 @@ namespace IdleBattle.UI
             private readonly Image icon;
             private readonly TMP_Text amount;
             private readonly Sprite emptyFrame;
+            private readonly Button button;
+            private ItemData boundItem;
 
             public SlotView(GameObject root)
             {
@@ -188,10 +192,22 @@ namespace IdleBattle.UI
                 amount = root.transform.Find("Count")?.GetComponent<TMP_Text>() ??
                          root.transform.Find("Level")?.GetComponent<TMP_Text>();
                 emptyFrame = frame != null ? frame.sprite : null;
+                button = root.GetComponent<Button>() ?? root.AddComponent<Button>();
+                button.transition = Selectable.Transition.None;
+                button.onClick.AddListener(EquipBoundItem);
+            }
+
+            private void EquipBoundItem()
+            {
+                if (boundItem == null) return;
+                var loadout = FindFirstObjectByType<EquipmentLoadoutController>(FindObjectsInactive.Include);
+                if (loadout != null && loadout.TryEquip(boundItem.ItemId))
+                    Debug.Log($"장비 장착: {boundItem.DisplayName}");
             }
 
             public void Bind(OwnedItem owned, Sprite rarityFrame)
             {
+                boundItem = owned.Item;
                 if (frame != null)
                 {
                     frame.sprite = rarityFrame != null ? rarityFrame : emptyFrame;
@@ -215,6 +231,7 @@ namespace IdleBattle.UI
 
             public void Clear()
             {
+                boundItem = null;
                 if (frame != null) frame.sprite = emptyFrame;
                 if (icon != null)
                 {

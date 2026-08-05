@@ -9,6 +9,7 @@ namespace IdleBattle
         [Header("Movement")]
         [SerializeField, Min(0f)] private float moveSpeed = 2.25f;
         [SerializeField, Min(0f)] private float turnSpeed = 10f;
+        [SerializeField, Min(0f)] private float aggroDistance = 6.5f;
 
         [Header("Attack")]
         [SerializeField, Min(0f)] private float attackRange = 1.65f;
@@ -25,6 +26,7 @@ namespace IdleBattle
         private Terrain terrain;
         private float groundOffset;
         private float attackTimer;
+        private float slowMultiplier = 1f;
         private Vector3 originalScale;
         private bool hasOriginalScale;
 
@@ -49,6 +51,7 @@ namespace IdleBattle
                 ? transform.position.y - (terrain.SampleHeight(transform.position) + terrain.transform.position.y)
                 : transform.position.y;
             attackTimer = Random.Range(0.2f, 0.8f);
+            slowMultiplier = 1f;
         }
 
         public void PrepareForPool()
@@ -61,6 +64,7 @@ namespace IdleBattle
             owner = null;
             terrain = null;
             attackTimer = 0f;
+            slowMultiplier = 1f;
             if (hasOriginalScale)
                 transform.localScale = originalScale;
         }
@@ -72,6 +76,27 @@ namespace IdleBattle
             transform.localScale = originalScale * Mathf.Lerp(0.72f, 1f, Mathf.Clamp01(healthRatio));
         }
 
+        public void ApplySlow(float duration, float multiplier, GameObject auraPrefab)
+        {
+            StopCoroutine(nameof(ClearSlow));
+            slowMultiplier = Mathf.Clamp(multiplier, .1f, 1f);
+            if (auraPrefab != null)
+            {
+                var aura = Instantiate(auraPrefab, transform);
+                aura.name = "Aura_Slow_Down_Active";
+                aura.transform.localPosition = Vector3.zero;
+                foreach (var particle in aura.GetComponentsInChildren<ParticleSystem>(true)) { particle.Clear(true); particle.Play(true); }
+                Destroy(aura, duration);
+            }
+            StartCoroutine(ClearSlow(duration));
+        }
+
+        private IEnumerator ClearSlow(float duration)
+        {
+            yield return new WaitForSeconds(duration);
+            slowMultiplier = 1f;
+        }
+
         private void Update()
         {
             if (target == null || owner == null || IsDead) return;
@@ -80,6 +105,7 @@ namespace IdleBattle
             var direction = target.position - transform.position;
             direction.y = 0f;
             var distance = direction.magnitude;
+            if (distance > aggroDistance) return;
 
             if (direction.sqrMagnitude > 0.001f)
                 transform.rotation = Quaternion.Slerp(
@@ -93,7 +119,7 @@ namespace IdleBattle
                     ? terrain.SampleHeight(transform.position) + terrain.transform.position.y + groundOffset
                     : groundOffset;
                 var destination = new Vector3(target.position.x, targetY, target.position.z);
-                transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * Time.deltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * slowMultiplier * Time.deltaTime);
             }
             else if (attackTimer <= 0f)
             {

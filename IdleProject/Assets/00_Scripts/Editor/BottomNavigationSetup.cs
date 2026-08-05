@@ -38,9 +38,10 @@ namespace IdleBattle.Editor
             var equipment = canvas.transform.Find("Equipment");
             var skill = canvas.transform.Find("Skill");
             var dungeon = canvas.transform.Find("Dungeon");
-            var bottom = canvas.transform.Find("Bottom");
-            if (main == null || equipment == null || skill == null || dungeon == null || bottom == null)
-                throw new MissingReferenceException("Main, Equipment, Skill, Dungeon, or Bottom root was not found under Canvas.");
+            var shop = canvas.transform.Find("Shop");
+            var bottom = canvas.transform.Find("Bottom") ?? canvas.transform.Find("SafeArea/Bottom");
+            if (main == null || equipment == null || skill == null || dungeon == null || shop == null || bottom == null)
+                throw new MissingReferenceException("Main, Equipment, Skill, Dungeon, Shop, or Bottom root was not found under Canvas.");
 
             var controller = bottom.GetComponent<BottomNavigationController>();
             if (controller == null) controller = bottom.gameObject.AddComponent<BottomNavigationController>();
@@ -96,6 +97,7 @@ namespace IdleBattle.Editor
             serialized.FindProperty("equipmentScreen").objectReferenceValue = equipment.gameObject;
             serialized.FindProperty("skillScreen").objectReferenceValue = skill.gameObject;
             serialized.FindProperty("dungeonScreen").objectReferenceValue = dungeon.gameObject;
+            serialized.FindProperty("shopScreen").objectReferenceValue = shop.gameObject;
             serialized.FindProperty("normalFrame").objectReferenceValue = Load("Nav_Frame_Normal");
             serialized.FindProperty("selectedFrame").objectReferenceValue = Load("Nav_Frame_Selected");
             serialized.FindProperty("selectionIndicator").objectReferenceValue = indicatorImage;

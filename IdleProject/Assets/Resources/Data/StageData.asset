@@ -18,18 +18,46 @@ MonoBehaviour:
     maxStage: 29
     normalRoundCount: 3
     bossPoolId: default
+    baseMonsterCount: 4
+    maxMonsterCount: 7
+    healthMultiplier: 1
+    damageMultiplier: 1
+    experiencePerMonster: 12
+    coinPerMonster: 8
+    bossRewardMultiplier: 5
   - ruleId: stage-30-49
     minStage: 30
     maxStage: 49
     normalRoundCount: 5
     bossPoolId: default
+    baseMonsterCount: 5
+    maxMonsterCount: 8
+    healthMultiplier: 1.25
+    damageMultiplier: 1.15
+    experiencePerMonster: 20
+    coinPerMonster: 13
+    bossRewardMultiplier: 5
   - ruleId: stage-50-99
     minStage: 50
     maxStage: 99
     normalRoundCount: 7
     bossPoolId: default
+    baseMonsterCount: 6
+    maxMonsterCount: 9
+    healthMultiplier: 1.6
+    damageMultiplier: 1.35
+    experiencePerMonster: 32
+    coinPerMonster: 21
+    bossRewardMultiplier: 6
   - ruleId: stage-100-plus
     minStage: 100
     maxStage: 0
     normalRoundCount: 7
     bossPoolId: default
+    baseMonsterCount: 7
+    maxMonsterCount: 10
+    healthMultiplier: 2.1
+    damageMultiplier: 1.7
+    experiencePerMonster: 50
+    coinPerMonster: 34
+    bossRewardMultiplier: 7

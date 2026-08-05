@@ -16,8 +16,13 @@ namespace IdleBattle
         [SerializeField, Min(0)] private int currentHealth = 100;
         [SerializeField, Min(1)] private int maxMana = 100;
         [SerializeField, Min(0)] private int currentMana = 100;
+        [SerializeField, Min(1)] private int level = 1;
+        [SerializeField, Min(0)] private int experience;
+        [SerializeField, Min(0)] private long coins;
         private readonly Dictionary<string, int> inventory = new();
+        private readonly HashSet<string> equippedItems = new(StringComparer.Ordinal);
         private const string SaveFileName = "player-data.json";
+        private const int SaveVersion = 2;
 
         public static PlayerDataManager Instance
         {
@@ -37,6 +42,11 @@ namespace IdleBattle
         public int CurrentMana => currentMana;
         public int MaxMana => maxMana;
         public IReadOnlyDictionary<string, int> Inventory => inventory;
+        public int Level => level;
+        public int Experience => experience;
+        public int ExperienceToNextLevel => GetExperienceRequirement(level);
+        public long Coins => coins;
+        public IReadOnlyCollection<string> EquippedItems => equippedItems;
 
         public event Action<int, int> HealthChanged;
         public event Action<int> Damaged;
@@ -44,6 +54,8 @@ namespace IdleBattle
         public event Action<int, int> ManaChanged;
         public event Action<ItemData, int> ItemAcquired;
         public event Action InventoryChanged;
+        public event Action<int, int, int> ExperienceChanged;
+        public event Action<long> CoinsChanged;
 
         public string SaveFilePath => Path.Combine(Application.persistentDataPath, SaveFileName);
 
@@ -144,22 +156,74 @@ namespace IdleBattle
             InventoryChanged?.Invoke();
         }
 
+        public void NotifyInventoryChanged()
+        {
+            InventoryChanged?.Invoke();
+        }
+
+        public void AddExperience(int amount)
+        {
+            if (amount <= 0) return;
+            experience += amount;
+            while (experience >= GetExperienceRequirement(level))
+            {
+                experience -= GetExperienceRequirement(level);
+                level++;
+                maxHealth += 10;
+                maxMana += 3;
+                currentHealth = maxHealth;
+                currentMana = maxMana;
+            }
+            Save();
+            ExperienceChanged?.Invoke(level, experience, GetExperienceRequirement(level));
+            HealthChanged?.Invoke(currentHealth, maxHealth);
+            ManaChanged?.Invoke(currentMana, maxMana);
+        }
+
+        public void AddCoins(long amount)
+        {
+            if (amount <= 0) return;
+            coins = Math.Max(0L, coins + amount);
+            Save();
+            CoinsChanged?.Invoke(coins);
+        }
+
+        public static int GetExperienceRequirement(int targetLevel)
+        {
+            return Mathf.Max(20, Mathf.RoundToInt(50f * Mathf.Pow(1.16f, Mathf.Max(0, targetLevel - 1))));
+        }
+
         public int GetItemCount(ItemData item)
         {
             if (item == null || string.IsNullOrWhiteSpace(item.ItemId)) return 0;
             return inventory.TryGetValue(item.ItemId, out var amount) ? amount : 0;
         }
 
+        public bool IsItemEquipped(string itemId) => !string.IsNullOrWhiteSpace(itemId) && equippedItems.Contains(itemId);
+
+        public void SetItemEquipped(string itemId, bool value)
+        {
+            if (string.IsNullOrWhiteSpace(itemId)) return;
+            if (value) equippedItems.Add(itemId);
+            else equippedItems.Remove(itemId);
+            Save();
+            InventoryChanged?.Invoke();
+        }
+
         public void Save()
         {
             var data = new PlayerSaveData
             {
-                version = 1,
+                version = SaveVersion,
+                level = level,
+                experience = experience,
+                coins = coins,
                 items = inventory
                     .Where(pair => !string.IsNullOrWhiteSpace(pair.Key) && pair.Value > 0)
                     .OrderBy(pair => pair.Key, StringComparer.Ordinal)
                     .Select(pair => new InventorySaveEntry { itemId = pair.Key, amount = pair.Value })
-                    .ToList()
+                    .ToList(),
+                equippedItems = equippedItems.OrderBy(value => value, StringComparer.Ordinal).ToList()
             };
 
             try
@@ -181,16 +245,32 @@ namespace IdleBattle
         public void Load()
         {
             inventory.Clear();
+            equippedItems.Clear();
             try
             {
                 if (!File.Exists(SaveFilePath)) return;
                 var data = JsonUtility.FromJson<PlayerSaveData>(File.ReadAllText(SaveFilePath));
+                if (data == null) return;
+                if (data.version < SaveVersion)
+                {
+                    // 이전 테스트 세이브는 장착/보유 규칙이 달라 한 번 초기화합니다.
+                    level = 1;
+                    experience = 0;
+                    coins = 0;
+                    return;
+                }
+                level = Mathf.Max(1, data.level);
+                experience = Mathf.Max(0, data.experience);
+                coins = Math.Max(0L, data.coins);
                 if (data?.items == null) return;
                 foreach (var entry in data.items)
                 {
                     if (entry == null || string.IsNullOrWhiteSpace(entry.itemId) || entry.amount <= 0) continue;
                     inventory[entry.itemId.Trim()] = entry.amount;
                 }
+                if (data.equippedItems != null)
+                    foreach (var itemId in data.equippedItems)
+                        if (!string.IsNullOrWhiteSpace(itemId)) equippedItems.Add(itemId.Trim());
             }
             catch (Exception exception)
             {
@@ -199,14 +279,20 @@ namespace IdleBattle
             finally
             {
                 InventoryChanged?.Invoke();
+                ExperienceChanged?.Invoke(level, experience, GetExperienceRequirement(level));
+                CoinsChanged?.Invoke(coins);
             }
         }
 
         [Serializable]
         private sealed class PlayerSaveData
         {
-            public int version = 1;
+            public int version = SaveVersion;
+            public int level = 1;
+            public int experience;
+            public long coins;
             public List<InventorySaveEntry> items = new();
+            public List<string> equippedItems = new();
         }
 
         [Serializable]

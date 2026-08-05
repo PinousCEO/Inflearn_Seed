@@ -75,7 +75,7 @@ namespace IdleBattle
         {
             return rarity switch
             {
-                ItemRarity.Common => new Color32(232, 232, 232, 255),
+                ItemRarity.Common => new Color32(150, 150, 150, 255),
                 ItemRarity.Uncommon => new Color32(74, 159, 232, 255),
                 ItemRarity.Rare => new Color32(242, 193, 78, 255),
                 ItemRarity.Epic => new Color32(167, 101, 209, 255),
