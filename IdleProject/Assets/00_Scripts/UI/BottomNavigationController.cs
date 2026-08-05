@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace IdleBattle.UI
 {
-    /// <summary>Switches the persistent bottom navigation between the four game screens.</summary>
+    /// <summary>Switches the persistent bottom navigation between the five game screens.</summary>
     [DisallowMultipleComponent]
     public sealed class BottomNavigationController : MonoBehaviour
     {
@@ -13,11 +13,13 @@ namespace IdleBattle.UI
         private const int DungeonIndex = 1;
         private const int MainIndex = 2;
         private const int SkillIndex = 3;
+        private const int ShopIndex = 4;
 
         [SerializeField] private GameObject mainScreen;
         [SerializeField] private GameObject equipmentScreen;
         [SerializeField] private GameObject skillScreen;
         [SerializeField] private GameObject dungeonScreen;
+        [SerializeField] private GameObject shopScreen;
         [SerializeField] private Sprite normalFrame;
         [SerializeField] private Sprite selectedFrame;
         [SerializeField] private Image selectionIndicator;
@@ -64,13 +66,15 @@ namespace IdleBattle.UI
 
         private void ResolveScreens()
         {
-            var canvas = transform.parent;
+            var canvas = GetComponentInParent<Canvas>(true);
             if (canvas == null) return;
+            var root = canvas.transform;
 
-            if (mainScreen == null) mainScreen = canvas.Find("Main")?.gameObject;
-            if (equipmentScreen == null) equipmentScreen = canvas.Find("Equipment")?.gameObject;
-            if (skillScreen == null) skillScreen = canvas.Find("Skill")?.gameObject;
-            if (dungeonScreen == null) dungeonScreen = canvas.Find("Dungeon")?.gameObject;
+            if (mainScreen == null) mainScreen = root.Find("Main")?.gameObject;
+            if (equipmentScreen == null) equipmentScreen = root.Find("Equipment")?.gameObject;
+            if (skillScreen == null) skillScreen = root.Find("Skill")?.gameObject;
+            if (dungeonScreen == null) dungeonScreen = root.Find("Dungeon")?.gameObject;
+            if (shopScreen == null) shopScreen = root.Find("Shop")?.gameObject;
         }
 
         private void CacheNavigation()
@@ -101,7 +105,7 @@ namespace IdleBattle.UI
 
         private void WireButtons()
         {
-            var screenIndices = new[] { EquipmentIndex, DungeonIndex, MainIndex, SkillIndex };
+            var screenIndices = new[] { EquipmentIndex, DungeonIndex, MainIndex, SkillIndex, ShopIndex };
             foreach (var index in screenIndices)
             {
                 var capturedIndex = index;
@@ -229,6 +233,7 @@ namespace IdleBattle.UI
             SetScreenActive(equipmentScreen, activeIndex == EquipmentIndex);
             SetScreenActive(skillScreen, activeIndex == SkillIndex);
             SetScreenActive(dungeonScreen, activeIndex == DungeonIndex);
+            SetScreenActive(shopScreen, activeIndex == ShopIndex);
             if (activeIndex != EquipmentIndex) HideUserInfo();
         }
 
@@ -245,6 +250,7 @@ namespace IdleBattle.UI
                 DungeonIndex => dungeonScreen,
                 MainIndex => mainScreen,
                 SkillIndex => skillScreen,
+                ShopIndex => shopScreen,
                 _ => null
             };
         }
@@ -252,7 +258,7 @@ namespace IdleBattle.UI
         private static bool IsScreenIndex(int index)
         {
             return index == EquipmentIndex || index == DungeonIndex ||
-                   index == MainIndex || index == SkillIndex;
+                   index == MainIndex || index == SkillIndex || index == ShopIndex;
         }
 
         private void ApplyNavigationState(int activeIndex, bool animate, int previousIndex)

@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UI;
+using TMPro;
+using IdleBattle.UI;
 using Random = UnityEngine.Random;
 
 namespace IdleBattle
@@ -19,15 +22,21 @@ namespace IdleBattle
         private Vector3 destination;
         private Material playerMaterial, enemyMaterial, markerMaterial;
         private GameObject enemyPrefab;
+        private GameObject monsterZonePrefab;
+        private GameObject monsterZoneInstance;
+        private GameObject stunPrefab;
         private ObjectPool<EnemyController> enemyPool;
         private Transform enemyPoolRoot;
         private DamagePopupSystem damagePopupSystem;
         private ItemDropSystem itemDropSystem;
         private ItemAcquisitionFeed itemAcquisitionFeed;
+        private CoinDropSystem coinDropSystem;
+        private TargetNavigationUI targetNavigationUI;
+        private LegendaryEquipmentSystem legendaryEquipmentSystem;
         private Terrain terrain;
         private Vector2 worldMin = new Vector2(-37f, -37f);
         private Vector2 worldMax = new Vector2(37f, 37f);
-        private int wave, defeated;
+        private int wave, stageWave, defeated;
         private int currentStage = 1;
         private int completedNormalRounds;
         private bool activeEncounterIsBoss;
@@ -35,6 +44,7 @@ namespace IdleBattle
         private StageRule currentStageRule;
         private RectTransform stageSlider;
         private RectTransform stageSliderFill;
+        private Image stageSliderFillImage;
         private float travelDistance;
         private float stageProgress;
         private int playerMana;
@@ -47,15 +57,24 @@ namespace IdleBattle
         private SkillData activeSkill;
         private int activeSkillIndex = -1;
         private string stateText = "지역 탐색 중";
+        private TMP_Text stageText;
+        private TMP_Text waveText;
+        private TMP_Text monsterCountText;
+        private TMP_Text levelText;
+        private TMP_Text experienceText;
+        private TMP_Text coinText;
+        private Slider experienceSlider;
+        private RectTransform experienceFill;
+        private Image experienceFillImage;
 
-        private const float SpawnRadius = 10f;
+        private const float SpawnRadius = 14f;
         private const float MoveSpeed = 4.2f;
         private const float AttackRange = 2.1f;
         private const int SkillAnimationCount = 4;
-        private const float SkillAnimationSpeed = 1.35f;
+        private const float SkillAnimationSpeed = 2.1f;
         private const float SkillEventFallbackNormalizedTime = .75f;
         private const float StageStatGrowth = 1.1f;
-        private const int NormalEnemyBaseHealth = 50;
+        private const int NormalEnemyBaseHealth = 1000;
         private const int NormalEnemyBaseDamage = 20;
         private const int BossHealthMultiplier = 4;
         private const int BossDamageMultiplier = 2;
@@ -67,6 +86,7 @@ namespace IdleBattle
             SetupStage();
             SetupStageSlider();
             CreateDestination();
+            SetupHud();
         }
 
         public event Action<SkillData, int> SkillCast;
@@ -97,7 +117,8 @@ namespace IdleBattle
 
         private void SetupStageSlider()
         {
-            var sliderObject = GameObject.Find("Canvas/Top/Slider");
+            var stageRoot = FindSceneObject("Stage");
+            var sliderObject = stageRoot != null ? FindChildByName(stageRoot.transform, "Slider") : null;
             if (sliderObject == null) return;
 
             stageSlider = sliderObject.GetComponent<RectTransform>();
@@ -105,17 +126,15 @@ namespace IdleBattle
             stageSliderFill = fill != null ? fill.GetComponent<RectTransform>() : null;
             if (stageSliderFill != null)
             {
-                var fillImage = stageSliderFill.GetComponent<Image>();
-                if (fillImage != null)
+                stageSliderFillImage = stageSliderFill.GetComponent<Image>();
+                if (stageSliderFillImage != null)
                 {
-                    fillImage.type = Image.Type.Simple;
-                    fillImage.fillAmount = 1f;
-                    fillImage.raycastTarget = false;
+                    stageSliderFillImage.type = Image.Type.Filled;
+                    stageSliderFillImage.fillMethod = Image.FillMethod.Horizontal;
+                    stageSliderFillImage.fillOrigin = 0;
+                    stageSliderFillImage.fillAmount = 0f;
+                    stageSliderFillImage.raycastTarget = false;
                 }
-                stageSliderFill.anchorMin = new Vector2(0f, .5f);
-                stageSliderFill.anchorMax = new Vector2(0f, .5f);
-                stageSliderFill.pivot = new Vector2(0f, .5f);
-                stageSliderFill.anchoredPosition = Vector2.zero;
             }
 
             var oldHorizontal = sliderObject.transform.Find("Horizontal");
@@ -128,8 +147,8 @@ namespace IdleBattle
         private void UpdateStageSlider(float progress)
         {
             stageProgress = Mathf.Clamp01(progress);
-            if (stageSliderFill != null && stageSlider != null)
-                stageSliderFill.sizeDelta = new Vector2(stageSlider.rect.width * stageProgress, stageSliderFill.sizeDelta.y);
+            if (stageSliderFillImage != null)
+                stageSliderFillImage.fillAmount = stageProgress;
         }
 
         private void SetupWorld()
@@ -153,6 +172,8 @@ namespace IdleBattle
             enemyMaterial = MakeMaterial(new Color(.9f, .2f, .25f));
             markerMaterial = MakeMaterial(new Color(.95f, .73f, .12f, .75f));
             enemyPrefab = LoadPrefab("01_Prefabs/Enemy", "Assets/01_Prefabs/Enemy.prefab");
+            monsterZonePrefab = LoadPrefab("01_Prefabs/Effects/Monsterzone", "Assets/01_Prefabs/Effects/Monsterzone.prefab");
+            stunPrefab = LoadPrefab("01_Prefabs/Effects/Stun", "Assets/01_Prefabs/Effects/Stun.prefab");
             CreateEnemyPool();
             damagePopupSystem = GetComponent<DamagePopupSystem>();
             if (damagePopupSystem == null)
@@ -197,6 +218,18 @@ namespace IdleBattle
                 hero.GetComponent<Renderer>().material = playerMaterial;
             }
             player = hero.transform;
+            legendaryEquipmentSystem = LegendaryEquipmentSystem.Instance;
+            legendaryEquipmentSystem.Initialize(this, player);
+            coinDropSystem = GetComponent<CoinDropSystem>();
+            if (coinDropSystem == null) coinDropSystem = gameObject.AddComponent<CoinDropSystem>();
+            coinDropSystem.Initialize(player);
+            var canvas = FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
+            if (canvas != null)
+            {
+                targetNavigationUI = canvas.GetComponent<TargetNavigationUI>();
+                if (targetNavigationUI == null) targetNavigationUI = canvas.gameObject.AddComponent<TargetNavigationUI>();
+                targetNavigationUI.Initialize(Camera.main, player);
+            }
             CollectCharacterSkillEffects(hero.transform);
             playerAnimator = hero.GetComponentInChildren<Animator>();
             playerEquipment = hero.GetComponentInChildren<CharacterEquipmentPresenter>(true);
@@ -207,6 +240,9 @@ namespace IdleBattle
                 var relay = playerAnimator.gameObject.GetComponent<CharacterAnimationEventRelay>();
                 if (relay == null) relay = playerAnimator.gameObject.AddComponent<CharacterAnimationEventRelay>();
                 relay.owner = this;
+                playerAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                playerAnimator.updateMode = AnimatorUpdateMode.Normal;
+                playerAnimator.enabled = true;
                 playerAnimator.SetBool("Run", false);
             }
             playerGroundY = player.position.y - GroundPoint(player.position).y;
@@ -431,7 +467,7 @@ namespace IdleBattle
             var index = candidates[UnityEngine.Random.Range(0, candidates.Count)];
             var skill = skills[index];
             if (!playerData.TrySpendMana(Mathf.CeilToInt(skill.ResourceCost))) return false;
-            skillReadyTimes[index] = Time.time + skill.Cooldown;
+            skillReadyTimes[index] = Time.time + skill.Cooldown * .55f;
             activeSkill = skill;
             activeSkillIndex = index;
             SkillCast?.Invoke(skill, index);
@@ -498,23 +534,97 @@ namespace IdleBattle
 
         private void FinishSkill()
         {
-            if (playerAnimator != null) playerAnimator.speed = animatorSpeedBeforeSkill;
+            if (playerAnimator != null)
+            {
+                playerAnimator.speed = animatorSpeedBeforeSkill;
+                playerAnimator.SetBool("Run", false);
+                // Skill 전환이 끊겼을 때 바인드 포즈(T-Pose)에 남지 않도록
+                // 항상 유효한 기본 전투 대기 상태로 복귀시킵니다.
+                playerAnimator.Play("CombatIdle", 0, 0f);
+                playerAnimator.Update(0f);
+            }
             isSkillActive = false;
             activeSkill = null;
             activeSkillIndex = -1;
             if (playerEquipment != null) playerEquipment.SheatheWeapon();
         }
 
-        // Character의 Skill 애니메이션 Event가 이 시점에 이펙트와 광역 피해를 실행합니다.
+        // Character의 Skill 애니메이션 Event가 이 시점에 스킬별 범위 피해를 실행합니다.
         public void Skill()
         {
             if (!isSkillActive || skillEventApplied) return;
             skillEventApplied = true;
 
             PlaySkillEffectOnce();
-            var targets = enemies.ToArray();
+            var targets = SelectSkillTargets().ToArray();
             foreach (var enemy in targets)
-                DamageEnemy(enemy, activeSkill != null ? activeSkill.Damage : 1);
+            {
+                var damage = activeSkill != null ? activeSkill.Damage : 1;
+                DamageEnemy(enemy, damage);
+                if ((activeSkillIndex == 2 || activeSkillIndex == 3) && enemy != null && !enemy.IsDead)
+                    ShowStun(enemy);
+            }
+            legendaryEquipmentSystem?.OnSkill(activeSkillIndex, targets, DamageEnemy);
+        }
+
+        private void ShowStun(EnemyController target)
+        {
+            if (stunPrefab == null || target == null || target.IsDead) return;
+
+            // 같은 몬스터에 이미 표시 중이면 새로 겹치지 않고 타이머를 갱신합니다.
+            var old = target.transform.Find("Stun_Active");
+            if (old != null) Destroy(old.gameObject);
+
+            var stun = Instantiate(stunPrefab);
+            stun.name = "Stun_Active";
+            stun.transform.position = GetHeadWorldPosition(target.gameObject);
+            stun.transform.SetParent(target.transform, true);
+
+            var particles = stun.GetComponentsInChildren<ParticleSystem>(true);
+            foreach (var particle in particles)
+            {
+                particle.Clear(true);
+                particle.Play(true);
+            }
+            StartCoroutine(RemoveStunAfter(stun, 1.4f));
+            legendaryEquipmentSystem?.OnStun(target);
+        }
+
+        private static IEnumerator RemoveStunAfter(GameObject stun, float duration)
+        {
+            yield return new WaitForSeconds(duration);
+            if (stun != null) Destroy(stun);
+        }
+
+        private IEnumerable<EnemyController> SelectSkillTargets()
+        {
+            var snapshot = enemies.ToArray();
+            if (activeSkillIndex == 2)
+            {
+                // 3번: 가장 가까운 한 마리만 타격합니다.
+                EnemyController nearest = null;
+                var nearestDistance = float.MaxValue;
+                foreach (var enemy in snapshot)
+                {
+                    if (enemy == null || enemy.IsDead) continue;
+                    var distance = (enemy.transform.position - player.position).sqrMagnitude;
+                    if (distance < nearestDistance) { nearestDistance = distance; nearest = enemy; }
+                }
+                if (nearest != null) yield return nearest;
+                yield break;
+            }
+
+            var radius = activeSkillIndex == 0 ? 5.5f : 6.5f;
+            var directional = activeSkillIndex == 1 || activeSkillIndex == 3;
+            var forward = Flat(player != null ? player.forward : Vector3.forward).normalized;
+            foreach (var enemy in snapshot)
+            {
+                if (enemy == null || enemy.IsDead) continue;
+                var offset = Flat(enemy.transform.position - player.position);
+                if (offset.sqrMagnitude > radius * radius) continue;
+                if (directional && Vector3.Dot(forward, offset.normalized) < .35f) continue;
+                yield return enemy;
+            }
         }
 
         private void PlaySkillEffectOnce()
@@ -564,9 +674,15 @@ namespace IdleBattle
             var dropPosition = GroundPoint(target.transform.position);
             enemies.Remove(target);
             defeated++;
+            var rewardMultiplier = activeEncounterIsBoss ? currentStageRule.BossRewardMultiplier : 1f;
+            var experienceReward = Mathf.RoundToInt(currentStageRule.ExperiencePerMonster * rewardMultiplier);
+            var coinReward = Mathf.RoundToInt(currentStageRule.CoinPerMonster * rewardMultiplier);
+            PlayerDataManager.Instance.AddExperience(experienceReward);
+            if (coinDropSystem != null) coinDropSystem.Drop(dropPosition, coinReward);
             if (itemDropSystem != null)
                 itemDropSystem.RollDrops(dropPosition);
             enemyPool.Release(target);
+            UpdateBattleHud();
             if (enemies.Count == 0)
             {
                 if (activeEncounterIsBoss)
@@ -577,10 +693,16 @@ namespace IdleBattle
             }
         }
 
+        public void DamageFromEquipment(EnemyController target, int damage)
+        {
+            DamageEnemy(target, damage);
+        }
+
         private void AdvanceStage()
         {
             currentStage++;
             completedNormalRounds = 0;
+            stageWave = 0;
             if (!stageData.TryGetRule(currentStage, out currentStageRule))
             {
                 Debug.LogError($"Stage {currentStage}에 적용할 StageData 규칙이 없습니다.", this);
@@ -588,17 +710,43 @@ namespace IdleBattle
                 return;
             }
             UpdateStageSlider(0f);
+            UpdateBattleHud();
         }
 
         private static Vector3 GetHeadWorldPosition(GameObject target)
         {
-            var renderers = target.GetComponentsInChildren<Renderer>();
-            if (renderers.Length == 0)
+            var renderers = target.GetComponentsInChildren<Renderer>(true);
+            Renderer first = null;
+            for (var i = 0; i < renderers.Length; i++)
+            {
+                // Stun 이펙트 자체의 Renderer를 머리 높이 계산에서 제외합니다.
+                // 그렇지 않으면 재생성할 때 이전 이펙트 높이만큼 계속 위로 누적됩니다.
+                var current = renderers[i].transform;
+                var isStunVisual = false;
+                while (current != null && current != target.transform)
+                {
+                    if (current.name == "Stun_Active") { isStunVisual = true; break; }
+                    current = current.parent;
+                }
+                if (!isStunVisual) { first = renderers[i]; break; }
+            }
+
+            if (first == null)
                 return target.transform.position + Vector3.up * 1.5f;
 
-            var bounds = renderers[0].bounds;
-            for (var i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
+            var bounds = first.bounds;
+            for (var i = 0; i < renderers.Length; i++)
+            {
+                var current = renderers[i].transform;
+                var isStunVisual = false;
+                while (current != null && current != target.transform)
+                {
+                    if (current.name == "Stun_Active") { isStunVisual = true; break; }
+                    current = current.parent;
+                }
+                if (!isStunVisual && renderers[i] != first)
+                    bounds.Encapsulate(renderers[i].bounds);
+            }
 
             return new Vector3(bounds.center.x, bounds.max.y + 0.2f, bounds.center.z);
         }
@@ -615,24 +763,29 @@ namespace IdleBattle
                 Vector3.Distance(
                     Flat(player != null ? player.position : Vector3.zero),
                     Flat(destination)));
-            var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            marker.name = "Next Enemy Area";
-            Destroy(marker.GetComponent<Collider>());
-            marker.transform.position = destination + Vector3.up * .045f;
-            marker.transform.localScale = new Vector3(2.2f, .04f, 2.2f);
-            marker.GetComponent<Renderer>().material = markerMaterial;
-            destinationMarker = marker.transform;
+            // 목표 지점은 월드 오브젝트를 만들지 않고 화면 가장자리 네비게이션으로 표시합니다.
+            destinationMarker = null;
+            if (targetNavigationUI != null) targetNavigationUI.SetTarget(destination);
+            SpawnMonsterZone();
         }
 
         private void SpawnWave()
         {
             wave++;
+            stageWave++;
             activeEncounterIsBoss = completedNormalRounds >= currentStageRule.NormalRoundCount;
             if (destinationMarker != null) Destroy(destinationMarker.gameObject);
-            var count = activeEncounterIsBoss ? 1 : Mathf.Min(4 + completedNormalRounds, 9);
+            if (monsterZoneInstance != null)
+            {
+                Destroy(monsterZoneInstance);
+                monsterZoneInstance = null;
+            }
+            var count = activeEncounterIsBoss
+                ? 1
+                : Mathf.Min(currentStageRule.BaseMonsterCount + completedNormalRounds, currentStageRule.MaxMonsterCount);
             var stageMultiplier = Mathf.Pow(StageStatGrowth, currentStage - 1);
-            var health = Mathf.Max(1, Mathf.CeilToInt(NormalEnemyBaseHealth * stageMultiplier));
-            var damage = Mathf.Max(1, Mathf.CeilToInt(NormalEnemyBaseDamage * stageMultiplier));
+            var health = Mathf.Max(1, Mathf.CeilToInt(NormalEnemyBaseHealth * stageMultiplier * currentStageRule.HealthMultiplier));
+            var damage = Mathf.Max(1, Mathf.CeilToInt(NormalEnemyBaseDamage * stageMultiplier * currentStageRule.DamageMultiplier));
             if (activeEncounterIsBoss)
             {
                 health *= BossHealthMultiplier;
@@ -656,12 +809,174 @@ namespace IdleBattle
                     ? $"Stage {currentStage} Boss"
                     : $"Stage {currentStage} Enemy {i + 1}";
                 enemyController.Initialize(health, damage, player, this, terrain);
+                var targetScale = enemy.transform.localScale;
+                enemy.transform.localScale = Vector3.zero;
+                StartCoroutine(AnimateEnemySpawn(enemy.transform, targetScale, i * .08f));
                 enemies.Add(enemyController);
             }
             UpdateStageSlider(GetEncounterProgress());
             stateText = activeEncounterIsBoss
                 ? "보스 등장"
                 : $"일반 라운드 {completedNormalRounds + 1}";
+            UpdateBattleHud();
+        }
+
+        private void SpawnMonsterZone()
+        {
+            if (monsterZoneInstance != null) Destroy(monsterZoneInstance);
+            if (monsterZonePrefab == null) return;
+            monsterZoneInstance = Instantiate(monsterZonePrefab, destination + Vector3.up * .03f, Quaternion.identity);
+            monsterZoneInstance.name = "Monsterzone_Active";
+        }
+
+        private IEnumerator AnimateEnemySpawn(Transform enemy, Vector3 targetScale, float delay)
+        {
+            if (delay > 0f) yield return new WaitForSeconds(delay);
+            if (enemy == null) yield break;
+            const float duration = .42f;
+            for (var elapsed = 0f; elapsed < duration; elapsed += Time.deltaTime)
+            {
+                if (enemy == null) yield break;
+                var t = Mathf.Clamp01(elapsed / duration);
+                var eased = 1f - Mathf.Pow(1f - t, 3f);
+                enemy.localScale = Vector3.LerpUnclamped(Vector3.zero, targetScale, eased);
+                yield return null;
+            }
+            if (enemy != null) enemy.localScale = targetScale;
+        }
+
+        private void SetupHud()
+        {
+            waveText = FindSceneText("Wave");
+            monsterCountText = FindSceneText("MonsterCount");
+            experienceText = FindSceneText("EXP");
+            stageText = FindSceneTextByValue("지옥");
+
+            // 레벨/EXP 슬라이더는 EXP 텍스트와 같은 프로필 패널 안의 것을 사용합니다.
+            var profileRoot = experienceText != null ? experienceText.transform.parent : null;
+            levelText = profileRoot != null ? FindTextByName(profileRoot, "LevelTxT") : FindSceneText("LevelTxT");
+            var goldRoot = FindSceneObject("Gold");
+            coinText = goldRoot != null ? goldRoot.GetComponentInChildren<TMP_Text>(true) : null;
+            var expRoot = profileRoot != null ? FindChildByName(profileRoot, "EXP_Slider") : FindSceneObject("EXP_Slider");
+            if (expRoot != null)
+            {
+                experienceSlider = expRoot.GetComponent<Slider>();
+                experienceFillImage = expRoot.GetComponentInChildren<Image>(true);
+                foreach (var image in expRoot.GetComponentsInChildren<Image>(true))
+                    if (image.transform != expRoot.transform) { experienceFillImage = image; break; }
+                experienceFill = experienceFillImage != null ? experienceFillImage.rectTransform : null;
+            }
+
+            var data = PlayerDataManager.Instance;
+            data.ExperienceChanged += OnExperienceChanged;
+            data.CoinsChanged += OnCoinsChanged;
+            UpdateBattleHud();
+        }
+
+        private void OnDestroy()
+        {
+            if (PlayerDataManager.Instance == null) return;
+            PlayerDataManager.Instance.ExperienceChanged -= OnExperienceChanged;
+            PlayerDataManager.Instance.CoinsChanged -= OnCoinsChanged;
+        }
+
+        private void OnExperienceChanged(int level, int experience, int required) => UpdatePlayerHud();
+        private void OnCoinsChanged(long value) => UpdatePlayerHud();
+
+        private void UpdateBattleHud()
+        {
+            if (currentStageRule == null) return;
+            var totalWaves = currentStageRule.NormalRoundCount + 1;
+            // 이동 중에는 enemies.Count가 0이 되므로 completedNormalRounds로 계산하면
+            // 화면의 웨이브가 2→1처럼 되돌아갑니다. 스폰 시 증가한 stageWave만 표시합니다.
+            var shownWave = Mathf.Clamp(Mathf.Max(1, stageWave), 1, totalWaves);
+            if (stageText != null) stageText.text = GetStageDisplayName(currentStage);
+            if (waveText != null) waveText.text = $"Wave <color=#D9CA57>{shownWave}/{totalWaves}";
+            if (monsterCountText != null)
+                monsterCountText.text = $"남은 몬스터 <color=#D9CA57>{enemies.Count}";
+            UpdatePlayerHud();
+        }
+
+        private void UpdatePlayerHud()
+        {
+            var data = PlayerDataManager.Instance;
+            var required = data.ExperienceToNextLevel;
+            var ratio = required > 0 ? data.Experience / (float)required : 0f;
+            if (levelText != null) levelText.text = $"Lv.{data.Level}";
+            if (experienceText != null) experienceText.text = $"EXP {ratio * 100f:0.0}%";
+            if (coinText != null) coinText.text = data.Coins.ToString("N0");
+            if (experienceSlider != null)
+            {
+                experienceSlider.minValue = 0f;
+                experienceSlider.maxValue = 1f;
+                experienceSlider.value = ratio;
+            }
+            else if (experienceFill != null)
+            {
+                if (experienceFillImage != null)
+                {
+                    experienceFillImage.type = Image.Type.Filled;
+                    experienceFillImage.fillMethod = Image.FillMethod.Horizontal;
+                    experienceFillImage.fillOrigin = 0;
+                    experienceFillImage.fillAmount = Mathf.Clamp01(ratio);
+                }
+            }
+        }
+
+        private static string GetStageDisplayName(int stage)
+        {
+            var chapter = (Mathf.Max(1, stage) - 1) / 10 + 1;
+            var section = (Mathf.Max(1, stage) - 1) % 10 + 1;
+            return $"지옥 {chapter}-{section}";
+        }
+
+        private static TMP_Text FindTextByName(Transform root, string objectName)
+        {
+            var child = FindChildByName(root, objectName);
+            return child != null ? child.GetComponent<TMP_Text>() : null;
+        }
+
+        private static TMP_Text FindTextByInitialValue(Transform root, string prefix)
+        {
+            foreach (var text in root.GetComponentsInChildren<TMP_Text>(true))
+                if (text.text != null && text.text.StartsWith(prefix, StringComparison.Ordinal)) return text;
+            return null;
+        }
+
+        private static TMP_Text FindSceneText(string objectName)
+        {
+            TMP_Text fallback = null;
+            foreach (var text in FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (text.name != objectName || !text.gameObject.scene.IsValid()) continue;
+                if (text.gameObject.activeInHierarchy) return text;
+                fallback ??= text;
+            }
+            return fallback;
+        }
+
+        private static TMP_Text FindSceneTextByValue(string prefix)
+        {
+            TMP_Text fallback = null;
+            foreach (var text in FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (!text.gameObject.scene.IsValid() || text.text == null || !text.text.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                if (text.gameObject.activeInHierarchy) return text;
+                fallback ??= text;
+            }
+            return fallback;
+        }
+
+        private static GameObject FindSceneObject(string objectName)
+        {
+            GameObject fallback = null;
+            foreach (var rect in FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (rect.name != objectName || !rect.gameObject.scene.IsValid()) continue;
+                if (rect.gameObject.activeInHierarchy) return rect.gameObject;
+                fallback ??= rect.gameObject;
+            }
+            return fallback;
         }
 
         private float GetEncounterProgress()

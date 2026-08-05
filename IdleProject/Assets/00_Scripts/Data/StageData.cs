@@ -144,12 +144,30 @@ namespace IdleBattle
         [Tooltip("보스 선택 시스템에서 사용할 그룹 ID입니다.")]
         [SerializeField] private string bossPoolId = "default";
 
+        [Header("전투 구성")]
+        [SerializeField, Min(1)] private int baseMonsterCount = 4;
+        [SerializeField, Min(1)] private int maxMonsterCount = 9;
+        [SerializeField, Min(0.01f)] private float healthMultiplier = 1f;
+        [SerializeField, Min(0.01f)] private float damageMultiplier = 1f;
+
+        [Header("처치 보상")]
+        [SerializeField, Min(0)] private int experiencePerMonster = 12;
+        [SerializeField, Min(0)] private int coinPerMonster = 8;
+        [SerializeField, Min(1f)] private float bossRewardMultiplier = 5f;
+
         public string RuleId => ruleId;
         public int MinStage => minStage;
         public int MaxStage => maxStage;
         public int NormalRoundCount => normalRoundCount;
         public int BossRoundNumber => normalRoundCount + 1;
         public string BossPoolId => bossPoolId;
+        public int BaseMonsterCount => baseMonsterCount;
+        public int MaxMonsterCount => maxMonsterCount;
+        public float HealthMultiplier => healthMultiplier;
+        public float DamageMultiplier => damageMultiplier;
+        public int ExperiencePerMonster => experiencePerMonster;
+        public int CoinPerMonster => coinPerMonster;
+        public float BossRewardMultiplier => bossRewardMultiplier;
         public bool HasUpperLimit => maxStage > 0;
 
         public bool Contains(int stage)
@@ -167,6 +185,13 @@ namespace IdleBattle
                 maxStage = minStage;
 
             normalRoundCount = Mathf.Max(0, normalRoundCount);
+            baseMonsterCount = Mathf.Max(1, baseMonsterCount);
+            maxMonsterCount = Mathf.Max(baseMonsterCount, maxMonsterCount);
+            healthMultiplier = Mathf.Max(.01f, healthMultiplier);
+            damageMultiplier = Mathf.Max(.01f, damageMultiplier);
+            experiencePerMonster = Mathf.Max(0, experiencePerMonster);
+            coinPerMonster = Mathf.Max(0, coinPerMonster);
+            bossRewardMultiplier = Mathf.Max(1f, bossRewardMultiplier);
             ruleId = string.IsNullOrWhiteSpace(ruleId)
                 ? $"stage-{minStage}"
                 : ruleId.Trim();

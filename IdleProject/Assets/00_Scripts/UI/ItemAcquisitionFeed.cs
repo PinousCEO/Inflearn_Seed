@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -137,9 +138,18 @@ namespace IdleBattle
             if (text != null)
             {
                 var color = ColorUtility.ToHtmlStringRGB(RarityColor(acquired.Item.Rarity));
-                text.text = $"아이템을 획득했습니다. <color=#{color}>[{acquired.Item.DisplayName}]</color>  x{acquired.Amount}";
+                text.text = $"<color=#{color}>{acquired.Item.DisplayName}</color>";
                 text.SetAllDirty();
                 text.ForceMeshUpdate();
+            }
+            var icon = alert.GetComponentsInChildren<Image>(true)
+                .FirstOrDefault(image => image.name == "Icon")
+                ?? alert.GetComponentsInChildren<Image>(true)
+                    .FirstOrDefault(image => image.gameObject != alert && image.name != "Background");
+            if (icon != null)
+            {
+                icon.sprite = acquired.Item.Icon;
+                icon.enabled = acquired.Item.Icon != null;
             }
         }
 
@@ -187,7 +197,7 @@ namespace IdleBattle
         {
             return rarity switch
             {
-                ItemRarity.Common => new Color32(232, 232, 232, 255),
+                ItemRarity.Common => new Color32(150, 150, 150, 255),
                 ItemRarity.Uncommon => new Color32(74, 159, 232, 255),
                 ItemRarity.Rare => new Color32(242, 193, 78, 255),
                 ItemRarity.Epic => new Color32(167, 101, 209, 255),
