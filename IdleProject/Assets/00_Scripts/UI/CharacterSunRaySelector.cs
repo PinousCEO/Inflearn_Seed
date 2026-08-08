@@ -46,6 +46,12 @@ namespace IdleBattle.UI
         /// <summary>현재 고른 캐릭터 인덱스입니다. 아직 아무것도 고르지 않았으면 -1입니다.</summary>
         public int SelectedIndex { get; private set; } = -1;
 
+        /// <summary>RenderTexture를 그리는 카메라입니다. Coming Soon 라벨 등 외부 연출이 참조합니다.</summary>
+        public Camera RenderCamera => renderCamera;
+
+        /// <summary>고를 수 있는 캐릭터 트랜스폼들입니다. 순서는 CharacterCatalog와 같습니다.</summary>
+        public Transform[] Characters => characters;
+
         /// <summary>켜 두면 클릭이 어디서 끊기는지 콘솔에 남깁니다.</summary>
         [Header("디버그")]
         [SerializeField] private bool logClicks;
@@ -86,11 +92,19 @@ namespace IdleBattle.UI
             if (index < 0) return;
             if (ignoreRepeatPick && index == SelectedIndex) return;
 
-            SelectCharacter(index, instant: false);
+            // 잠긴(Coming Soon) 캐릭터는 포커싱도 선택도 하지 않습니다.
+            if (selectController != null && !selectController.IsIndexSelectable(index))
+            {
+                if (logClicks) Debug.Log($"[SunRay] index {index} 는 잠긴 캐릭터라 선택하지 않습니다.", this);
+                return;
+            }
+
+            // 빛이 이동하는 연출 없이, 고른 캐릭터로 곧바로 포커싱합니다.
+            SelectCharacter(index, instant: true);
         }
 
         /// <summary>인덱스로 직접 고릅니다. 버튼 UI 등 다른 곳에서 불러도 됩니다.</summary>
-        public void SelectCharacter(int index) => SelectCharacter(index, instant: false);
+        public void SelectCharacter(int index) => SelectCharacter(index, instant: true);
 
         public void SelectCharacter(int index, bool instant)
         {

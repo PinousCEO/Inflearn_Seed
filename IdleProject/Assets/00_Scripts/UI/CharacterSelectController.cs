@@ -67,19 +67,26 @@ namespace IdleBattle.UI
         [SerializeField] private Color hintOkColor = new Color(0.50f, 0.84f, 0.64f, 1f);
         [SerializeField] private Color hintErrorColor = new Color(0.88f, 0.54f, 0.48f, 1f);
 
-        [Header("동작")]
-        [Tooltip("켜면 Coming Soon 캐릭터도 눌러서 정보를 미리 볼 수 있습니다. 단, 모험 시작은 막힙니다.")]
-        [SerializeField] private bool previewLockedCharacters = true;
-
         private readonly List<CharacterSelectButton> buttons = new List<CharacterSelectButton>();
         private readonly List<Coroutine> activeTweens = new List<Coroutine>();
         private CharacterData current;
+        private bool isStarting;
         private Coroutine infoRoutine;
         private Vector3 infoOriginalPosition;
         private bool infoPositionCached;
 
         /// <summary>현재 화면에서 고른 캐릭터입니다. 아직 아무것도 고르지 않았으면 null입니다.</summary>
         public CharacterData Current => current;
+
+        /// <summary>캐릭터 목록입니다. Coming Soon 라벨 등 외부 연출이 잠금 여부를 읽을 때 씁니다.</summary>
+        public CharacterCatalog Catalog => catalog;
+
+        /// <summary>해당 인덱스의 캐릭터를 고를 수 있는지입니다. 잠긴 캐릭터면 false입니다.</summary>
+        public bool IsIndexSelectable(int index)
+        {
+            var data = catalog != null ? catalog.Get(index) : null;
+            return data != null && data.IsPlayable;
+        }
 
         private void Reset()
         {
@@ -235,7 +242,8 @@ namespace IdleBattle.UI
             var data = catalog.Get(index);
             if (data == null) return;
 
-            if (!data.IsPlayable && !previewLockedCharacters)
+            // 잠긴(Coming Soon) 캐릭터는 선택할 수 없습니다.
+            if (!data.IsPlayable)
             {
                 SetHint(data.LockedMessage, hintErrorColor);
                 return;
@@ -256,15 +264,12 @@ namespace IdleBattle.UI
             var data = source != null ? source.Data : null;
             if (data == null) return;
 
+            // 잠긴(Coming Soon) 캐릭터는 흔들림 피드백만 주고 선택하지 않습니다.
             if (!data.IsPlayable)
             {
                 StartCoroutine(source.ShakeRoutine());
-
-                if (!previewLockedCharacters)
-                {
-                    SetHint(data.LockedMessage, hintErrorColor);
-                    return;
-                }
+                SetHint(data.LockedMessage, hintErrorColor);
+                return;
             }
 
             Select(data, animate: true);
@@ -301,26 +306,24 @@ namespace IdleBattle.UI
                 if (row == null) continue;
                 SetText(row.label, CharacterData.GetStatLabel((CharacterStatType)i));
                 PrepareSlider(row.slider);
+                if (row.slider != null) row.slider.value = 0f; // 항상 0에서 다시 시작한다.
                 if (row.value != null) row.value.text = "0";
             }
 
-            ApplyStars(data.Difficulty, animate);
-            ApplySkillSlots(data, animate);
+            // 별 · 스킬 · 패널은 어색한 팝/페이드/슬라이드 없이 즉시 반영한다.
+            ApplyStars(data.Difficulty, false);
+            ApplySkillSlots(data, false);
+            if (infoGroup != null) infoGroup.alpha = 1f;
+            RestoreInfoPosition();
 
             if (!animate)
             {
                 for (var i = 0; i < statRows.Length; i++)
                     ApplyStatImmediate(statRows[i], data.GetStat(i));
-
-                if (infoGroup != null) infoGroup.alpha = 1f;
-                RestoreInfoPosition();
                 yield break;
             }
 
-            // 패널 자체는 살짝 아래에서 올라오며 밝아진다.
-            var fade = StartCoroutine(FadeAndSlideRoutine());
-            activeTweens.Add(fade);
-
+            // 캐릭터를 새로 고르면 스탯 슬라이더만 0에서 목표치까지 차오른다.
             for (var i = 0; i < statRows.Length; i++)
             {
                 var row = statRows[i];
@@ -328,8 +331,6 @@ namespace IdleBattle.UI
                 if (row != null)
                     activeTweens.Add(StartCoroutine(FillStatRoutine(row, target, i * statStagger)));
             }
-
-            yield return fade;
         }
 
         private IEnumerator FadeAndSlideRoutine()
@@ -522,8 +523,9 @@ namespace IdleBattle.UI
             nameHintText.color = color;
         }
 
-        private void OnStartClicked()
+        private async void OnStartClicked()
         {
+            if (isStarting) return;
             if (current == null || !current.IsPlayable) return;
 
             var playerName = nameInput != null ? nameInput.text.Trim() : string.Empty;
@@ -533,15 +535,30 @@ namespace IdleBattle.UI
                 return;
             }
 
-            CharacterSelection.Save(current.CharacterId, playerName);
-
             if (string.IsNullOrWhiteSpace(nextSceneName))
             {
                 Debug.LogWarning("다음 씬 이름이 비어 있어 씬 전환을 건너뜁니다.", this);
                 return;
             }
 
-            SceneManager.LoadScene(nextSceneName);
+            isStarting = true;
+            if (startButton != null) startButton.interactable = false;
+
+            // 로컬 캐시(빠른 참조용)와 계정 저장본(Firestore)에 모두 남긴다.
+            CharacterSelection.Save(current.CharacterId, playerName);
+            try
+            {
+                await PlayerDataManager.Instance.SetCharacterAsync(current.CharacterId, playerName);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+            }
+
+            if (this == null) return;
+
+            // 페이드 아웃 -> Main 로드 -> 페이드 인.
+            SceneTransition.Instance.LoadScene(nextSceneName);
         }
 
         // ------------------------------------------------------------------

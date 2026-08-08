@@ -18,6 +18,8 @@ namespace IdleBattle
         [SerializeField, Min(1)] private int level = 1;
         [SerializeField, Min(0)] private int experience;
         [SerializeField, Min(0)] private long coins;
+        private string characterId = string.Empty;
+        private string playerName = string.Empty;
         private readonly Dictionary<string, int> inventory = new();
         private readonly HashSet<string> equippedItems = new(StringComparer.Ordinal);
         private const int SaveVersion = 2;
@@ -47,6 +49,15 @@ namespace IdleBattle
         public long Coins => coins;
         public IReadOnlyCollection<string> EquippedItems => equippedItems;
         public bool IsLoaded { get; private set; }
+
+        /// <summary>Select 씬에서 고른 캐릭터(직업) ID입니다. 아직 고르지 않았으면 비어 있습니다.</summary>
+        public string CharacterId => characterId;
+
+        /// <summary>Select 씬에서 입력한 플레이어 이름입니다.</summary>
+        public string PlayerName => playerName;
+
+        /// <summary>데이터를 불러왔고, 캐릭터까지 정해져 있으면 true. Title에서 Select 건너뛰기 판별에 씁니다.</summary>
+        public bool HasCharacter => IsLoaded && !string.IsNullOrWhiteSpace(characterId);
 
         public event Action<int, int> HealthChanged;
         public event Action<int> Damaged;
@@ -228,6 +239,22 @@ namespace IdleBattle
             loadTask ??= LoadFromFirestoreAsync();
         }
 
+        /// <summary>Firestore 로드가 끝날 때까지 기다립니다. 아직 시작 전이면 시작합니다.</summary>
+        public System.Threading.Tasks.Task EnsureLoadedAsync()
+        {
+            loadTask ??= LoadFromFirestoreAsync();
+            return loadTask;
+        }
+
+        /// <summary>Select 씬에서 고른 캐릭터와 이름을 저장합니다. 로드가 끝난 뒤에 반영해 덮어쓰기를 막습니다.</summary>
+        public async System.Threading.Tasks.Task SetCharacterAsync(string newCharacterId, string newPlayerName)
+        {
+            await EnsureLoadedAsync();
+            characterId = newCharacterId?.Trim() ?? string.Empty;
+            playerName = newPlayerName?.Trim() ?? string.Empty;
+            Save();
+        }
+
         private PlayerSaveData CreateSaveData()
         {
             return new PlayerSaveData
@@ -236,6 +263,8 @@ namespace IdleBattle
                 level = level,
                 experience = experience,
                 coins = coins,
+                characterId = characterId,
+                playerName = playerName,
                 items = inventory
                     .Where(pair => !string.IsNullOrWhiteSpace(pair.Key) && pair.Value > 0)
                     .OrderBy(pair => pair.Key, StringComparer.Ordinal)
@@ -255,12 +284,16 @@ namespace IdleBattle
                 level = 1;
                 experience = 0;
                 coins = 0;
+                characterId = string.Empty;
+                playerName = string.Empty;
                 return;
             }
 
             level = Mathf.Max(1, data.level);
             experience = Mathf.Max(0, data.experience);
             coins = Math.Max(0L, data.coins);
+            characterId = data.characterId?.Trim() ?? string.Empty;
+            playerName = data.playerName?.Trim() ?? string.Empty;
             if (data.items != null)
                 foreach (var entry in data.items)
                     if (entry != null && !string.IsNullOrWhiteSpace(entry.itemId) && entry.amount > 0)
@@ -324,6 +357,8 @@ namespace IdleBattle
             public int level = 1;
             public int experience;
             public long coins;
+            public string characterId = string.Empty;
+            public string playerName = string.Empty;
             public List<InventorySaveEntry> items = new();
             public List<string> equippedItems = new();
         }

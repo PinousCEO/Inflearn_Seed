@@ -45,6 +45,12 @@ namespace IdleBattle
         private float nextHealthPotionTime;
         private float nextManaPotionTime;
 
+        // HP/MP는 매 프레임 호출되지만, 값이 그대로면 TMP 메시를 다시 만들 필요가 없다.
+        private int lastHpCurrent = int.MinValue;
+        private int lastHpMax = int.MinValue;
+        private int lastMpCurrent = int.MinValue;
+        private int lastMpMax = int.MinValue;
+
         private void OnEnable()
         {
             player = PlayerDataManager.Instance;
@@ -158,12 +164,20 @@ namespace IdleBattle
 
         private void RefreshHealth(int current, int maximum)
         {
+            if (current == lastHpCurrent && maximum == lastHpMax) return;
+            lastHpCurrent = current;
+            lastHpMax = maximum;
+
             if (hpFill != null) hpFill.fillAmount = maximum > 0 ? (float)current / maximum : 0f;
             if (hpText != null) hpText.SetText("{0} / {1}", current, maximum);
         }
 
         private void RefreshMana(int current, int maximum)
         {
+            if (current == lastMpCurrent && maximum == lastMpMax) return;
+            lastMpCurrent = current;
+            lastMpMax = maximum;
+
             if (mpFill != null) mpFill.fillAmount = maximum > 0 ? (float)current / maximum : 0f;
             if (mpText != null) mpText.SetText("{0} / {1}", current, maximum);
         }

@@ -11,6 +11,7 @@ namespace IdleBattle.UI
     public sealed class TitleLoginController : MonoBehaviour
     {
         private const string TitleSceneName = "Title";
+        private const string SelectSceneName = "Select";
         private const string MainSceneName = "Main";
 
         /// <summary>
@@ -27,6 +28,8 @@ namespace IdleBattle.UI
         private Button googleButton;
         private TMP_Text statusText;
         private bool isSigningIn;
+        private bool isRouting;
+        private Task<bool> characterProbe;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void InstallOnTitleScene()
@@ -123,10 +126,13 @@ namespace IdleBattle.UI
             statusText = loginPanel.GetComponentInChildren<TMP_Text>(true);
         }
 
-        /// <summary>TapToStart를 눌렀을 때 비로소 Main 씬 로딩을 시작한다.</summary>
-        private void OnTapToStart()
+        /// <summary>
+        /// TapToStart를 눌렀을 때 저장된 캐릭터 유무를 보고 분기한다.
+        /// 캐릭터가 있으면 Main(로딩바 + 페이드), 없으면 Select(페이드)로 넘어간다.
+        /// </summary>
+        private async void OnTapToStart()
         {
-            if (isSigningIn || loadingBar.IsLoading) return;
+            if (isSigningIn || isRouting || loadingBar.IsLoading) return;
 
             if (!FirebaseInitializer.Instance.IsSignedIn)
             {
@@ -136,9 +142,23 @@ namespace IdleBattle.UI
                 return;
             }
 
+            isRouting = true;
             SetTapToStartVisible(false);
             SetLoginPanelVisible(false);
-            loadingBar.Load(MainSceneName);
+
+            var hasCharacter = await (characterProbe ??= ProbeHasCharacterAsync());
+            if (this == null) return;
+
+            if (hasCharacter)
+            {
+                // 이미 캐릭터가 있는 사용자 -> Main으로. 무거운 씬이라 로딩바로 진행한다.
+                loadingBar.Load(MainSceneName);
+            }
+            else
+            {
+                // 신규 사용자 -> Select에서 직업 선택 + 이름 입력.
+                SceneTransition.Instance.LoadScene(SelectSceneName);
+            }
         }
 
         /// <summary>게스트 로그인 성공 시 씬 전환 없이 로그인 판넬만 닫고 TapToStart를 켠다.</summary>
@@ -204,6 +224,34 @@ namespace IdleBattle.UI
             SetLoginPanelVisible(false);
             HideLoadingBar();
             SetTapToStartVisible(true);
+
+            // TapToStart를 누르는 순간 바로 분기할 수 있도록, 저장된 캐릭터 유무를 미리 조회해 둔다.
+            characterProbe = ProbeHasCharacterAsync();
+        }
+
+        /// <summary>Firestore 저장본에 캐릭터(직업)가 이미 있는지 확인한다. 있으면 Main, 없으면 Select로 간다.</summary>
+        private async Task<bool> ProbeHasCharacterAsync()
+        {
+            try
+            {
+                var json = await FirebaseInitializer.Instance.LoadPlayerJsonAsync();
+                if (string.IsNullOrWhiteSpace(json)) return false;
+
+                var probe = JsonUtility.FromJson<CharacterProbe>(json);
+                return probe != null && !string.IsNullOrWhiteSpace(probe.characterId);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+                return false; // 조회 실패 시에는 안전하게 Select(캐릭터 선택)로 보낸다.
+            }
+        }
+
+        /// <summary>저장 JSON에서 characterId 하나만 뽑아 보기 위한 최소 구조체.</summary>
+        [Serializable]
+        private sealed class CharacterProbe
+        {
+            public string characterId;
         }
 
         private void ShowLoginPanel()

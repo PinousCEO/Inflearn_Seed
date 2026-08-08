@@ -13,6 +13,7 @@ namespace IdleBattle
         private Camera worldCamera;
         private Camera canvasCamera;
         private Vector3 worldOffset;
+        private Graphic[] graphics;
 
         public void Initialize(ItemData item, Transform target, RectTransform parent, Camera camera, Vector3 offset)
         {
@@ -36,7 +37,9 @@ namespace IdleBattle
                 label.ForceMeshUpdate();
             }
 
-            foreach (var graphic in GetComponentsInChildren<Graphic>(true))
+            // 매 프레임 다시 탐색하지 않도록 자식 Graphic들을 한 번만 캐싱한다.
+            graphics = GetComponentsInChildren<Graphic>(true);
+            foreach (var graphic in graphics)
                 graphic.raycastTarget = false;
 
             UpdatePosition();
@@ -61,8 +64,10 @@ namespace IdleBattle
             var worldPosition = worldTarget.position + worldOffset;
             var viewport = worldCamera.WorldToViewportPoint(worldPosition);
             var visible = viewport.z > 0f && viewport.x >= 0f && viewport.x <= 1f && viewport.y >= 0f && viewport.y <= 1f;
-            foreach (var graphic in GetComponentsInChildren<Graphic>(true))
-                graphic.enabled = visible;
+            if (graphics != null)
+                foreach (var graphic in graphics)
+                    if (graphic != null)
+                        graphic.enabled = visible;
             if (!visible)
                 return;
 
