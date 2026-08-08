@@ -105,6 +105,9 @@ namespace IdleBattle.UI
             AnimateLabel(animationTime);
 
             yield return new WaitForSecondsRealtime(CompleteHoldSeconds);
+
+            // 씬을 활성화하기 직전에 화면을 덮는다. 새 씬은 SceneTransition이 다시 밝힌다(페이드 인).
+            yield return SceneTransition.Instance.CoverRoutine();
             operation.allowSceneActivation = true;
         }
 

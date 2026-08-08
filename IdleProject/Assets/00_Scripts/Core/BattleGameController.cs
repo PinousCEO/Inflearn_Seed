@@ -16,6 +16,8 @@ namespace IdleBattle
         private readonly List<EnemyController> enemies = new List<EnemyController>();
         private Transform player, destinationMarker;
         private readonly List<GameObject> skillEffects = new List<GameObject>();
+        // 사용 가능한 스킬 후보를 매번 새로 할당하지 않도록 재사용하는 버퍼.
+        private readonly List<int> skillCandidates = new List<int>();
         private Animator playerAnimator;
         private CharacterEquipmentPresenter playerEquipment;
         private float playerGroundY;
@@ -50,6 +52,8 @@ namespace IdleBattle
         private int playerMana;
         private bool isSkillActive;
         private bool skillEventApplied;
+        private float skillStartTime;
+        private Coroutine skillRoutine;
         private float animatorSpeedBeforeSkill = 1f;
         private int nextSkillNum;
         private SkillData[] skills = Array.Empty<SkillData>();
@@ -76,6 +80,8 @@ namespace IdleBattle
         private const int SkillAnimationCount = 4;
         private const float SkillAnimationSpeed = 2.1f;
         private const float SkillEventFallbackNormalizedTime = .75f;
+        // 스킬이 이 시간을 넘기면 비정상으로 보고 강제 종료해, T-Pose·멈춤 고착을 막습니다.
+        private const float MaxSkillDuration = 6f;
         private const float StageStatGrowth = 1.1f;
         private const int NormalEnemyBaseHealth = 1000;
         private const int NormalEnemyBaseDamage = 20;
@@ -415,8 +421,19 @@ namespace IdleBattle
             enemies.RemoveAll(enemy => enemy == null);
             if (isSkillActive)
             {
-                SetRunning(false);
-                return;
+                // 스킬 코루틴이 어떤 이유로든 끝내지 못하고 오래 고착되면(T-Pose·멈춤) 강제로 되돌린다.
+                if (Time.time - skillStartTime > MaxSkillDuration)
+                {
+                    Debug.LogWarning("스킬이 비정상적으로 오래 지속되어 강제 종료합니다.", this);
+                    if (skillRoutine != null) StopCoroutine(skillRoutine);
+                    skillRoutine = null;
+                    FinishSkill();
+                }
+                else
+                {
+                    SetRunning(false);
+                    return;
+                }
             }
             if (enemies.Count == 0)
             {
@@ -489,7 +506,8 @@ namespace IdleBattle
         private bool TryActivateRandomSkill()
         {
             if (isSkillActive || skills.Length == 0 || skillEffects.Count == 0) return false;
-            var candidates = new List<int>();
+            var candidates = skillCandidates;
+            candidates.Clear();
             var playerData = PlayerDataManager.Instance;
             for (var i = 0; i < skills.Length; i++)
                 if (skills[i] != null &&
@@ -504,7 +522,7 @@ namespace IdleBattle
             activeSkill = skill;
             activeSkillIndex = index;
             SkillCast?.Invoke(skill, index);
-            StartCoroutine(ActivateSkill());
+            skillRoutine = StartCoroutine(ActivateSkill());
             return true;
         }
 
@@ -512,57 +530,80 @@ namespace IdleBattle
         {
             isSkillActive = true;
             skillEventApplied = false;
-            SetRunning(false);
-            if (playerEquipment != null) playerEquipment.DrawWeapon();
+            skillStartTime = Time.time;
 
-            if (playerAnimator == null)
+            // try/finally로 감싸, 중간에 어떤 예외(스킬 데미지·이펙트 등)가 나더라도
+            // 반드시 FinishSkill()이 실행되어 isSkillActive가 풀리고 CombatIdle로 복귀합니다.
+            // 이 복구가 빠지면 캐릭터가 T-Pose/멈춤 상태로 고착됩니다.
+            try
             {
-                Skill();
+                SetRunning(false);
+                if (playerEquipment != null) playerEquipment.DrawWeapon();
+
+                if (playerAnimator == null)
+                {
+                    SafeSkill();
+                    yield break;
+                }
+
+                var previousState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+                animatorSpeedBeforeSkill = playerAnimator.speed;
+                playerAnimator.speed = animatorSpeedBeforeSkill * SkillAnimationSpeed;
+                playerAnimator.SetInteger("Num", activeSkill != null
+                    ? activeSkill.AnimationIndex
+                    : nextSkillNum);
+                nextSkillNum = (nextSkillNum + 1) % SkillAnimationCount;
+                playerAnimator.ResetTrigger("Skill");
+                playerAnimator.SetTrigger("Skill");
+
+                var enterTimeout = 1f;
+                while (enterTimeout > 0f && playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash == previousState)
+                {
+                    enterTimeout -= Time.deltaTime;
+                    yield return null;
+                }
+
+                var skillState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+                var finishTimeout = 5f;
+                while (finishTimeout > 0f)
+                {
+                    finishTimeout -= Time.deltaTime;
+                    var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
+                    // Every authored skill clip has a Skill Animation Event at its
+                    // actual contact frame. Only fall back late in the clip when an
+                    // imported event is missing; firing at .3 made VFX/damage lead
+                    // the weapon contact by a visible amount.
+                    if (!skillEventApplied &&
+                        !playerAnimator.IsInTransition(0) &&
+                        state.normalizedTime >= SkillEventFallbackNormalizedTime)
+                        SafeSkill();
+
+                    if (state.fullPathHash != skillState ||
+                        (!playerAnimator.IsInTransition(0) && state.normalizedTime >= .98f))
+                        break;
+                    yield return null;
+                }
+
+                if (!skillEventApplied)
+                    SafeSkill();
+            }
+            finally
+            {
                 FinishSkill();
-                yield break;
             }
+        }
 
-            var previousState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
-            animatorSpeedBeforeSkill = playerAnimator.speed;
-            playerAnimator.speed = animatorSpeedBeforeSkill * SkillAnimationSpeed;
-            playerAnimator.SetInteger("Num", activeSkill != null
-                ? activeSkill.AnimationIndex
-                : nextSkillNum);
-            nextSkillNum = (nextSkillNum + 1) % SkillAnimationCount;
-            playerAnimator.ResetTrigger("Skill");
-            playerAnimator.SetTrigger("Skill");
-
-            var enterTimeout = 1f;
-            while (enterTimeout > 0f && playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash == previousState)
+        /// <summary>스킬 피해/이펙트 처리에서 예외가 나도 전투 흐름이 끊기지 않도록 감쌉니다.</summary>
+        private void SafeSkill()
+        {
+            try
             {
-                enterTimeout -= Time.deltaTime;
-                yield return null;
-            }
-
-            var skillState = playerAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash;
-            var finishTimeout = 5f;
-            while (finishTimeout > 0f)
-            {
-                finishTimeout -= Time.deltaTime;
-                var state = playerAnimator.GetCurrentAnimatorStateInfo(0);
-                // Every authored skill clip has a Skill Animation Event at its
-                // actual contact frame. Only fall back late in the clip when an
-                // imported event is missing; firing at .3 made VFX/damage lead
-                // the weapon contact by a visible amount.
-                if (!skillEventApplied &&
-                    !playerAnimator.IsInTransition(0) &&
-                    state.normalizedTime >= SkillEventFallbackNormalizedTime)
-                    Skill();
-
-                if (state.fullPathHash != skillState ||
-                    (!playerAnimator.IsInTransition(0) && state.normalizedTime >= .98f))
-                    break;
-                yield return null;
-            }
-
-            if (!skillEventApplied)
                 Skill();
-            FinishSkill();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+            }
         }
 
         private void FinishSkill()
