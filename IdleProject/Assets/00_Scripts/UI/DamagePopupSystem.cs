@@ -22,6 +22,7 @@ namespace IdleBattle
         private const float HorizontalSpread = 58f;
         private const float VerticalSpread = 32f;
         private const float GoldenAngle = 137.5f;
+        private const float RetryInterval = 1f;
 
         private readonly Stack<TextMeshProUGUI> available = new Stack<TextMeshProUGUI>();
         private readonly HashSet<TextMeshProUGUI> owned = new HashSet<TextMeshProUGUI>();
@@ -33,18 +34,19 @@ namespace IdleBattle
         private Camera worldCamera;
         private Camera canvasCamera;
         private GameObject damagePrefab;
+        private float nextInitializeAttempt;
 
         public bool Initialize(Camera camera)
         {
             worldCamera = camera != null ? camera : Camera.main;
-            canvas = FindFirstObjectByType<Canvas>();
+            canvas = SceneRefs.RootCanvas;
             if (canvas == null)
             {
                 Debug.LogWarning("Damage UI를 표시할 Canvas를 찾지 못했습니다.");
                 return false;
             }
 
-            mainBounds = canvas.transform.Find("Main") as RectTransform;
+            mainBounds = SceneRefs.Screen("Main") as RectTransform;
             var poolParent = mainBounds != null ? mainBounds : canvas.transform as RectTransform;
             pool = FindPool(canvas.transform);
             if (pool == null)
@@ -76,8 +78,13 @@ namespace IdleBattle
 
         public void Show(int damage, Vector3 worldPosition)
         {
-            if ((canvas == null || pool == null || worldCamera == null) && !Initialize(Camera.main))
-                return;
+            // 피해 숫자 하나마다 씬을 다시 훑지 않도록, 준비가 안 된 동안에도 재시도 간격을 둡니다.
+            if (canvas == null || pool == null || worldCamera == null)
+            {
+                if (Time.unscaledTime < nextInitializeAttempt) return;
+                nextInitializeAttempt = Time.unscaledTime + RetryInterval;
+                if (!Initialize(Camera.main)) return;
+            }
 
             var viewportPoint = worldCamera.WorldToViewportPoint(worldPosition);
             if (viewportPoint.z <= 0f)

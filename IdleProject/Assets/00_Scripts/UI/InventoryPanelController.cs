@@ -15,6 +15,7 @@ namespace IdleBattle.UI
 
         private ItemCatalog catalog;
         private PlayerDataManager dataManager;
+        private EquipmentLoadoutController loadout;
         private RectTransform content;
         private TMP_Text countText;
         private readonly List<SlotView> slots = new();
@@ -33,15 +34,14 @@ namespace IdleBattle.UI
 
         private static void AttachToCurrentScene()
         {
-            var equipment = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                .Select(canvas => canvas.transform.Find("Equipment")?.gameObject)
-                .FirstOrDefault(value => value != null);
+            var equipment = SceneRefs.Screen("Equipment");
             if (equipment != null && equipment.GetComponent<InventoryPanelController>() == null)
-                equipment.AddComponent<InventoryPanelController>();
+                equipment.gameObject.AddComponent<InventoryPanelController>();
         }
 
         private void Awake()
         {
+            SceneRefs.Register(this);
             catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
             dataManager = PlayerDataManager.Instance;
             var inventory = transform.Find("SafeArea/Inventory");
@@ -57,7 +57,7 @@ namespace IdleBattle.UI
             }
 
             for (var i = 0; i < content.childCount; i++)
-                slots.Add(new SlotView(content.GetChild(i).gameObject));
+                slots.Add(new SlotView(this, content.GetChild(i).gameObject));
 
             SetupTabs(inventory.Find("Horizontal"));
         }
@@ -112,13 +112,29 @@ namespace IdleBattle.UI
             Refresh();
         }
 
+        /// <summary>
+        /// 장착 화면 컨트롤러는 같은 Equipment 오브젝트에 붙습니다.
+        /// 부착 순서를 보장할 수 없으므로 처음 필요할 때 한 번만 해석하고 캐싱합니다.
+        /// </summary>
+        private EquipmentLoadoutController Loadout
+        {
+            get
+            {
+                if (loadout != null) return loadout;
+                if (!TryGetComponent(out loadout)) loadout = SceneRefs.Get<EquipmentLoadoutController>();
+                return loadout;
+            }
+        }
+
         public void Refresh()
         {
+            // 필터 안에서 찾으면 아이템 개수만큼 씬 전체를 훑게 되므로 밖으로 끌어냅니다.
+            var equippedSource = Loadout;
             var owned = dataManager.Inventory
                 .Select(pair => catalog.TryGet(pair.Key, out var item) ? new OwnedItem(item, pair.Value) : default)
                 .Where(value => value.Item != null && value.Amount > 0 && MatchesCategory(value.Item.Type) &&
                     !(value.Item.Type == ItemType.Equipment &&
-                      FindFirstObjectByType<EquipmentLoadoutController>(FindObjectsInactive.Include)?.IsEquippedItem(value.Item.ItemId) == true))
+                      equippedSource != null && equippedSource.IsEquippedItem(value.Item.ItemId)))
                 .OrderByDescending(value => value.Item.Rarity)
                 .ThenBy(value => value.Item.ItemId)
                 .ToList();
@@ -168,7 +184,7 @@ namespace IdleBattle.UI
             {
                 var clone = Instantiate(slots[0].Root, content, false);
                 clone.name = $"Item ({slots.Count})";
-                slots.Add(new SlotView(clone));
+                slots.Add(new SlotView(this, clone));
             }
         }
 
@@ -177,6 +193,7 @@ namespace IdleBattle.UI
         private sealed class SlotView
         {
             public readonly GameObject Root;
+            private readonly InventoryPanelController owner;
             private readonly Image frame;
             private readonly Image icon;
             private readonly TMP_Text amount;
@@ -184,8 +201,9 @@ namespace IdleBattle.UI
             private readonly Button button;
             private ItemData boundItem;
 
-            public SlotView(GameObject root)
+            public SlotView(InventoryPanelController owner, GameObject root)
             {
+                this.owner = owner;
                 Root = root;
                 frame = root.GetComponent<Image>();
                 icon = root.transform.Find("Icon")?.GetComponent<Image>();
@@ -199,9 +217,9 @@ namespace IdleBattle.UI
 
             private void EquipBoundItem()
             {
-                if (boundItem == null) return;
-                var loadout = FindFirstObjectByType<EquipmentLoadoutController>(FindObjectsInactive.Include);
-                if (loadout != null && loadout.TryEquip(boundItem.ItemId))
+                if (boundItem == null || owner == null) return;
+                var target = owner.Loadout;
+                if (target != null && target.TryEquip(boundItem.ItemId))
                     Debug.Log($"장비 장착: {boundItem.DisplayName}");
             }
 

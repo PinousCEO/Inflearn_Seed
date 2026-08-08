@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e30b58e84146fa8c7434f8fb76cf87, type: 3}
+  m_Name: character-01-s54
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.SkillData
+  owner: {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  skillId: character-01-s54
+  displayName: "\uB300\uC9C0 \uD30C\uC1C4"
+  description: "\uB300\uC9C0\uB97C \uB0B4\uB824\uCCD0 \uD669\uAE08 \uACB0\uC815\uC744 \uC19F\uAD6C\uCE58\uAC8C \uD55C\uB2E4. \uAC08\uB77C\uC9C4 \uB545\uC774 \uB113\uC740 \uBC94\uC704\uC758 \uC801\uC744 \uBD80\uC218\uBA70 \uAE30\uC808\uC2DC\uD0A8\uB2E4."
+  icon: {fileID: 21300000, guid: f90f1d6d205700a4395ec4bf92e7f73c, type: 3}
+  skillTypes: 34
+  customTypeName: 
+  targetType: 3
+  cooldown: 35
+  resourceCost: 48
+  castTime: 0.7
+  duration: 0
+  effectPrefab: {fileID: 0}
+  damage: 200
+  animationIndex: 3
+  abilities:
+  - key: damage
+    displayName: "\uD53C\uD574\uB7C9"
+    value: 200
+    unit: 
+  - key: radius
+    displayName: "\uBC18\uACBD"
+    value: 5.5
+    unit: "m"
+  - key: crystalCount
+    displayName: "\uACB0\uC815 \uC218"
+    value: 3
+    unit: "\uAC1C"
+  - key: stunDuration
+    displayName: "\uAE30\uC808 \uC2DC\uAC04"
+    value: 1.5
+    unit: "\uCD08"

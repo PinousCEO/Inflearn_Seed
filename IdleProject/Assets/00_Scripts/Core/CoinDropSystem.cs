@@ -15,8 +15,7 @@ namespace IdleBattle
         {
             player = playerTransform;
             if (coinMaterial != null) return;
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            coinMaterial = new Material(shader)
+            coinMaterial = new Material(RuntimeShaders.Lit)
             {
                 name = "Runtime Golden Coin",
                 color = new Color(1f, .66f, .05f)

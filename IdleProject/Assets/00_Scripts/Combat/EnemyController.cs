@@ -29,8 +29,24 @@ namespace IdleBattle
         private float slowMultiplier = 1f;
         private Vector3 originalScale;
         private bool hasOriginalScale;
+        private GameObject stunEffect;
 
         public bool IsDead => health <= 0;
+
+        /// <summary>
+        /// 스턴 이펙트를 이 몬스터가 직접 들고 있게 해서,
+        /// 표시할 때마다 자식 계층을 이름으로 뒤지지 않도록 합니다.
+        /// </summary>
+        public void SetStunEffect(GameObject effect)
+        {
+            if (stunEffect != null && stunEffect != effect) Destroy(stunEffect);
+            stunEffect = effect;
+        }
+
+        public void ClearStunEffect(GameObject effect)
+        {
+            if (stunEffect == effect) stunEffect = null;
+        }
 
         public void Initialize(int healthValue, int attackDamageValue, Transform player, BattleGameController game, Terrain activeTerrain)
         {
@@ -57,6 +73,8 @@ namespace IdleBattle
         public void PrepareForPool()
         {
             StopAllCoroutines();
+            if (stunEffect != null) Destroy(stunEffect);
+            stunEffect = null;
             health = 0;
             maxHealth = 0;
             scaledAttackDamage = 0;

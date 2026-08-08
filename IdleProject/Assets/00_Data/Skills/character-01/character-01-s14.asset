@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e30b58e84146fa8c7434f8fb76cf87, type: 3}
+  m_Name: character-01-s14
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.SkillData
+  owner: {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  skillId: character-01-s14
+  displayName: "\uCC98\uD615\uC790\uC758 \uC77C\uACA9"
+  description: "\uBA38\uB9AC \uC704\uC5D0\uC11C \uB0B4\uB9AC\uAF42\uB294 \uD55C \uBC29. \uCCB4\uB825\uC774 \uC5BC\uB9C8 \uB0A8\uC9C0 \uC54A\uC740 \uC801\uC5D0\uAC8C \uCE58\uBA85\uC801\uC778 \uD53C\uD574\uB97C \uC900\uB2E4."
+  icon: {fileID: 21300000, guid: 42c3b9f9ae9304b4b9707834bbadba03, type: 3}
+  skillTypes: 16
+  customTypeName: 
+  targetType: 1
+  cooldown: 8
+  resourceCost: 18
+  castTime: 0.45
+  duration: 0
+  effectPrefab: {fileID: 0}
+  damage: 90
+  animationIndex: 3
+  abilities:
+  - key: damage
+    displayName: "\uD53C\uD574\uB7C9"
+    value: 90
+    unit: 
+  - key: executeThreshold
+    displayName: "\uCC98\uD615 \uAE30\uC900"
+    value: 30
+    unit: "%"
+  - key: critBonus
+    displayName: "\uCE58\uBA85\uD0C0 \uC99D\uAC00"
+    value: 25
+    unit: "%"

@@ -17,6 +17,7 @@ namespace IdleBattle
         private const float RiseDistance = 120f;
         private const float SpawnInterval = .5f;
         private const float TotalDuration = RevealDuration + HoldDuration + FadeDuration;
+        private const float RetryInterval = 1f;
 
         private readonly Queue<AcquiredItem> pending = new();
         private readonly Stack<GameObject> pool = new();
@@ -25,6 +26,7 @@ namespace IdleBattle
         private Vector2 origin;
         private PlayerDataManager playerData;
         private Coroutine playback;
+        private float nextInitializeAttempt;
 
         private readonly struct AcquiredItem
         {
@@ -38,12 +40,22 @@ namespace IdleBattle
             }
         }
 
+        /// <summary>
+        /// 아직 준비되지 않았을 때만 초기화를 다시 시도합니다.
+        /// 실패가 이어지는 동안 아이템을 얻을 때마다 씬을 훑지 않도록 재시도 간격을 둡니다.
+        /// </summary>
+        private bool EnsureInitialized()
+        {
+            if (panel != null && template != null) return true;
+            if (Time.unscaledTime < nextInitializeAttempt) return false;
+            nextInitializeAttempt = Time.unscaledTime + RetryInterval;
+            return Initialize();
+        }
+
         public bool Initialize()
         {
-            var canvas = FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
-            panel = canvas != null
-                ? canvas.transform.Find("Main/SafeArea/GetItemPanel") as RectTransform
-                : null;
+            var main = SceneRefs.Screen("Main");
+            panel = main != null ? main.Find("SafeArea/GetItemPanel") as RectTransform : null;
             if (panel == null)
             {
                 Debug.LogWarning("Canvas/Main/SafeArea/GetItemPanel을 찾지 못했습니다.", this);
@@ -83,8 +95,7 @@ namespace IdleBattle
 
         private void Enqueue(ItemData item, int totalAmount)
         {
-            if (item == null) return;
-            if ((panel == null || template == null) && !Initialize()) return;
+            if (item == null || !EnsureInitialized()) return;
 
             pending.Enqueue(new AcquiredItem(item, 1));
 

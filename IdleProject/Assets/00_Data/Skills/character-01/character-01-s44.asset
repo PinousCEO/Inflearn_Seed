@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e30b58e84146fa8c7434f8fb76cf87, type: 3}
+  m_Name: character-01-s44
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.SkillData
+  owner: {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  skillId: character-01-s44
+  displayName: "\uC0AC\uC2AC \uC791\uC0B4"
+  description: "\uC0AC\uC2AC \uC791\uC0B4\uC744 \uB358\uC838 \uBA40\uB9AC \uC788\uB294 \uC801\uC744 \uCC0D\uC5B4 \uB208\uC55E\uAE4C\uC9C0 \uB04C\uC5B4\uB2F9\uAE34\uB2E4."
+  icon: {fileID: 21300000, guid: bc19cd1624f78dc47b5c4305cbe0e76c, type: 3}
+  skillTypes: 4
+  customTypeName: 
+  targetType: 1
+  cooldown: 10
+  resourceCost: 20
+  castTime: 0.35
+  duration: 0
+  effectPrefab: {fileID: 0}
+  damage: 75
+  animationIndex: 3
+  abilities:
+  - key: damage
+    displayName: "\uD53C\uD574\uB7C9"
+    value: 75
+    unit: 
+  - key: range
+    displayName: "\uC0AC\uAC70\uB9AC"
+    value: 9
+    unit: "m"
+  - key: pullDistance
+    displayName: "\uB04C\uC5B4\uB2F9\uAE40"
+    value: 5
+    unit: "m"

@@ -19,6 +19,9 @@ namespace IdleBattle
 
         private readonly Dictionary<string, GameObject> effects = new(StringComparer.OrdinalIgnoreCase);
         private readonly bool[] equipped = new bool[9];
+        // 몬스터 목록을 매번 새로 할당하지 않기 위한 재사용 버퍼입니다.
+        private readonly List<EnemyController> damageBuffer = new();
+        private readonly List<EnemyController> targetBuffer = new();
         private ItemCatalog catalog;
         private Transform player;
         private BattleGameController battle;
@@ -123,11 +126,30 @@ namespace IdleBattle
             for (var i = 0; i < ticks; i++)
             {
                 if (center == null) yield break;
-                foreach (var enemy in FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
-                    if (enemy != null && !enemy.IsDead && (enemy.transform.position - center.transform.position).sqrMagnitude <= radius * radius)
+                // 틱마다 씬을 훑는 대신 전투 컨트롤러가 이미 들고 있는 생존 목록을 재사용합니다.
+                CollectActiveEnemies(damageBuffer);
+                var centerPosition = center.transform.position;
+                foreach (var enemy in damageBuffer)
+                    if (enemy != null && !enemy.IsDead && (enemy.transform.position - centerPosition).sqrMagnitude <= radius * radius)
                         damageCallback?.Invoke(enemy, 8);
                 yield return new WaitForSeconds(interval);
             }
+        }
+
+        /// <summary>
+        /// 살아 있는 몬스터 목록을 얻습니다. 전투 컨트롤러가 연결돼 있으면 그 목록을 쓰고,
+        /// 아직 Initialize 전이라면 그때 한정으로만 씬을 탐색합니다.
+        /// </summary>
+        private void CollectActiveEnemies(List<EnemyController> buffer)
+        {
+            if (battle != null)
+            {
+                battle.CopyActiveEnemies(buffer);
+                return;
+            }
+
+            buffer.Clear();
+            buffer.AddRange(FindObjectsByType<EnemyController>(FindObjectsSortMode.None));
         }
 
         private IEnumerator RepeatDamage(EnemyController[] targets, Action<EnemyController, int> damage, int count, float interval, int multiplier)
@@ -153,10 +175,10 @@ namespace IdleBattle
             // 실제 캐릭터 복제는 하지 않습니다. 방패 밀쳐내기 피해만 안전하게 유지합니다.
         }
 
-        private static EnemyController[] GetNearbyTargets(float radius, EnemyController[] fallback, Vector3 center)
+        private EnemyController[] GetNearbyTargets(float radius, EnemyController[] fallback, Vector3 center)
         {
-            var all = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
-            var result = all.Where(enemy => enemy != null && !enemy.IsDead &&
+            CollectActiveEnemies(targetBuffer);
+            var result = targetBuffer.Where(enemy => enemy != null && !enemy.IsDead &&
                 (enemy.transform.position - center).sqrMagnitude <= radius * radius).ToArray();
             return result.Length > 0 ? result : fallback;
         }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 
@@ -21,8 +20,8 @@ namespace IdleBattle
         [SerializeField, Min(0)] private long coins;
         private readonly Dictionary<string, int> inventory = new();
         private readonly HashSet<string> equippedItems = new(StringComparer.Ordinal);
-        private const string SaveFileName = "player-data.json";
         private const int SaveVersion = 2;
+        private System.Threading.Tasks.Task loadTask;
 
         public static PlayerDataManager Instance
         {
@@ -47,6 +46,7 @@ namespace IdleBattle
         public int ExperienceToNextLevel => GetExperienceRequirement(level);
         public long Coins => coins;
         public IReadOnlyCollection<string> EquippedItems => equippedItems;
+        public bool IsLoaded { get; private set; }
 
         public event Action<int, int> HealthChanged;
         public event Action<int> Damaged;
@@ -56,8 +56,6 @@ namespace IdleBattle
         public event Action InventoryChanged;
         public event Action<int, int, int> ExperienceChanged;
         public event Action<long> CoinsChanged;
-
-        public string SaveFilePath => Path.Combine(Application.persistentDataPath, SaveFileName);
 
         private void Awake()
         {
@@ -145,6 +143,7 @@ namespace IdleBattle
 
         public void AddItem(ItemData item, int amount = 1)
         {
+            if (!IsLoaded) return;
             if (item == null || string.IsNullOrWhiteSpace(item.ItemId) || amount <= 0)
                 return;
 
@@ -163,6 +162,7 @@ namespace IdleBattle
 
         public void AddExperience(int amount)
         {
+            if (!IsLoaded) return;
             if (amount <= 0) return;
             experience += amount;
             while (experience >= GetExperienceRequirement(level))
@@ -182,6 +182,7 @@ namespace IdleBattle
 
         public void AddCoins(long amount)
         {
+            if (!IsLoaded) return;
             if (amount <= 0) return;
             coins = Math.Max(0L, coins + amount);
             Save();
@@ -203,6 +204,7 @@ namespace IdleBattle
 
         public void SetItemEquipped(string itemId, bool value)
         {
+            if (!IsLoaded) return;
             if (string.IsNullOrWhiteSpace(itemId)) return;
             if (value) equippedItems.Add(itemId);
             else equippedItems.Remove(itemId);
@@ -212,7 +214,23 @@ namespace IdleBattle
 
         public void Save()
         {
-            var data = new PlayerSaveData
+            if (!IsLoaded)
+            {
+                Debug.LogWarning("Firestore save skipped because guest login/data loading is not complete.", this);
+                return;
+            }
+            var json = JsonUtility.ToJson(CreateSaveData(), true);
+            _ = SaveToFirestoreAsync(json);
+        }
+
+        public void Load()
+        {
+            loadTask ??= LoadFromFirestoreAsync();
+        }
+
+        private PlayerSaveData CreateSaveData()
+        {
+            return new PlayerSaveData
             {
                 version = SaveVersion,
                 level = level,
@@ -225,63 +243,78 @@ namespace IdleBattle
                     .ToList(),
                 equippedItems = equippedItems.OrderBy(value => value, StringComparer.Ordinal).ToList()
             };
+        }
 
+        private void ApplySaveData(PlayerSaveData data)
+        {
+            if (data == null) return;
+            inventory.Clear();
+            equippedItems.Clear();
+            if (data.version < SaveVersion)
+            {
+                level = 1;
+                experience = 0;
+                coins = 0;
+                return;
+            }
+
+            level = Mathf.Max(1, data.level);
+            experience = Mathf.Max(0, data.experience);
+            coins = Math.Max(0L, data.coins);
+            if (data.items != null)
+                foreach (var entry in data.items)
+                    if (entry != null && !string.IsNullOrWhiteSpace(entry.itemId) && entry.amount > 0)
+                        inventory[entry.itemId.Trim()] = entry.amount;
+            if (data.equippedItems != null)
+                foreach (var itemId in data.equippedItems)
+                    if (!string.IsNullOrWhiteSpace(itemId)) equippedItems.Add(itemId.Trim());
+        }
+
+        private async System.Threading.Tasks.Task LoadFromFirestoreAsync()
+        {
             try
             {
-                var path = SaveFilePath;
-                var directory = Path.GetDirectoryName(path);
-                if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
-                var temporaryPath = path + ".tmp";
-                File.WriteAllText(temporaryPath, JsonUtility.ToJson(data, true));
-                if (File.Exists(path)) File.Delete(path);
-                File.Move(temporaryPath, path);
+                var json = await FirebaseInitializer.Instance.LoadPlayerJsonAsync();
+                if (this == null) return;
+
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    await FirebaseInitializer.Instance.SavePlayerJsonAsync(
+                        JsonUtility.ToJson(CreateSaveData(), true), SaveVersion);
+                    IsLoaded = true;
+                    NotifyDataLoaded();
+                    return;
+                }
+
+                ApplySaveData(JsonUtility.FromJson<PlayerSaveData>(json));
+                IsLoaded = true;
+                NotifyDataLoaded();
             }
             catch (Exception exception)
             {
-                Debug.LogError($"인벤토리 저장에 실패했습니다: {exception.Message}", this);
+                Debug.LogError($"Firestore load failed: {exception.Message}", this);
             }
         }
 
-        public void Load()
+        private async System.Threading.Tasks.Task SaveToFirestoreAsync(string json)
         {
-            inventory.Clear();
-            equippedItems.Clear();
             try
             {
-                if (!File.Exists(SaveFilePath)) return;
-                var data = JsonUtility.FromJson<PlayerSaveData>(File.ReadAllText(SaveFilePath));
-                if (data == null) return;
-                if (data.version < SaveVersion)
-                {
-                    // 이전 테스트 세이브는 장착/보유 규칙이 달라 한 번 초기화합니다.
-                    level = 1;
-                    experience = 0;
-                    coins = 0;
-                    return;
-                }
-                level = Mathf.Max(1, data.level);
-                experience = Mathf.Max(0, data.experience);
-                coins = Math.Max(0L, data.coins);
-                if (data?.items == null) return;
-                foreach (var entry in data.items)
-                {
-                    if (entry == null || string.IsNullOrWhiteSpace(entry.itemId) || entry.amount <= 0) continue;
-                    inventory[entry.itemId.Trim()] = entry.amount;
-                }
-                if (data.equippedItems != null)
-                    foreach (var itemId in data.equippedItems)
-                        if (!string.IsNullOrWhiteSpace(itemId)) equippedItems.Add(itemId.Trim());
+                await FirebaseInitializer.Instance.SavePlayerJsonAsync(json, SaveVersion);
             }
             catch (Exception exception)
             {
-                Debug.LogError($"인벤토리 불러오기에 실패했습니다: {exception.Message}", this);
+                Debug.LogError($"Firestore save failed: {exception.Message}", this);
             }
-            finally
-            {
-                InventoryChanged?.Invoke();
-                ExperienceChanged?.Invoke(level, experience, GetExperienceRequirement(level));
-                CoinsChanged?.Invoke(coins);
-            }
+        }
+
+        private void NotifyDataLoaded()
+        {
+            InventoryChanged?.Invoke();
+            ExperienceChanged?.Invoke(level, experience, GetExperienceRequirement(level));
+            CoinsChanged?.Invoke(coins);
+            HealthChanged?.Invoke(currentHealth, maxHealth);
+            ManaChanged?.Invoke(currentMana, maxMana);
         }
 
         [Serializable]

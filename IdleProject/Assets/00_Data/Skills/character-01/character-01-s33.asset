@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e30b58e84146fa8c7434f8fb76cf87, type: 3}
+  m_Name: character-01-s33
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.SkillData
+  owner: {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  skillId: character-01-s33
+  displayName: "\uBC29\uD328 \uC9C4\uD615"
+  description: "\uBE5B\uB098\uB294 \uBC29\uD328 \uC138 \uAC1C\uB97C \uC138\uC6CC \uBAB8\uC744 \uAC10\uC2F8\uB294 \uBCF4\uD638\uB9C9\uC744 \uB9CC\uB4E0\uB2E4."
+  icon: {fileID: 21300000, guid: 316da734e2012684c8737362794add85, type: 3}
+  skillTypes: 66
+  customTypeName: 
+  targetType: 0
+  cooldown: 22
+  resourceCost: 26
+  castTime: 0.5
+  duration: 9
+  effectPrefab: {fileID: 0}
+  damage: 1
+  animationIndex: 2
+  abilities:
+  - key: shieldAmount
+    displayName: "\uBCF4\uD638\uB9C9"
+    value: 350
+    unit: 
+  - key: defenseBonus
+    displayName: "\uBC29\uC5B4\uB825 \uC99D\uAC00"
+    value: 20
+    unit: "%"
+  - key: duration
+    displayName: "\uC9C0\uC18D \uC2DC\uAC04"
+    value: 9
+    unit: "\uCD08"

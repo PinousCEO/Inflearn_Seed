@@ -104,3 +104,21 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# ---------------------------------------------------------------
+# Unity 프로젝트가 하위 폴더(IdleProject/)에 있어서, 위쪽 루트 기준
+# 규칙(/[Oo]bj/ 등)이 걸리지 않습니다. 하위 경로용으로 다시 지정합니다.
+# ---------------------------------------------------------------
+IdleProject/[Ll]ibrary/
+IdleProject/[Tt]emp/
+IdleProject/[Oo]bj/
+IdleProject/[Bb]uild/
+IdleProject/[Bb]uilds/
+IdleProject/[Ll]ogs/
+IdleProject/[Uu]ser[Ss]ettings/
+IdleProject/[Mm]emoryCaptures/
+
+# 앱 서명 키 - 절대 커밋하지 않습니다.
+*.keystore
+*.jks
+*.p12

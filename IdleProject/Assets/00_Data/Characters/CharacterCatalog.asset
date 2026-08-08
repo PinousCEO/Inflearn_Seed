@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e9d31b7a0c24f6e8b12d7f4c3a95e18, type: 3}
+  m_Name: CharacterCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.CharacterCatalog
+  characters:
+  - {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  - {fileID: 11400000, guid: b2d15e8f46c9572a0e3f7194d85c26b3, type: 2}
+  - {fileID: 11400000, guid: c3e26f9057da683b1f408205e96d37c4, type: 2}
+  - {fileID: 11400000, guid: d4f3710168eb794c20519316fa7e48d5, type: 2}
+  - {fileID: 11400000, guid: e504821279fc8a5d316204270b8f59e6, type: 2}

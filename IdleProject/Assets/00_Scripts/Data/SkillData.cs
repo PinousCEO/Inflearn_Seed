@@ -55,6 +55,11 @@ namespace IdleBattle
         menuName = "Idle Battle/Skill Data")]
     public sealed class SkillData : ScriptableObject
     {
+        [Header("소속 캐릭터")]
+        [Tooltip("이 스킬이 속한 캐릭터입니다. 캐릭터 데이터를 먼저 만든 뒤 여기에 연결하면 " +
+                 "스킬 관리 창에서 캐릭터 기준으로 스킬을 구성할 수 있습니다.")]
+        [SerializeField] private CharacterData owner;
+
         [Header("기본 정보")]
         [SerializeField] private string skillId;
         [SerializeField] private string displayName = "새 스킬";
@@ -80,6 +85,7 @@ namespace IdleBattle
         [Tooltip("damage, radius, projectileCount처럼 런타임에서 사용할 키와 수치를 자유롭게 추가합니다.")]
         [SerializeField] private List<SkillAbility> abilities = new List<SkillAbility>();
 
+        public CharacterData Owner => owner;
         public string SkillId => skillId;
         public string DisplayName => displayName;
         public string Description => description;
@@ -117,8 +123,9 @@ namespace IdleBattle
             return false;
         }
 
-        public void Initialize(string id, string initialName)
+        public void Initialize(string id, string initialName, CharacterData ownerCharacter = null)
         {
+            owner = ownerCharacter;
             skillId = id;
             displayName = initialName;
             description = string.Empty;
@@ -135,6 +142,13 @@ namespace IdleBattle
             animationIndex = 0;
             abilities = new List<SkillAbility>();
         }
+
+#if UNITY_EDITOR
+        public void SetOwner(CharacterData value)
+        {
+            owner = value;
+        }
+#endif
 
         private void OnValidate()
         {
