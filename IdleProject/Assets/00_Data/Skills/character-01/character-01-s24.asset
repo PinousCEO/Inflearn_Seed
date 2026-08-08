@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e30b58e84146fa8c7434f8fb76cf87, type: 3}
+  m_Name: character-01-s24
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.SkillData
+  owner: {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  skillId: character-01-s24
+  displayName: "\uD53C\uC758 \uC808\uB2E8"
+  description: "\uC2ED\uC790\uB85C \uAD50\uCC28\uD558\uB294 \uB450 \uBC88\uC758 \uCC38\uACA9. \uBC8C\uC5B4\uC9C4 \uC0C1\uCC98\uC5D0\uC11C \uCD9C\uD608\uC774 \uC774\uC5B4\uC9C0\uACE0 \uADF8\uB9CC\uD07C \uCCB4\uB825\uC744 \uBE68\uC544\uB4E4\uC778\uB2E4."
+  icon: {fileID: 21300000, guid: 82c08878793b66b498542807e9e49aea, type: 3}
+  skillTypes: 16
+  customTypeName: 
+  targetType: 1
+  cooldown: 5
+  resourceCost: 18
+  castTime: 0.2
+  duration: 0
+  effectPrefab: {fileID: 0}
+  damage: 70
+  animationIndex: 3
+  abilities:
+  - key: damage
+    displayName: "\uD53C\uD574\uB7C9"
+    value: 70
+    unit: 
+  - key: bleedDamage
+    displayName: "\uCD9C\uD608 \uD53C\uD574"
+    value: 12
+    unit: 
+  - key: bleedDuration
+    displayName: "\uCD9C\uD608 \uC9C0\uC18D"
+    value: 4
+    unit: "\uCD08"
+  - key: lifeSteal
+    displayName: "\uD761\uD608"
+    value: 8
+    unit: "%"

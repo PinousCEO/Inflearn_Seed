@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c1a4f2e9b3d48a1a5f0c62d81e34b70, type: 3}
+  m_Name: character-03-hunter
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.CharacterData
+  characterId: character-03
+  displayName: "\uD5CC\uD130"
+  roleName: "\uC6D0\uAC70\uB9AC \xB7 \uCE58\uBA85\uD0C0"
+  description: "\uAE09\uC18C\uB9CC \uB178\uB9AC\uB294 \uADF8\uB9BC\uC790 \uC18D\uC758
+    \uC0AC\uB0E5\uAFBC."
+  tags:
+  - "\uC6D0\uAC70\uB9AC \uB51C"
+  - "\uCE58\uBA85\uD0C0 \uD2B9\uD654"
+  - "\uACE0\uAE30\uB3D9"
+  difficulty: 3
+  attack: 95
+  survival: 52
+  defense: 44
+  mobility: 92
+  critical: 98
+  areaPower: 56
+  icon: {fileID: 0}
+  portrait: {fileID: 0}
+  characterPrefab: {fileID: 0}
+  themeColor: {r: 0.24, g: 0.62, b: 0.6, a: 1}
+  skillSet: {fileID: 0}
+  isPlayable: 0
+  lockedLabel: COMING SOON
+  lockedMessage: "\uC900\uBE44 \uC911\uC778 \uC601\uC6C5\uC785\uB2C8\uB2E4"

@@ -66,6 +66,9 @@ namespace IdleBattle
         private Slider experienceSlider;
         private RectTransform experienceFill;
         private Image experienceFillImage;
+        // Awake의 UI 셋업 동안에만 유지하는 씬 스캔 결과입니다.
+        private TMP_Text[] sceneTexts = Array.Empty<TMP_Text>();
+        private RectTransform[] sceneRects = Array.Empty<RectTransform>();
 
         private const float SpawnRadius = 14f;
         private const float MoveSpeed = 4.2f;
@@ -81,16 +84,46 @@ namespace IdleBattle
 
         private void Awake()
         {
+            // UI가 씬 전체를 훑지 않고 전투 컨트롤러를 찾을 수 있게 등록합니다.
+            SceneRefs.Register(this);
             LoadSkills();
             SetupWorld();
             SetupStage();
+            // 아래 셋업은 씬의 UI 오브젝트를 이름으로 찾습니다.
+            // 호출마다 씬을 훑지 않도록 한 번만 수집해서 공유하고, 끝나면 버립니다.
+            BeginSceneLookup();
             SetupStageSlider();
             CreateDestination();
             SetupHud();
+            EndSceneLookup();
+        }
+
+        private void BeginSceneLookup()
+        {
+            sceneTexts = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            sceneRects = FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        }
+
+        private void EndSceneLookup()
+        {
+            sceneTexts = Array.Empty<TMP_Text>();
+            sceneRects = Array.Empty<RectTransform>();
         }
 
         public event Action<SkillData, int> SkillCast;
         public IReadOnlyList<SkillData> Skills => skills;
+
+        /// <summary>
+        /// 현재 전장에 살아 있는 몬스터를 buffer로 복사합니다.
+        /// 살아 있는 목록은 이미 여기서 관리하므로, 다른 시스템이 FindObjectsByType으로
+        /// 씬 전체를 다시 훑을 필요가 없습니다. 피해를 주면 원본 목록이 바뀌므로 항상 복사본을 순회합니다.
+        /// </summary>
+        public void CopyActiveEnemies(List<EnemyController> buffer)
+        {
+            if (buffer == null) return;
+            buffer.Clear();
+            buffer.AddRange(enemies);
+        }
         public float GetCooldownRemaining(int index) =>
             index >= 0 && index < skillReadyTimes.Length
                 ? Mathf.Max(0f, skillReadyTimes[index] - Time.time)
@@ -223,7 +256,7 @@ namespace IdleBattle
             coinDropSystem = GetComponent<CoinDropSystem>();
             if (coinDropSystem == null) coinDropSystem = gameObject.AddComponent<CoinDropSystem>();
             coinDropSystem.Initialize(player);
-            var canvas = FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
+            var canvas = SceneRefs.RootCanvas;
             if (canvas != null)
             {
                 targetNavigationUI = canvas.GetComponent<TargetNavigationUI>();
@@ -571,14 +604,13 @@ namespace IdleBattle
         {
             if (stunPrefab == null || target == null || target.IsDead) return;
 
-            // 같은 몬스터에 이미 표시 중이면 새로 겹치지 않고 타이머를 갱신합니다.
-            var old = target.transform.Find("Stun_Active");
-            if (old != null) Destroy(old.gameObject);
-
             var stun = Instantiate(stunPrefab);
             stun.name = "Stun_Active";
             stun.transform.position = GetHeadWorldPosition(target.gameObject);
             stun.transform.SetParent(target.transform, true);
+            // 같은 몬스터에 이미 표시 중이면 겹치지 않게 이전 것을 정리합니다.
+            // 몬스터가 자기 이펙트를 들고 있으므로 자식 계층을 이름으로 뒤지지 않습니다.
+            target.SetStunEffect(stun);
 
             var particles = stun.GetComponentsInChildren<ParticleSystem>(true);
             foreach (var particle in particles)
@@ -586,13 +618,14 @@ namespace IdleBattle
                 particle.Clear(true);
                 particle.Play(true);
             }
-            StartCoroutine(RemoveStunAfter(stun, 1.4f));
+            StartCoroutine(RemoveStunAfter(target, stun, 1.4f));
             legendaryEquipmentSystem?.OnStun(target);
         }
 
-        private static IEnumerator RemoveStunAfter(GameObject stun, float duration)
+        private static IEnumerator RemoveStunAfter(EnemyController target, GameObject stun, float duration)
         {
             yield return new WaitForSeconds(duration);
+            if (target != null) target.ClearStunEffect(stun);
             if (stun != null) Destroy(stun);
         }
 
@@ -943,36 +976,39 @@ namespace IdleBattle
             return null;
         }
 
-        private static TMP_Text FindSceneText(string objectName)
+        // 아래 세 메서드는 BeginSceneLookup으로 미리 모아 둔 배열만 훑습니다.
+        // 씬 스캔은 Awake에서 종류별로 한 번씩만 일어납니다.
+        private TMP_Text FindSceneText(string objectName)
         {
             TMP_Text fallback = null;
-            foreach (var text in FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var text in sceneTexts)
             {
-                if (text.name != objectName || !text.gameObject.scene.IsValid()) continue;
+                if (text == null || text.name != objectName || !text.gameObject.scene.IsValid()) continue;
                 if (text.gameObject.activeInHierarchy) return text;
                 fallback ??= text;
             }
             return fallback;
         }
 
-        private static TMP_Text FindSceneTextByValue(string prefix)
+        private TMP_Text FindSceneTextByValue(string prefix)
         {
             TMP_Text fallback = null;
-            foreach (var text in FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var text in sceneTexts)
             {
-                if (!text.gameObject.scene.IsValid() || text.text == null || !text.text.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                if (text == null || !text.gameObject.scene.IsValid() || text.text == null ||
+                    !text.text.StartsWith(prefix, StringComparison.Ordinal)) continue;
                 if (text.gameObject.activeInHierarchy) return text;
                 fallback ??= text;
             }
             return fallback;
         }
 
-        private static GameObject FindSceneObject(string objectName)
+        private GameObject FindSceneObject(string objectName)
         {
             GameObject fallback = null;
-            foreach (var rect in FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var rect in sceneRects)
             {
-                if (rect.name != objectName || !rect.gameObject.scene.IsValid()) continue;
+                if (rect == null || rect.name != objectName || !rect.gameObject.scene.IsValid()) continue;
                 if (rect.gameObject.activeInHierarchy) return rect.gameObject;
                 fallback ??= rect.gameObject;
             }
@@ -1030,8 +1066,7 @@ namespace IdleBattle
 
         private static Material MakeMaterial(Color color)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var material = new Material(shader) { color = color };
+            var material = new Material(RuntimeShaders.Lit) { color = color };
             if (color.a < 1f)
             {
                 material.SetFloat("_Surface", 1);

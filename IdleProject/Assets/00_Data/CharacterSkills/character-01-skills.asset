@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e52f305c7f4910bc65a91d4359ebc1, type: 3}
+  m_Name: character-01-skills
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.CharacterSkillSetData
+  character: {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  characterId: character-01
+  displayName: "\uBC14\uBC14\uB9AC\uC548"
+  characterIcon: {fileID: 0}
+  characterPrefab: {fileID: 0}
+  sections:
+  - sectionName: "1\uAD6C\uAC04"
+    unlockLevel: 1
+    skills:
+    - {fileID: 11400000, guid: c32b2291dc7494d5469d847fd1a72f22, type: 2}
+    - {fileID: 11400000, guid: d73fa4d0f06b0c4bc543b96fd0cec55e, type: 2}
+    - {fileID: 11400000, guid: a8a8ed0342fabba2a10bb83251becbee, type: 2}
+    - {fileID: 11400000, guid: 9babdf7eba6bd7ffc6ffc8f06b8ca140, type: 2}
+  - sectionName: "2\uAD6C\uAC04"
+    unlockLevel: 5
+    skills:
+    - {fileID: 11400000, guid: fbd55bb93903a64749644cc5b970a28f, type: 2}
+    - {fileID: 11400000, guid: 2d56095cfdef3c63aa3998da3faca9c2, type: 2}
+    - {fileID: 11400000, guid: a163740c3b921ccd3fb1857a4b86400f, type: 2}
+    - {fileID: 11400000, guid: 6524b14a037adbba98fc90f6889a9459, type: 2}
+  - sectionName: "3\uAD6C\uAC04"
+    unlockLevel: 10
+    skills:
+    - {fileID: 11400000, guid: a380cf146e11148eefebaada12136662, type: 2}
+    - {fileID: 11400000, guid: a9f164989e93bbec567543fb82a0a20b, type: 2}
+    - {fileID: 11400000, guid: d706786ad1819b618f762403ea2b48ae, type: 2}
+    - {fileID: 11400000, guid: 6e51c84039140c939751806df4c6d5e3, type: 2}
+  - sectionName: "4\uAD6C\uAC04"
+    unlockLevel: 15
+    skills:
+    - {fileID: 11400000, guid: bbe1b8e394cb5504fd90bb69282f9752, type: 2}
+    - {fileID: 11400000, guid: c4131fa91dc231d8fe3b66c4c358ee09, type: 2}
+    - {fileID: 11400000, guid: 2047149f4864ed164176f2af10d4ae99, type: 2}
+    - {fileID: 11400000, guid: 2aa5bb58ad823bc0c018830585d94b3c, type: 2}
+  - sectionName: "5\uAD6C\uAC04"
+    unlockLevel: 20
+    skills:
+    - {fileID: 11400000, guid: 977ad674c03700fd8c2534ff6df2fdbb, type: 2}
+    - {fileID: 11400000, guid: 5584dacfbcaafbf0e7252d304516930c, type: 2}
+    - {fileID: 11400000, guid: 3fedcb283a83a29560c0ef4a77f12339, type: 2}
+    - {fileID: 11400000, guid: 4b8dade44b4140911952262c7e61624c, type: 2}

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c1a4f2e9b3d48a1a5f0c62d81e34b70, type: 3}
+  m_Name: character-02-priest
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.CharacterData
+  characterId: character-02
+  displayName: "\uC0AC\uC81C"
+  roleName: "\uBCF4\uC870 \xB7 \uD68C\uBCF5"
+  description: "\uBE5B\uC73C\uB85C \uC544\uAD70\uC744 \uC9C0\uD0F1\uD558\uB294 \uC5EC\uBA85\uC758
+    \uC778\uB3C4\uC790."
+  tags:
+  - "\uD68C\uBCF5"
+  - "\uBCF4\uD638\uB9C9"
+  - "\uC7A5\uAE30\uC804"
+  difficulty: 3
+  attack: 46
+  survival: 88
+  defense: 63
+  mobility: 58
+  critical: 35
+  areaPower: 70
+  icon: {fileID: 0}
+  portrait: {fileID: 0}
+  characterPrefab: {fileID: 0}
+  themeColor: {r: 0.95, g: 0.84, b: 0.55, a: 1}
+  skillSet: {fileID: 0}
+  isPlayable: 0
+  lockedLabel: COMING SOON
+  lockedMessage: "\uC900\uBE44 \uC911\uC778 \uC601\uC6C5\uC785\uB2C8\uB2E4"

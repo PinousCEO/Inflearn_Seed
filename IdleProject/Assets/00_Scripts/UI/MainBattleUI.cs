@@ -48,7 +48,8 @@ namespace IdleBattle
         private void OnEnable()
         {
             player = PlayerDataManager.Instance;
-            if (battle == null) battle = FindFirstObjectByType<BattleGameController>();
+            // 인스펙터에 연결돼 있으면 탐색하지 않고, 없을 때만 캐싱된 씬 참조를 씁니다.
+            if (battle == null) battle = SceneRefs.Get<BattleGameController>();
             player.HealthChanged -= RefreshHealth;
             player.ManaChanged -= RefreshMana;
             player.HealthChanged += RefreshHealth;

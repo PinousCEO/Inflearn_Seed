@@ -60,15 +60,21 @@ namespace IdleBattle
     {
         public const int SectionCount = 5;
 
+        [Tooltip("이 스킬 세트의 주인이 되는 캐릭터 데이터입니다. " +
+                 "연결하면 ID와 표시 이름을 캐릭터 데이터에서 그대로 따라갑니다.")]
+        [SerializeField] private CharacterData character;
         [SerializeField] private string characterId;
         [SerializeField] private string displayName = "새 캐릭터";
         [SerializeField] private Sprite characterIcon;
         [SerializeField] private GameObject characterPrefab;
         [SerializeField] private SkillSection[] sections = new SkillSection[SectionCount];
 
+        public CharacterData Character => character;
         public string CharacterId => characterId;
         public string DisplayName => displayName;
-        public Sprite CharacterIcon => characterIcon;
+        public Sprite CharacterIcon => character != null && character.Icon != null
+            ? character.Icon
+            : characterIcon;
         public GameObject CharacterPrefab => characterPrefab;
         public IReadOnlyList<SkillSection> Sections => sections;
 
@@ -80,8 +86,9 @@ namespace IdleBattle
             return sections[index];
         }
 
-        public void Initialize(string id, string initialName)
+        public void Initialize(string id, string initialName, CharacterData ownerCharacter = null)
         {
+            character = ownerCharacter;
             characterId = id;
             displayName = initialName;
             characterIcon = null;
@@ -95,8 +102,24 @@ namespace IdleBattle
             EnsureLayout();
         }
 
+#if UNITY_EDITOR
+        public void SetCharacter(CharacterData value)
+        {
+            character = value;
+        }
+#endif
+
         private void OnValidate()
         {
+            // 캐릭터 데이터가 연결되어 있으면 그쪽 값을 원본으로 삼는다.
+            if (character != null)
+            {
+                if (!string.IsNullOrWhiteSpace(character.CharacterId))
+                    characterId = character.CharacterId;
+                if (!string.IsNullOrWhiteSpace(character.DisplayName))
+                    displayName = character.DisplayName;
+            }
+
             characterId = characterId?.Trim() ?? string.Empty;
             displayName = string.IsNullOrWhiteSpace(displayName) ? name : displayName.Trim();
             EnsureLayout();

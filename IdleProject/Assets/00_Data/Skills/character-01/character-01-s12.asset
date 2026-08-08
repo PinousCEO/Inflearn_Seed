@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e30b58e84146fa8c7434f8fb76cf87, type: 3}
+  m_Name: character-01-s12
+  m_EditorClassIdentifier: Assembly-CSharp::IdleBattle.SkillData
+  owner: {fileID: 11400000, guid: a1c04d7e35b8461f9d2e6083c74b15a2, type: 2}
+  skillId: character-01-s12
+  displayName: "\uB9F9\uC218\uC758 \uBC1C\uD1B1"
+  description: "\uBD89\uAC8C \uD0C0\uC624\uB974\uB294 \uC138 \uC904\uAE30 \uBC1C\uD1B1\uC73C\uB85C \uC801\uC744 \uC5F0\uB2EC\uC544 \uCC22\uACE0 \uAE4A\uC740 \uCD9C\uD608\uC744 \uB0A8\uAE34\uB2E4."
+  icon: {fileID: 21300000, guid: 20e83686ace014b4b90a9579b9047bc0, type: 3}
+  skillTypes: 16
+  customTypeName: 
+  targetType: 1
+  cooldown: 4
+  resourceCost: 12
+  castTime: 0.15
+  duration: 0
+  effectPrefab: {fileID: 0}
+  damage: 60
+  animationIndex: 1
+  abilities:
+  - key: damage
+    displayName: "\uD53C\uD574\uB7C9"
+    value: 60
+    unit: 
+  - key: hitCount
+    displayName: "\uD0C0\uACA9 \uD69F\uC218"
+    value: 3
+    unit: "\uD68C"
+  - key: bleedDamage
+    displayName: "\uCD9C\uD608 \uD53C\uD574"
+    value: 8
+    unit: 
+  - key: bleedDuration
+    displayName: "\uCD9C\uD608 \uC9C0\uC18D"
+    value: 3
+    unit: "\uCD08"

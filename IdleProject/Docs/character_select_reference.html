@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>영웅 선택 - UI 레퍼런스</title>
+<style>
+/* ============================================================
+   영웅 선택 (Character Select) — UI Reference
+   Canvas 1080 x 1920 / BrightReferences 테마 (Dark Navy + Gold)
+   ============================================================ */
+:root{
+  --navy-0:#050a12;
+  --navy-1:#0b1522;
+  --navy-2:#122032;
+  --navy-3:#18293f;
+  --panel-a:rgba(20,34,52,.92);
+  --panel-b:rgba(11,21,34,.92);
+  --gold:#d9b96e;
+  --gold-lt:#f0dcae;
+  --gold-dim:rgba(217,185,110,.28);
+  --cream:#e8dcc0;
+  --text:#cdd7e4;
+  --text-dim:#7f8ea3;
+  --cyan:#57c8e8;
+  --ember:#e8613f;
+  --ember-d:#b8362a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:#05080d;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  overflow:hidden;
+}
+/* 뷰포트에 맞춰 축소 */
+#viewport{width:1080px;height:1920px;transform-origin:center center;}
+
+/* ---------- 프레임 ---------- */
+.phone{
+  position:relative;width:1080px;height:1920px;overflow:hidden;
+  background:
+    radial-gradient(120% 70% at 50% 8%, #1c3550 0%, transparent 60%),
+    linear-gradient(180deg,#0d1929 0%,#0a1420 45%,#060c15 100%);
+  color:var(--text);
+}
+.bg-glow{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(46% 30% at 50% 30%, rgba(88,140,200,.20) 0%, transparent 70%),
+    radial-gradient(70% 40% at 50% 52%, rgba(217,185,110,.10) 0%, transparent 70%);
+}
+.bg-vignette{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(80% 60% at 50% 45%, transparent 30%, rgba(0,0,0,.62) 100%);
+}
+.bg-rays{
+  position:absolute;left:50%;top:-120px;width:1400px;height:1200px;
+  transform:translateX(-50%);pointer-events:none;opacity:.35;
+  background:
+    conic-gradient(from 200deg at 50% 0%,
+      transparent 0deg, rgba(150,190,240,.10) 12deg, transparent 24deg,
+      transparent 40deg, rgba(217,185,110,.08) 52deg, transparent 64deg,
+      transparent 96deg, rgba(150,190,240,.09) 108deg, transparent 120deg);
+  filter:blur(2px);
+}
+
+/* ---------- 상단 바 ---------- */
+.topbar{
+  position:relative;z-index:6;height:150px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 40px;
+}
+.icon-btn{
+  position:absolute;top:44px;width:64px;height:64px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(30,48,70,.9),rgba(14,25,40,.9));
+  border:1px solid var(--gold-dim);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.icon-btn.left{left:36px}
+.icon-btn.right{right:36px}
+.title-wrap{display:flex;align-items:center;gap:22px;margin-top:6px}
+.title-wrap .line{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),var(--gold))}
+.title-wrap .line.r{background:linear-gradient(270deg,transparent,var(--gold-dim),var(--gold))}
+.dia{width:12px;height:12px;transform:rotate(45deg);border:1px solid var(--gold);background:rgba(217,185,110,.25)}
+.screen-title{
+  font-size:44px;font-weight:700;letter-spacing:6px;color:var(--gold-lt);
+  text-shadow:0 0 18px rgba(217,185,110,.35),0 2px 4px rgba(0,0,0,.7);
+}
+.sub-title{
+  position:absolute;top:112px;left:0;right:0;text-align:center;
+  font-size:22px;color:var(--text-dim);letter-spacing:3px;
+}
+
+/* ---------- 스테이지 ---------- */
+.stage{
+  position:relative;height:840px;margin-top:4px;z-index:5;
+}
+.skyfield{position:absolute;inset:0;pointer-events:none}
+.skyfield span{
+  position:absolute;width:4px;height:4px;border-radius:50%;
+  background:#dbe8f7;box-shadow:0 0 8px rgba(200,225,255,.9);
+  animation:tw 4.5s ease-in-out infinite;animation-delay:var(--d);opacity:.25;
+}
+@keyframes tw{0%,100%{opacity:.16;transform:scale(.7)}50%{opacity:.7;transform:scale(1.15)}}
+
+/* 바닥 플랫폼 */
+.floor{
+  position:absolute;left:50%;bottom:96px;transform:translateX(-50%);
+  width:1000px;height:190px;pointer-events:none;
+}
+.floor .disc{
+  position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(50% 60% at 50% 50%, rgba(94,140,196,.28) 0%, rgba(30,52,80,.16) 45%, transparent 72%);
+}
+.floor .rim{
+  position:absolute;left:60px;right:60px;top:52px;height:86px;border-radius:50%;
+  border:1px solid rgba(217,185,110,.30);
+  box-shadow:0 0 30px rgba(217,185,110,.12), inset 0 0 40px rgba(217,185,110,.06);
+}
+.floor .rim.inner{left:150px;right:150px;top:70px;height:52px;border-color:rgba(217,185,110,.18)}
+.floor-line{
+  position:absolute;left:40px;right:40px;bottom:92px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(217,185,110,.35),transparent);
+}
+
+/* 라인업 */
+.lineup{
+  position:absolute;left:0;right:0;bottom:104px;
+  display:flex;align-items:flex-end;justify-content:center;gap:8px;
+  padding:0 22px;
+}
+.hero{
+  position:relative;width:196px;height:520px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  cursor:pointer;
+  transform:translateY(var(--dy,0px));
+  transition:transform .35s ease, filter .35s ease, opacity .35s ease;
+}
+.hero[data-depth="out"]{--dy:18px;--ds:.84}
+.hero[data-depth="mid"]{--dy:8px;--ds:.93}
+.hero[data-depth="ctr"]{--dy:0px;--ds:1}
+.hero.is-selected{--ds:1.14;z-index:4}
+.hero.dimmed{filter:brightness(.38) saturate(.30) blur(.5px);opacity:.9}
+.hero.locked{cursor:not-allowed}
+.hero.locked.dimmed{filter:brightness(.42) saturate(.15) blur(.4px)}
+
+.figure-box{position:relative;width:196px;height:384px;display:flex;align-items:flex-end;justify-content:center;
+  transform:scale(var(--ds,1));transform-origin:50% 100%;
+  transition:transform .35s cubic-bezier(.2,.9,.25,1.1);}
+.figure-box svg{width:116%;height:auto;overflow:visible;display:block;
+  filter:drop-shadow(0 14px 18px rgba(0,0,0,.55))}
+.shadow{
+  position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+  width:146px;height:28px;border-radius:50%;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.62), transparent 72%);
+}
+
+/* 선택 연출 */
+.rune{
+  position:absolute;bottom:-16px;left:50%;transform:translateX(-50%) rotateX(72deg);
+  width:200px;height:200px;border-radius:50%;opacity:0;pointer-events:none;
+  border:2px dashed rgba(240,220,170,.75);
+  box-shadow:0 0 32px rgba(230,190,110,.55), inset 0 0 30px rgba(230,190,110,.30);
+  transition:opacity .35s ease;
+}
+.rune::after{
+  content:'';position:absolute;inset:26px;border-radius:50%;
+  border:1px solid rgba(240,220,170,.45);
+}
+.hero.is-selected .rune{opacity:1;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:translateX(-50%) rotateX(72deg) rotate(360deg)}}
+
+.beam{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:252px;height:520px;opacity:0;pointer-events:none;
+  background:linear-gradient(180deg, rgba(240,220,170,.00) 0%, rgba(240,220,170,.10) 55%, rgba(240,220,170,.22) 100%);
+  clip-path:polygon(28% 0,72% 0,100% 100%,0 100%);
+  transition:opacity .4s ease;filter:blur(6px);
+}
+.hero.is-selected .beam{opacity:1}
+
+.fx{position:absolute;inset:-60px -40px 0;pointer-events:none;overflow:visible}
+.pt{position:absolute;bottom:40px;opacity:0}
+.pt.d{width:10px;height:10px;transform:rotate(45deg);background:linear-gradient(135deg,#fff6dd,#e2b85f);box-shadow:0 0 10px rgba(240,205,130,.9)}
+.pt.o{width:6px;height:6px;border-radius:50%;background:#fff3d2;box-shadow:0 0 12px rgba(255,225,160,.95)}
+.pt.s{width:3px;height:16px;border-radius:2px;background:linear-gradient(180deg,#fff8e6,rgba(226,184,95,0));box-shadow:0 0 8px rgba(240,205,130,.8)}
+@keyframes rise{
+  0%{opacity:0;transform:translate(0,0) scale(.4)}
+  12%{opacity:1}
+  70%{opacity:.9}
+  100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(var(--tsc))}
+}
+/* 상시 은은한 정령 입자 (스크린샷용) */
+.mote{
+  position:absolute;bottom:60px;width:5px;height:5px;border-radius:50%;
+  background:#ffeec2;box-shadow:0 0 10px rgba(255,220,150,.9);opacity:0;
+}
+.hero.is-selected .mote{animation:float 3.6s ease-in-out infinite}
+@keyframes float{
+  0%{opacity:0;transform:translateY(0) scale(.6)}
+  20%{opacity:.95}
+  100%{opacity:0;transform:translateY(-230px) scale(.3)}
+}
+.burst{
+  position:absolute;bottom:20px;left:50%;width:200px;height:200px;margin-left:-100px;
+  border-radius:50%;border:2px solid rgba(255,235,190,.9);opacity:0;pointer-events:none;
+}
+@keyframes ring{0%{opacity:.95;transform:scale(.25)}100%{opacity:0;transform:scale(1.7)}}
+
+/* 이름표 */
+.plate{
+  position:relative;margin-top:16px;width:172px;padding:9px 8px 10px;
+  text-align:center;
+  background:linear-gradient(180deg,rgba(24,41,63,.95),rgba(10,19,31,.95));
+  border:1px solid var(--gold-dim);border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .3s ease, border-color .3s ease, background .3s ease;
+}
+.hero.is-selected .plate{
+  transform:scale(1.06);
+  border-color:rgba(240,215,160,.85);
+  background:linear-gradient(180deg,rgba(58,45,28,.96),rgba(28,22,14,.96));
+  box-shadow:0 0 22px rgba(217,185,110,.45), inset 0 1px 0 rgba(255,255,255,.10);
+}
+.plate .cls{font-size:23px;font-weight:700;color:var(--cream);letter-spacing:1px;white-space:nowrap}
+.hero.is-selected .plate .cls{color:#ffe9b8}
+.plate .role{margin-top:3px;font-size:16px;color:var(--text-dim);letter-spacing:1px}
+
+.check{
+  position:absolute;top:-20px;left:-20px;width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(180deg,#e8613f,#b8362a);
+  border:2px solid #ffd9a0;display:none;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.55);
+}
+.hero.is-selected .check{display:flex}
+
+/* Coming Soon */
+.soon-tag{
+  position:absolute;top:150px;left:50%;transform:translateX(-50%) rotate(-7deg);
+  padding:7px 16px;border-radius:6px;
+  background:linear-gradient(180deg,rgba(38,54,76,.96),rgba(18,30,46,.96));
+  border:1px solid rgba(160,185,215,.45);
+  font-size:19px;font-weight:800;letter-spacing:3px;color:#b7c8dd;
+  text-shadow:0 1px 2px rgba(0,0,0,.8);
+  box-shadow:0 4px 12px rgba(0,0,0,.55);white-space:nowrap;
+}
+.lock{
+  position:absolute;top:232px;left:50%;transform:translateX(-50%);
+  width:56px;height:56px;border-radius:50%;
+  background:rgba(10,18,30,.85);border:1px solid rgba(160,185,215,.35);
+  display:flex;align-items:center;justify-content:center;
+}
+.hero.locked .plate .cls{color:#8ea0b8}
+.shake{animation:sh .4s ease}
+@keyframes sh{0%,100%{transform:translateY(var(--dy)) translateX(0)}
+  20%{transform:translateY(var(--dy)) translateX(-10px)}
+  50%{transform:translateY(var(--dy)) translateX(9px)}
+  80%{transform:translateY(var(--dy)) translateX(-5px)}}
+
+/* ---------- 공용 패널 ---------- */
+.panel{
+  position:relative;
+  background:linear-gradient(180deg,var(--panel-a),var(--panel-b));
+  border:1px solid var(--gold-dim);border-radius:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.panel .corner{position:absolute;width:16px;height:16px;border:1px solid rgba(217,185,110,.55)}
+.panel .c1{top:8px;left:8px;border-right:0;border-bottom:0}
+.panel .c2{top:8px;right:8px;border-left:0;border-bottom:0}
+.panel .c3{bottom:8px;left:8px;border-right:0;border-top:0}
+.panel .c4{bottom:8px;right:8px;border-left:0;border-top:0}
+.panel-head{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:18px}
+.panel-head .ln{width:56px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim))}
+.panel-head .ln.r{background:linear-gradient(270deg,transparent,var(--gold-dim))}
+.panel-head h3{font-size:27px;font-weight:700;color:var(--gold-lt);letter-spacing:3px}
+
+/* ---------- 정보 패널 ---------- */
+.content{position:relative;z-index:6;padding:0 40px}
+.info{padding:26px 30px 24px;min-height:340px}
+.info-top{display:flex;align-items:flex-start;gap:20px}
+.info-name{font-size:40px;font-weight:800;color:#ffe9b8;letter-spacing:2px;
+  text-shadow:0 0 16px rgba(217,185,110,.30)}
+.tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tag{padding:5px 14px;border-radius:20px;font-size:18px;letter-spacing:1px;
+  background:rgba(87,200,232,.10);border:1px solid rgba(87,200,232,.35);color:#9fdcf0}
+.tag.g{background:rgba(217,185,110,.10);border-color:rgba(217,185,110,.38);color:#e6cd93}
+.diff{margin-left:auto;text-align:right;flex-shrink:0}
+.diff .lb{font-size:17px;color:var(--text-dim);letter-spacing:2px}
+.diff .stars{margin-top:6px;font-size:24px;color:var(--gold);letter-spacing:4px}
+.diff .stars i{color:#334458;font-style:normal}
+.lore{margin-top:16px;font-size:21px;line-height:1.55;color:#9fb0c4}
+.lore b{color:var(--gold-lt);font-weight:600}
+
+.stats{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px 34px}
+.stat{display:flex;align-items:center;gap:12px}
+.stat .k{width:76px;font-size:20px;color:#a9b8ca;letter-spacing:1px;flex-shrink:0}
+.stat .bar{flex:1;height:12px;border-radius:6px;background:rgba(6,12,20,.85);
+  border:1px solid rgba(217,185,110,.20);overflow:hidden;position:relative}
+.stat .fill{height:100%;border-radius:5px;
+  background:linear-gradient(90deg,#8a6a2e,#e6c273 60%,#ffeab8);
+  box-shadow:0 0 10px rgba(230,194,115,.45);transition:width .45s ease}
+.stat.cy .fill{background:linear-gradient(90deg,#1f6a86,#57c8e8 60%,#a9e9fb);
+  box-shadow:0 0 10px rgba(87,200,232,.45)}
+.stat .v{width:52px;text-align:right;font-size:19px;color:var(--cream);flex-shrink:0}
+
+.skills{margin-top:20px;display:flex;align-items:center;gap:14px}
+.skill{position:relative;width:74px;height:74px;border-radius:12px;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(180deg,rgba(30,48,70,.9),rgba(12,22,36,.9));
+  border:1px solid rgba(217,185,110,.30);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.skill.hi{border-color:rgba(240,215,160,.85);box-shadow:0 0 16px rgba(217,185,110,.35)}
+.skill .art{position:absolute;inset:0}
+.skill .glyph{position:relative;z-index:2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.skill.lk{background:linear-gradient(180deg,rgba(18,30,46,.95),rgba(9,16,26,.95));border-color:rgba(217,185,110,.16)}
+.skill.lk .lv{font-size:19px;color:#6f8098;letter-spacing:.5px}
+.skill-note{font-size:19px;color:var(--text-dim);line-height:1.45}
+.skill-note b{color:#c9b98a}
+
+/* ---------- 이름 입력 ---------- */
+.namebox{margin-top:20px;padding:24px 30px 26px}
+.name-row{display:flex;align-items:center;gap:14px}
+.field{
+  position:relative;flex:1;height:86px;border-radius:12px;
+  background:linear-gradient(180deg,rgba(6,12,20,.95),rgba(10,18,30,.95));
+  border:1px solid rgba(217,185,110,.38);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.6);
+  display:flex;align-items:center;padding:0 20px;
+}
+.field.focus{border-color:rgba(240,215,160,.9);box-shadow:inset 0 2px 8px rgba(0,0,0,.6),0 0 18px rgba(217,185,110,.30)}
+.field input{
+  flex:1;background:transparent;border:0;outline:none;
+  font-family:inherit;font-size:32px;color:#ffeec2;letter-spacing:2px;
+}
+.field input::placeholder{color:#5c6b7e;letter-spacing:1px}
+.counter{font-size:20px;color:var(--text-dim);margin-left:12px;flex-shrink:0}
+.counter b{color:var(--gold)}
+.sq-btn{
+  width:86px;height:86px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(180deg,rgba(32,52,76,.95),rgba(14,26,42,.95));
+  border:1px solid rgba(217,185,110,.38);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07);
+}
+.sq-btn:active{transform:translateY(2px)}
+.hint{margin-top:14px;font-size:19px;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+.hint.ok{color:#7fd6a2}
+.hint.no{color:#e08a7a}
+
+/* ---------- 하단 CTA ---------- */
+.bottom{position:relative;z-index:6;padding:22px 40px 34px}
+.cta{
+  width:100%;height:112px;border-radius:14px;cursor:pointer;border:2px solid #f0c98a;
+  background:linear-gradient(180deg,#ef7250 0%,#d9492f 48%,#a92c22 100%);
+  box-shadow:0 8px 22px rgba(180,60,40,.40), inset 0 2px 0 rgba(255,255,255,.28), inset 0 -3px 0 rgba(0,0,0,.30);
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  font-size:38px;font-weight:800;color:#fff4e2;letter-spacing:8px;
+  text-shadow:0 2px 4px rgba(0,0,0,.55);
+  transition:filter .2s ease, transform .1s ease;
+}
+.cta:active{transform:translateY(3px)}
+.cta.off{filter:saturate(.35) brightness(.48);cursor:not-allowed;border-color:rgba(240,201,138,.30);box-shadow:none}
+.foot{margin-top:14px;text-align:center;font-size:18px;color:#61708a;letter-spacing:1px}
+
+/* 토스트 */
+.toast{
+  position:absolute;left:50%;bottom:270px;transform:translateX(-50%) translateY(14px);
+  padding:16px 34px;border-radius:10px;z-index:20;opacity:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(26,42,62,.97),rgba(12,22,36,.97));
+  border:1px solid rgba(217,185,110,.45);
+  font-size:23px;color:var(--cream);letter-spacing:1px;
+  box-shadow:0 8px 24px rgba(0,0,0,.6);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="viewport">
+<div class="phone">
+  <div class="bg-rays"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-vignette"></div>
+
+  <!-- ================= 상단 바 ================= -->
+  <div class="topbar">
+    <div class="icon-btn left">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#e8dcc0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 5 L8 12 L15 19"/>
+      </svg>
+    </div>
+    <div class="title-wrap">
+      <div class="line"></div><div class="dia"></div>
+      <div class="screen-title">영웅 선택</div>
+      <div class="dia"></div><div class="line r"></div>
+    </div>
+    <div class="icon-btn right">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e8dcc0" stroke-width="2">
+        <circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.7 2.7 0 1 1 3.4 3.2c-.6.2-.9.7-.9 1.3v.4" stroke-linecap="round"/>
+        <circle cx="12" cy="17.4" r="1.1" fill="#e8dcc0" stroke="none"/>
+      </svg>
+    </div>
+    <div class="sub-title">함께 모험을 시작할 영웅을 선택하세요</div>
+  </div>
+
+  <!-- ================= 스테이지 ================= -->
+  <div class="stage">
+    <div class="skyfield">
+      <span style="left:12%;top:64px;--d:0s"></span><span style="left:23%;top:150px;--d:1.2s"></span>
+      <span style="left:38%;top:92px;--d:2.1s"></span><span style="left:52%;top:38px;--d:.6s"></span>
+      <span style="left:66%;top:132px;--d:1.7s"></span><span style="left:79%;top:74px;--d:2.6s"></span>
+      <span style="left:88%;top:168px;--d:.9s"></span><span style="left:30%;top:214px;--d:3.1s"></span>
+      <span style="left:71%;top:222px;--d:2.3s"></span>
+    </div>
+    <div class="floor">
+      <div class="disc"></div>
+      <div class="rim"></div>
+      <div class="rim inner"></div>
+    </div>
+    <div class="floor-line"></div>
+    <div class="lineup" id="lineup"></div>
+  </div>
+
+  <!-- ================= 정보 / 이름 ================= -->
+  <div class="content">
+    <div class="panel info">
+      <span class="corner c1"></span><span class="corner c2"></span>
+      <span class="corner c3"></span><span class="corner c4"></span>
+      <div class="info-top">
+        <div>
+          <div class="info-name" id="iName">그림자 사냥꾼</div>
+          <div class="tags" id="iTags"></div>
+        </div>
+        <div class="diff">
+          <div class="lb">숙련도</div>
+          <div class="stars" id="iStars"></div>
+        </div>
+      </div>
+      <div class="lore" id="iLore"></div>
+      <div class="stats" id="iStats"></div>
+      <div class="skills" id="iSkills"></div>
+    </div>
+
+    <div class="panel namebox">
+      <span class="corner c1"></span><span class="corner c2"></span>
+      <span class="corner c3"></span><span class="corner c4"></span>
+      <div class="panel-head">
+        <div class="ln"></div><div class="dia"></div>
+        <h3>캐릭터 이름</h3>
+        <div class="dia"></div><div class="ln r"></div>
+      </div>
+      <div class="name-row">
+        <div class="field" id="field">
+          <input id="nameInput" maxlength="12" placeholder="이름을 입력하세요" autocomplete="off">
+          <div class="counter"><b id="cnt">0</b>/12</div>
+        </div>
+        <div class="sq-btn" id="diceBtn" title="랜덤 이름">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#e6cd93" stroke-width="1.7">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="4"/>
+            <circle cx="8.5" cy="8.5" r="1.5" fill="#e6cd93" stroke="none"/>
+            <circle cx="15.5" cy="15.5" r="1.5" fill="#e6cd93" stroke="none"/>
+            <circle cx="12" cy="12" r="1.5" fill="#e6cd93" stroke="none"/>
+          </svg>
+        </div>
+      </div>
+      <div class="hint" id="hint">2~12자의 한글 · 영문 · 숫자를 사용할 수 있습니다</div>
+    </div>
+  </div>
+
+  <!-- ================= 하단 ================= -->
+  <div class="bottom">
+    <div class="cta off" id="cta">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff4e2"><path d="M12 2l2.6 6.2 6.7.5-5.1 4.4 1.6 6.6L12 16.2 6.2 19.7l1.6-6.6L2.7 8.7l6.7-.5z"/></svg>
+      모험 시작
+    </div>
+    <div class="foot">선택한 영웅과 이름은 게임 시작 후 변경할 수 없습니다</div>
+  </div>
+
+  <div class="toast" id="toast">준비 중인 영웅입니다</div>
+</div>
+</div>
+
+<!-- ===== 공용 그라디언트 정의 ===== -->
+<svg width="0" height="0" style="position:absolute">
+<defs>
+  <linearGradient id="gSkin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4cfa4"/><stop offset="1" stop-color="#d9a273"/></linearGradient>
+  <linearGradient id="gSkin2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9c49c"/><stop offset="1" stop-color="#c69268"/></linearGradient>
+  <linearGradient id="gFur" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9b7c50"/><stop offset="1" stop-color="#54402a"/></linearGradient>
+  <linearGradient id="gLeather" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a35"/><stop offset="1" stop-color="#4e3220"/></linearGradient>
+  <linearGradient id="gHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4653a"/><stop offset="1" stop-color="#993d22"/></linearGradient>
+  <linearGradient id="gSteel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6eef7"/><stop offset=".5" stop-color="#a9bccf"/><stop offset="1" stop-color="#67809a"/></linearGradient>
+  <linearGradient id="gCloak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6f74"/><stop offset="1" stop-color="#173c46"/></linearGradient>
+  <linearGradient id="gCloak2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d8a8c"/><stop offset="1" stop-color="#1d4c56"/></linearGradient>
+  <linearGradient id="gGoldM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9b0"/><stop offset="1" stop-color="#c39a4b"/></linearGradient>
+  <linearGradient id="gSil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3c53"/><stop offset="1" stop-color="#101c2c"/></linearGradient>
+  <linearGradient id="gSilRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5c7a9e"/><stop offset="1" stop-color="#3a5271"/></linearGradient>
+</defs>
+</svg>
+
+<script>
+/* ==========================================================
+   1) 영웅 데이터 (2인 플레이 가능 / 3인 Coming Soon)
+   ========================================================== */
+const SVG = {};
+
+/* --- 바바리안 --- */
+SVG.barb = `
+<svg viewBox="0 0 200 330">
+  <!-- 다리 -->
+  <path d="M74 232 h22 v70 h-26 q-4 -34 4 -70z" fill="url(#gLeather)"/>
+  <path d="M106 232 h22 q8 36 4 70 h-26z" fill="url(#gLeather)"/>
+  <rect x="64" y="292" width="42" height="24" rx="9" fill="#3b2717"/>
+  <rect x="98" y="292" width="42" height="24" rx="9" fill="#33210f"/>
+  <!-- 몸통 -->
+  <path d="M62 148 q38 -16 78 0 l8 66 q-46 20 -94 0z" fill="url(#gSkin2)"/>
+  <path d="M62 190 q46 20 86 0 l-4 30 q-40 18 -78 0z" fill="url(#gFur)"/>
+  <path d="M74 154 L128 206" stroke="url(#gLeather)" stroke-width="13" stroke-linecap="round"/>
+  <rect x="92" y="172" width="20" height="18" rx="4" fill="url(#gGoldM)"/>
+  <!-- 어깨 모피 -->
+  <ellipse cx="60" cy="152" rx="27" ry="23" fill="url(#gFur)"/>
+  <ellipse cx="142" cy="152" rx="27" ry="23" fill="url(#gFur)"/>
+  <path d="M40 150 q22 -18 42 -4" fill="none" stroke="#d8c39c" stroke-width="3" opacity=".5"/>
+  <!-- 팔 -->
+  <path d="M46 164 q-12 30 -2 56 l24 -6 q-8 -26 0 -48z" fill="url(#gSkin)"/>
+  <path d="M156 164 q12 30 2 56 l-24 -6 q8 -26 0 -48z" fill="url(#gSkin)"/>
+  <circle cx="56" cy="226" r="14" fill="url(#gSkin)"/>
+  <!-- 도끼 -->
+  <g transform="translate(150,160) rotate(-7)">
+    <rect x="-5" y="-70" width="10" height="192" rx="5" fill="url(#gLeather)"/>
+    <path d="M4 -62 L44 -74 Q62 -42 44 -10 L4 -22 Z" fill="url(#gSteel)" stroke="#48607a" stroke-width="2"/>
+    <path d="M12 -58 L38 -66 Q50 -42 38 -16 L12 -28 Z" fill="#e2ecf6" opacity=".55"/>
+    <rect x="-9" y="-72" width="18" height="15" rx="3" fill="url(#gGoldM)"/>
+    <rect x="-6" y="20" width="12" height="10" rx="3" fill="url(#gGoldM)"/>
+  </g>
+  <circle cx="148" cy="226" r="14" fill="url(#gSkin)"/>
+  <!-- 머리 -->
+  <circle cx="101" cy="92" r="52" fill="url(#gSkin)"/>
+  <path d="M50 88 q4 -56 51 -56 t51 56 q-16 -26 -51 -26 T50 88z" fill="url(#gHair)"/>
+  <path d="M62 62 q-14 -22 6 -32 q4 16 16 18z" fill="url(#gHair)"/>
+  <path d="M140 62 q14 -22 -6 -32 q-4 16 -16 18z" fill="url(#gHair)"/>
+  <path d="M64 108 q37 40 74 0 q4 44 -37 50 q-41 -6 -37 -50z" fill="url(#gHair)"/>
+  <ellipse cx="82" cy="98" rx="7" ry="9" fill="#2b1a10"/>
+  <ellipse cx="120" cy="98" rx="7" ry="9" fill="#2b1a10"/>
+  <circle cx="84" cy="95" r="2.6" fill="#fff"/><circle cx="122" cy="95" r="2.6" fill="#fff"/>
+  <path d="M70 82 l22 6" stroke="#8a3f22" stroke-width="5" stroke-linecap="round"/>
+  <path d="M132 82 l-22 6" stroke="#8a3f22" stroke-width="5" stroke-linecap="round"/>
+  <path d="M92 120 q9 8 18 0" fill="none" stroke="#a8663c" stroke-width="3" stroke-linecap="round"/>
+  <!-- 머리띠 -->
+  <path d="M52 78 q49 -18 98 0 l-2 12 q-47 -17 -94 0z" fill="url(#gGoldM)"/>
+</svg>`;
+
+/* --- 그림자 사냥꾼 --- */
+SVG.hunt = `
+<svg viewBox="0 0 200 330">
+  <!-- 활 -->
+  <g transform="translate(44,168)">
+    <path d="M0 -92 Q-42 0 0 92" fill="none" stroke="#6a4a2c" stroke-width="9" stroke-linecap="round"/>
+    <path d="M0 -90 L0 90" stroke="#dfe7ef" stroke-width="2.2" opacity=".85"/>
+    <circle cx="-30" cy="0" r="8" fill="url(#gGoldM)"/>
+  </g>
+  <!-- 망토 -->
+  <path d="M46 148 q54 -26 108 0 l14 116 q-68 26 -136 0z" fill="url(#gCloak)"/>
+  <path d="M100 150 l-6 112 h12z" fill="#0f2c35" opacity=".6"/>
+  <!-- 다리 -->
+  <path d="M78 244 h20 v62 h-24 q-2 -30 4 -62z" fill="#26404a"/>
+  <path d="M104 244 h20 q6 32 4 62h-24z" fill="#26404a"/>
+  <rect x="66" y="296" width="42" height="22" rx="9" fill="#1b2f37"/>
+  <rect x="98" y="296" width="42" height="22" rx="9" fill="#16282f"/>
+  <!-- 몸통 -->
+  <path d="M66 150 q34 -14 70 0 l6 74 q-40 16 -82 0z" fill="url(#gCloak2)"/>
+  <path d="M76 156 l24 22 l24 -22 l-4 66 q-20 10 -40 0z" fill="#123039"/>
+  <path d="M66 196 q40 16 76 0 l-2 14 q-36 16 -72 0z" fill="url(#gLeather)"/>
+  <rect x="92" y="196" width="18" height="16" rx="4" fill="url(#gGoldM)"/>
+  <!-- 화살통 -->
+  <g transform="translate(150,150) rotate(14)">
+    <rect x="0" y="0" width="26" height="66" rx="8" fill="#5c3d22"/>
+    <path d="M6 0 l-2 -26 M14 0 l0 -30 M22 0 l4 -26" stroke="#c9d5e2" stroke-width="3" stroke-linecap="round"/>
+    <path d="M2 -22 l4 -8 l4 8z M10 -26 l4 -8 l4 8z M20 -22 l4 -8 l4 8z" fill="#d8e2ee"/>
+  </g>
+  <!-- 팔 -->
+  <path d="M56 164 q-12 26 -4 50 l24 -6 q-6 -24 2 -44z" fill="url(#gCloak2)"/>
+  <path d="M146 164 q12 26 4 50 l-24 -6 q6 -24 -2 -44z" fill="url(#gCloak2)"/>
+  <circle cx="64" cy="218" r="13" fill="url(#gSkin)"/>
+  <circle cx="140" cy="218" r="13" fill="url(#gSkin)"/>
+  <!-- 머리 + 후드 -->
+  <circle cx="101" cy="94" r="50" fill="url(#gSkin)"/>
+  <path d="M48 100 q0 -62 53 -62 t53 62 q-10 -34 -53 -34 T48 100z" fill="url(#gCloak2)"/>
+  <path d="M48 98 q10 -22 26 -30 l-4 34z" fill="#123039"/>
+  <path d="M154 98 q-10 -22 -26 -30 l4 34z" fill="#123039"/>
+  <path d="M50 96 q51 -30 102 0 l-4 22 q-47 -26 -94 0z" fill="#0e2731"/>
+  <ellipse cx="83" cy="106" rx="7" ry="8.5" fill="#1b2c34"/>
+  <ellipse cx="120" cy="106" rx="7" ry="8.5" fill="#1b2c34"/>
+  <circle cx="85" cy="103" r="2.6" fill="#8ef0ff"/><circle cx="122" cy="103" r="2.6" fill="#8ef0ff"/>
+  <path d="M56 118 q-14 30 4 48 l16 -16z" fill="url(#gCloak)"/>
+  <path d="M146 118 q14 30 -4 48 l-16 -16z" fill="url(#gCloak)"/>
+  <path d="M92 128 q9 6 18 0" fill="none" stroke="#b3805a" stroke-width="3" stroke-linecap="round"/>
+</svg>`;
+
+/* --- Coming Soon 실루엣: 마도사 / 수호기사 / 사제 --- */
+SVG.mage = `
+<svg viewBox="0 0 200 330">
+  <g fill="url(#gSil)">
+    <path d="M156 60 q-8 -14 -18 0 q-2 12 9 16 q11 -4 9 -16z" fill="#3a5b7d"/>
+    <rect x="146" y="74" width="8" height="228" rx="4" fill="url(#gSil)"/>
+    <path d="M52 176 q48 -28 96 0 l14 128 q-62 22 -124 0z"/>
+    <path d="M62 158 q38 -16 76 0 l4 30 q-42 16 -84 0z"/>
+    <circle cx="100" cy="104" r="46"/>
+    <path d="M50 108 q10 -78 50 -92 q40 14 50 92 q-50 -34 -100 0z"/>
+    <path d="M100 16 q22 34 -6 34 q-18 -6 6 -34z" />
+    <circle cx="60" cy="196" r="16"/><circle cx="142" cy="196" r="16"/>
+  </g>
+  <circle cx="147" cy="66" r="14" fill="none" stroke="#4d7ba8" stroke-width="2" opacity=".55"/>
+  <path d="M52 108 q10 -76 48 -90" fill="none" stroke="#587fa8" stroke-width="2.4" opacity=".6"/>
+  <path d="M54 178 q46 -26 92 0" fill="none" stroke="#4a6b90" stroke-width="2" opacity=".45"/>
+  <ellipse cx="84" cy="112" rx="6" ry="7" fill="#2f5a80" opacity=".9"/>
+  <ellipse cx="116" cy="112" rx="6" ry="7" fill="#2f5a80" opacity=".9"/>
+</svg>`;
+
+SVG.guard = `
+<svg viewBox="0 0 200 330">
+  <g fill="url(#gSil)">
+    <path d="M76 226 h22 v78 h-26 q-4 -38 4 -78z"/>
+    <path d="M104 226 h22 q8 40 4 78 h-26z"/>
+    <rect x="62" y="294" width="46" height="24" rx="9"/>
+    <rect x="96" y="294" width="46" height="24" rx="9"/>
+    <path d="M58 146 q44 -18 88 0 l8 84 q-52 22 -104 0z"/>
+    <ellipse cx="54" cy="150" rx="28" ry="24"/>
+    <ellipse cx="148" cy="150" rx="28" ry="24"/>
+    <path d="M40 162 q-14 32 -2 60 l26 -8 q-10 -28 0 -50z"/>
+    <circle cx="101" cy="92" r="50"/>
+    <path d="M52 96 q6 -58 49 -58 t49 58 l-8 26 q-41 -22 -82 0z"/>
+    <path d="M96 62 h10 v66 h-10z" fill="#0b1522"/>
+    <path d="M101 18 q10 22 0 30 q-10 -8 0 -30z"/>
+  </g>
+  <!-- 대형 방패 -->
+  <g transform="translate(150,196)">
+    <path d="M-34 -62 q34 -14 68 0 v52 q0 44 -34 62 q-34 -18 -34 -62z" fill="url(#gSil)" stroke="#4b6b90" stroke-width="2.5"/>
+    <path d="M0 -62 v112" stroke="#48678a" stroke-width="3" opacity=".7"/>
+    <path d="M-30 -12 h60" stroke="#48678a" stroke-width="3" opacity=".7"/>
+  </g>
+  <path d="M54 98 q6 -56 47 -56" fill="none" stroke="#5b81ab" stroke-width="2.6" opacity=".6"/>
+  <path d="M60 148 q42 -16 82 0" fill="none" stroke="#4a6b90" stroke-width="2" opacity=".5"/>
+  <path d="M78 100 h16 M110 100 h16" stroke="#2f5a80" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+</svg>`;
+
+SVG.priest = `
+<svg viewBox="0 0 200 330">
+  <g fill="url(#gSil)">
+    <path d="M50 178 q50 -28 100 0 l12 126 q-62 22 -124 0z"/>
+    <path d="M64 150 q37 -16 74 0 l4 34 q-41 16 -82 0z"/>
+    <path d="M46 168 q-12 34 0 62 l26 -8 q-10 -30 0 -52z"/>
+    <path d="M154 168 q12 34 0 62 l-26 -8 q10 -30 0 -52z"/>
+    <circle cx="100" cy="98" r="46"/>
+    <path d="M54 104 q0 -58 46 -58 t46 58 l-10 -6 q-36 -20 -72 0z"/>
+    <path d="M56 100 q44 -26 88 0 l4 16 q-48 -24 -96 0z"/>
+  </g>
+  <!-- 성물 지팡이 -->
+  <g transform="translate(150,150)">
+    <rect x="-4" y="-64" width="8" height="216" rx="4" fill="url(#gSil)"/>
+    <path d="M-3 -96 h6 v20 h16 v6 h-16 v22 h-6 v-22 h-16 v-6 h16z" fill="#3d6288"/>
+    <circle cx="0" cy="-70" r="20" fill="none" stroke="#456b95" stroke-width="2.4" opacity=".7"/>
+  </g>
+  <path d="M56 104 q0 -56 44 -56" fill="none" stroke="#5b81ab" stroke-width="2.6" opacity=".6"/>
+  <path d="M52 180 q48 -26 96 0" fill="none" stroke="#4a6b90" stroke-width="2" opacity=".45"/>
+  <ellipse cx="84" cy="106" rx="6" ry="7" fill="#2f5a80" opacity=".9"/>
+  <ellipse cx="116" cy="106" rx="6" ry="7" fill="#2f5a80" opacity=".9"/>
+  <path d="M84 154 h32 v10 h-11 v22 h-10 v-22 h-11z" fill="#3d6288"/>
+</svg>`;
+
+const HEROES = [
+  { id:'mage',  svg:SVG.mage,  cls:'서리 마도사', role:'원거리 · 마법', locked:true,  depth:'out' },
+  { id:'barb',  svg:SVG.barb,  cls:'바바리안',    role:'근접 · 광폭',   locked:false, depth:'mid',
+    tags:['근접 전투','광역 딜','높은 체력'], stars:2,
+    lore:'분노를 힘으로 바꾸는 북방의 전사. <b>체력이 낮을수록</b> 공격력이 상승하며, 적진 한가운데를 정면으로 돌파합니다.',
+    stats:[['공격력',88],['방어력',72],['생존력',95],['기동성',48],['치명타',60],['광역',82]],
+    skill:'대지 가르기' },
+  { id:'hunt',  svg:SVG.hunt,  cls:'그림자 사냥꾼', role:'원거리 · 민첩', locked:false, depth:'ctr',
+    tags:['원거리 딜','치명타 특화','고기동'], stars:3,
+    lore:'어둠 속에서 활을 겨누는 추적자. <b>치명타 피해</b>에 특화되어 있으며, 단일 대상을 순식간에 제압합니다.',
+    stats:[['공격력',95],['방어력',44],['생존력',52],['기동성',92],['치명타',98],['광역',56]],
+    skill:'별빛 검무' },
+  { id:'guard', svg:SVG.guard, cls:'강철 수호자', role:'근접 · 방어', locked:true, depth:'mid' },
+  { id:'priest',svg:SVG.priest,cls:'여명의 사제', role:'보조 · 회복', locked:true, depth:'out' },
+];
+
+
+/* ---- 스킬 아이콘 아트 ---- */
+const SKILL_ART = {
+  barb:[
+    {n:'대지 가르기', bg:'radial-gradient(60% 60% at 50% 42%, #b9631f 0%, #6a2b0d 55%, #2a1207 100%)',
+     g:`<svg width="46" height="46" viewBox="0 0 48 48"><path d="M24 4 L30 20 L46 24 L30 28 L24 44 L18 28 L2 24 L18 20 Z" fill="#ffd79a"/><path d="M24 10 L27.5 21 L38 24 L27.5 27 L24 38 L20.5 27 L10 24 L20.5 21 Z" fill="#fff3dc"/></svg>`},
+    {n:'광폭화', lv:'Lv.5'},{n:'불굴', lv:'Lv.15'}
+  ],
+  hunt:[
+    {n:'별빛 검무', bg:'radial-gradient(60% 60% at 50% 42%, #d8b25a 0%, #7a5a1c 55%, #241a08 100%)',
+     g:`<svg width="46" height="46" viewBox="0 0 48 48"><path d="M8 40 L38 8" stroke="#fff6de" stroke-width="4" stroke-linecap="round"/><path d="M14 34 L40 30 M18 12 L22 38" stroke="#ffe3a8" stroke-width="2.4" stroke-linecap="round" opacity=".85"/><circle cx="38" cy="9" r="4" fill="#fffaf0"/></svg>`},
+    {n:'그림자 도약', lv:'Lv.5'},{n:'약점 간파', lv:'Lv.15'}
+  ]
+};
+
+const RANDOM_NAMES = ['바람의검','새벽추적자','붉은늑대','고요한칼날','서리방랑자','달빛사냥꾼','강철의맹세','그림자결','불꽃의아이','천공의활'];
+
+/* ==========================================================
+   2) 라인업 렌더
+   ========================================================== */
+const lineup = document.getElementById('lineup');
+HEROES.forEach((h, i) => {
+  const el = document.createElement('div');
+  el.className = 'hero' + (h.locked ? ' locked' : '');
+  el.dataset.depth = h.depth;
+  el.dataset.id = h.id;
+  el.innerHTML = `
+    <div class="beam"></div>
+    <div class="rune"></div>
+    <div class="figure-box">
+      ${h.svg}
+      <div class="shadow"></div>
+      ${h.locked ? `<div class="soon-tag">COMING SOON</div>
+        <div class="lock">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b7c8dd" stroke-width="2">
+            <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" fill="rgba(20,34,52,.9)"/>
+            <path d="M8 10.5V7.8a4 4 0 1 1 8 0v2.7"/>
+          </svg>
+        </div>` : ''}
+      <div class="fx"></div>
+      ${[...Array(5)].map((_,k)=>`<div class="mote" style="left:${18+k*32}%;animation-delay:${k*0.62}s"></div>`).join('')}
+    </div>
+    <div class="plate">
+      <div class="check">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div class="cls">${h.cls}</div>
+      <div class="role">${h.role}</div>
+    </div>`;
+  el.addEventListener('click', () => select(h.id, true));
+  lineup.appendChild(el);
+});
+
+/* ==========================================================
+   3) 선택 로직
+   ========================================================== */
+let current = null;
+
+function select(id, burst){
+  const h = HEROES.find(x => x.id === id);
+  const el = lineup.querySelector(`.hero[data-id="${id}"]`);
+  if (h.locked){
+    el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+    showToast(`${h.cls} · 준비 중인 영웅입니다`);
+    return;
+  }
+  current = id;
+  lineup.querySelectorAll('.hero').forEach(n => {
+    const on = n.dataset.id === id;
+    n.classList.toggle('is-selected', on);
+    n.classList.toggle('dimmed', !on);      // ← 선택되지 않은 캐릭터 어둡게
+  });
+  if (burst) spawnParticles(el);
+  renderInfo(h);
+  validate();
+}
+
+/* 파티클 분출 */
+function spawnParticles(el){
+  const fx = el.querySelector('.fx');
+  const ring = document.createElement('div');
+  ring.className = 'burst';
+  ring.style.animation = 'ring .75s ease-out forwards';
+  fx.appendChild(ring);
+  setTimeout(() => ring.remove(), 800);
+
+  for (let i = 0; i < 40; i++){
+    const p = document.createElement('div');
+    const kind = i % 5 === 0 ? 'd' : (i % 3 === 0 ? 's' : 'o');
+    p.className = 'pt ' + kind;
+    const sc = .5 + Math.random() * 1.2;
+    p.style.left = (12 + Math.random() * 76) + '%';
+    p.style.bottom = (10 + Math.random() * 120) + 'px';
+    p.style.setProperty('--tx', (Math.random() * 150 - 75) + 'px');
+    p.style.setProperty('--ty', (-160 - Math.random() * 230) + 'px');
+    p.style.setProperty('--tsc', sc.toFixed(2));
+    p.style.animation = `rise ${(1 + Math.random() * .9).toFixed(2)}s cubic-bezier(.2,.7,.4,1) ${(Math.random()*.28).toFixed(2)}s forwards`;
+    fx.appendChild(p);
+    setTimeout(() => p.remove(), 2400);
+  }
+}
+
+/* 정보 패널 */
+function renderInfo(h){
+  document.getElementById('iName').textContent = h.cls;
+  document.getElementById('iTags').innerHTML =
+    h.tags.map((t, i) => `<span class="tag${i === 0 ? ' g' : ''}">${t}</span>`).join('');
+  document.getElementById('iStars').innerHTML =
+    [1,2,3,4,5].map(n => n <= h.stars ? '★' : '<i>★</i>').join('');
+  document.getElementById('iLore').innerHTML = h.lore;
+  document.getElementById('iStats').innerHTML = h.stats.map(([k, v], i) => `
+    <div class="stat${i % 2 ? ' cy' : ''}">
+      <div class="k">${k}</div>
+      <div class="bar"><div class="fill" style="width:${v}%"></div></div>
+      <div class="v">${v}</div>
+    </div>`).join('');
+  const arr = SKILL_ART[h.id];
+  document.getElementById('iSkills').innerHTML =
+    arr.map(sk => sk.lv
+      ? `<div class="skill lk"><span class="lv">${sk.lv}</span></div>`
+      : `<div class="skill hi"><span class="art" style="background:${sk.bg}"></span><span class="glyph">${sk.g}</span></div>`
+    ).join('') +
+    `<div class="skill-note">시작 스킬 <b>${arr[0].n}</b><br>나머지 스킬은 <b>Lv.5</b>부터 순차 해금됩니다</div>`;
+}
+
+/* ==========================================================
+   4) 이름 입력
+   ========================================================== */
+const input = document.getElementById('nameInput');
+const field = document.getElementById('field');
+const hint  = document.getElementById('hint');
+const cta   = document.getElementById('cta');
+
+input.addEventListener('focus', () => field.classList.add('focus'));
+input.addEventListener('blur',  () => field.classList.remove('focus'));
+input.addEventListener('input', validate);
+document.getElementById('diceBtn').addEventListener('click', () => {
+  input.value = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
+  validate();
+});
+
+function validate(){
+  const v = input.value.trim();
+  document.getElementById('cnt').textContent = v.length;
+  let ok = false, msg = '2~12자의 한글 · 영문 · 숫자를 사용할 수 있습니다', cn = '';
+  if (v.length === 0){ /* 기본 안내 */ }
+  else if (v.length < 2){ msg = '이름은 2자 이상이어야 합니다'; cn = 'no'; }
+  else if (!/^[가-힣a-zA-Z0-9]+$/.test(v)){ msg = '특수문자와 공백은 사용할 수 없습니다'; cn = 'no'; }
+  else { msg = `‘${v}’ · 사용 가능한 이름입니다`; cn = 'ok'; ok = true; }
+  hint.textContent = msg;
+  hint.className = 'hint ' + cn;
+  cta.classList.toggle('off', !(ok && current));
+}
+
+cta.addEventListener('click', () => {
+  if (cta.classList.contains('off')){
+    showToast(current ? '캐릭터 이름을 입력해 주세요' : '영웅을 선택해 주세요');
+    return;
+  }
+  const h = HEROES.find(x => x.id === current);
+  showToast(`${h.cls} ‘${input.value.trim()}’ · 모험을 시작합니다`);
+});
+
+/* 토스트 */
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 1800);
+}
+
+/* ==========================================================
+   5) 초기 상태 & 뷰포트 스케일
+   ========================================================== */
+select('hunt', false);
+setTimeout(() => spawnParticles(lineup.querySelector('.hero[data-id="hunt"]')), 400);
+
+function fit(){
+  const s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  document.getElementById('viewport').style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>

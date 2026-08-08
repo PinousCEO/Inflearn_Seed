@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "671338895740",
+    "project_id": "idleproject-caf03",
+    "storage_bucket": "idleproject-caf03.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671338895740:android:254e9664ce53de41916cf9",
+        "android_client_info": {
+          "package_name": "com.pinous.idleproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671338895740-dt23vhblimnsb27t8i48s97b61d3bji2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pinous.idleproject",
+            "certificate_hash": "35c968c080132632b37f770a5ee883ef972c301d"
+          }
+        },
+        {
+          "client_id": "671338895740-l7taa5r83adqeqvs6ak0ej4lp4cdr39p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC_QdLZiVhWK11KYTY7U9tv8kssFJFHlc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671338895740-l7taa5r83adqeqvs6ak0ej4lp4cdr39p.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "671338895740-his7rhailt2ncmdtejm348d7ufsj7v2r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.pinous.idleproject"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

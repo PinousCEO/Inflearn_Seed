@@ -9,13 +9,14 @@ namespace IdleBattleEditor
 {
     public sealed class SkillDataManagerWindow : EditorWindow
     {
-        private const string SkillFolder = "Assets/00_Data/Skills";
-        private const string CharacterFolder = "Assets/00_Data/CharacterSkills";
+        private const string CharacterFolder = CharacterSkillSetFactory.SkillSetFolder;
         private const float InspectorWidth = 370f;
         private const float CardHeight = 178f;
 
         private readonly List<CharacterSkillSetData> characters = new List<CharacterSkillSetData>();
-        private readonly List<SkillData> allSkills = new List<SkillData>();
+        private readonly List<CharacterData> characterDataList = new List<CharacterData>();
+        private string[] characterDataLabels = Array.Empty<string>();
+        private Action pendingAction;
 
         private CharacterSkillSetData selectedCharacter;
         private SerializedObject characterObject;
@@ -34,6 +35,17 @@ namespace IdleBattleEditor
             window.titleContent = new GUIContent("캐릭터 스킬 보드");
             window.minSize = new Vector2(1050f, 650f);
             window.Show();
+        }
+
+        /// <summary>특정 캐릭터의 스킬 세트를 펼친 상태로 창을 엽니다.</summary>
+        public static void Open(CharacterSkillSetData skillSet)
+        {
+            Open();
+            var window = GetWindow<SkillDataManagerWindow>();
+            window.RefreshAssets();
+            if (skillSet != null)
+                window.SelectCharacter(skillSet);
+            window.Focus();
         }
 
         private void OnEnable()
@@ -70,27 +82,46 @@ namespace IdleBattleEditor
             {
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(
-                    "위에서 캐릭터를 선택하거나 새 캐릭터 스킬 보드를 만드세요.",
+                    "위에서 캐릭터를 고르면 그 캐릭터의 5구간 × 4스킬 보드가 열립니다.",
                     EditorStyles.centeredGreyMiniLabel);
                 GUILayout.FlexibleSpace();
-                return;
+            }
+            else
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    DrawSkillBoard();
+                    DrawDivider();
+                    DrawSkillInspector();
+                }
             }
 
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                DrawSkillBoard();
-                DrawDivider();
-                DrawSkillInspector();
-            }
+            RunPendingAction();
+        }
+
+        /// <summary>
+        /// 에셋을 만들거나 선택을 바꾸는 작업은 이번 프레임의 레이아웃이 끝난 뒤에 실행한다.
+        /// 그리는 중에 SerializedObject를 갈아 끼우면 레이아웃이 어긋난다.
+        /// </summary>
+        private void RunPendingAction()
+        {
+            if (pendingAction == null) return;
+
+            var action = pendingAction;
+            pendingAction = null;
+            action();
+            Repaint();
         }
 
         private void DrawCharacterHeader()
         {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
+                DrawCharacterDataPicker();
+
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    GUILayout.Label("캐릭터", EditorStyles.boldLabel, GUILayout.Width(58f));
+                    GUILayout.Label("스킬 세트", EditorStyles.boldLabel, GUILayout.Width(58f));
 
                     var names = characters.Select(CharacterLabel).ToArray();
                     var currentIndex = selectedCharacter == null
@@ -104,7 +135,7 @@ namespace IdleBattleEditor
                     if (names.Length > 0 && popupIndex != currentIndex)
                         SelectCharacter(characters[popupIndex]);
 
-                    if (GUILayout.Button("+ 새 캐릭터", GUILayout.Width(105f), GUILayout.Height(24f)))
+                    if (GUILayout.Button("+ 빈 세트", GUILayout.Width(78f), GUILayout.Height(24f)))
                         CreateCharacter();
 
                     if (selectedCharacter != null)
@@ -138,11 +169,173 @@ namespace IdleBattleEditor
 
                 if (selectedCharacter != null)
                 {
+                    DrawCharacterDataRow();
                     GUILayout.Label(
                         "5개 구간 · 구간마다 4개 선택지 · 총 20개 스킬",
                         EditorStyles.miniLabel);
                 }
             }
+        }
+
+        /// <summary>
+        /// 캐릭터 데이터를 골라 그 캐릭터의 스킬 세트로 바로 넘어간다.
+        /// 세트가 아직 없으면 여기서 만들 수 있게 한다.
+        /// </summary>
+        private void DrawCharacterDataPicker()
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label("캐릭터", EditorStyles.boldLabel, GUILayout.Width(58f));
+
+                if (characterDataList.Count == 0)
+                {
+                    GUILayout.Label(
+                        "캐릭터 데이터가 없습니다. Assets/00_Data/Characters에서 먼저 만드세요.",
+                        EditorStyles.miniLabel);
+                    return;
+                }
+
+                var currentCharacter = selectedCharacter != null ? selectedCharacter.Character : null;
+                var currentIndex = currentCharacter != null
+                    ? characterDataList.IndexOf(currentCharacter)
+                    : -1;
+                var nextIndex = EditorGUILayout.Popup(
+                    currentIndex,
+                    characterDataLabels,
+                    GUILayout.MinWidth(240f));
+
+                if (nextIndex >= 0 && nextIndex != currentIndex)
+                {
+                    var picked = characterDataList[nextIndex];
+                    pendingAction = () => SelectByCharacterData(picked);
+                }
+
+                var target = currentCharacter ??
+                             characterDataList[Mathf.Clamp(nextIndex, 0, characterDataList.Count - 1)];
+
+                if (GUILayout.Button("스킬셋 준비", GUILayout.Width(84f), GUILayout.Height(24f)))
+                    pendingAction = () => PrepareSkillSet(target, false);
+
+                if (GUILayout.Button(
+                        $"스킬 {CharacterSkillSetFactory.TotalSlotCount}개 채우기",
+                        GUILayout.Width(112f),
+                        GUILayout.Height(24f)))
+                    pendingAction = () => PrepareSkillSet(target, true);
+
+                GUILayout.FlexibleSpace();
+            }
+        }
+
+        /// <summary>캐릭터 데이터로 스킬 세트를 찾아 선택한다. 없으면 만들지 물어본다.</summary>
+        private void SelectByCharacterData(CharacterData data)
+        {
+            if (data == null) return;
+
+            var skillSet = CharacterSkillSetFactory.FindSkillSet(data);
+            if (skillSet == null)
+            {
+                if (!EditorUtility.DisplayDialog(
+                        "스킬 세트 없음",
+                        $"‘{DisplayName(data.DisplayName)}’에는 스킬 세트가 없습니다.\n" +
+                        "5구간 × 4스킬 세트를 지금 만들까요?",
+                        "만들기",
+                        "취소"))
+                    return;
+
+                PrepareSkillSet(data, false);
+                return;
+            }
+
+            CharacterSkillSetFactory.Link(data, skillSet);
+            SelectCharacter(skillSet);
+        }
+
+        /// <summary>이 캐릭터의 스킬 세트를 만들거나 찾아서 선택하고, 필요하면 스킬까지 채운다.</summary>
+        private void PrepareSkillSet(CharacterData data, bool fillSkills)
+        {
+            if (data == null) return;
+
+            var skillSet = CharacterSkillSetFactory.EnsureSkillSet(data);
+            if (skillSet == null) return;
+
+            if (fillSkills)
+            {
+                var created = CharacterSkillSetFactory.FillEmptySlots(skillSet);
+                Debug.Log($"{DisplayName(data.DisplayName)} · 스킬 {created}개를 새로 만들었습니다.");
+            }
+
+            RefreshAssets();
+            SelectCharacter(skillSet);
+        }
+
+        /// <summary>스킬 세트를 캐릭터 데이터에 묶고, 그 캐릭터의 설정값을 한눈에 보여준다.</summary>
+        private void DrawCharacterDataRow()
+        {
+            characterObject.UpdateIfRequiredOrScript();
+            var characterProperty = characterObject.FindProperty("character");
+            if (characterProperty == null) return;
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label("캐릭터 데이터", EditorStyles.miniBoldLabel, GUILayout.Width(84f));
+                EditorGUILayout.PropertyField(
+                    characterProperty,
+                    GUIContent.none,
+                    GUILayout.MinWidth(200f));
+
+                var data = characterProperty.objectReferenceValue as CharacterData;
+                if (data != null)
+                {
+                    GUILayout.Label(
+                        $"난이도 {data.Difficulty}/5 · 공{data.Attack} 생{data.Survival} 방{data.Defense} " +
+                        $"기{data.Mobility} 치{data.Critical} 광{data.AreaPower}",
+                        EditorStyles.miniLabel);
+
+                    if (GUILayout.Button("소속 일괄 지정", GUILayout.Width(96f)))
+                        AssignOwnerToAllSkills(data);
+                }
+                else
+                {
+                    GUILayout.Label(
+                        "캐릭터 데이터를 연결하면 스킬에 소속이 자동으로 채워집니다.",
+                        EditorStyles.miniLabel);
+                }
+            }
+
+            if (characterObject.ApplyModifiedProperties())
+                EditorUtility.SetDirty(selectedCharacter);
+
+            // 캐릭터 데이터 쪽에서도 이 스킬 세트를 가리키도록 반대 방향 참조를 맞춰 준다.
+            var linked = characterObject.FindProperty("character").objectReferenceValue as CharacterData;
+            if (linked != null && linked.SkillSet != selectedCharacter)
+            {
+                Undo.RecordObject(linked, "스킬 세트 연결");
+                linked.SetSkillSet(selectedCharacter);
+                EditorUtility.SetDirty(linked);
+            }
+        }
+
+        /// <summary>이 스킬 세트에 들어 있는 모든 스킬의 소속 캐릭터를 한 번에 맞춘다.</summary>
+        private void AssignOwnerToAllSkills(CharacterData data)
+        {
+            if (selectedCharacter == null) return;
+
+            var changed = 0;
+            foreach (var section in selectedCharacter.Sections)
+            {
+                if (section == null) continue;
+                foreach (var skill in section.Skills)
+                {
+                    if (skill == null || skill.Owner == data) continue;
+                    Undo.RecordObject(skill, "소속 캐릭터 지정");
+                    skill.SetOwner(data);
+                    EditorUtility.SetDirty(skill);
+                    changed++;
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            Debug.Log($"{data.DisplayName} 소속으로 스킬 {changed}개를 지정했습니다.");
         }
 
         private void DrawSkillBoard()
@@ -151,9 +344,20 @@ namespace IdleBattleEditor
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    GUILayout.Label("20 스킬 보드", sectionTitleStyle);
+                    var filled = CharacterSkillSetFactory.CountFilledSlots(selectedCharacter);
+                    var total = CharacterSkillSetFactory.TotalSlotCount;
+                    GUILayout.Label($"20 스킬 보드  ({filled}/{total})", sectionTitleStyle);
                     GUILayout.FlexibleSpace();
                     GUILayout.Label("카드를 클릭하면 오른쪽에서 상세 편집", EditorStyles.miniLabel);
+                    GUILayout.Space(8f);
+
+                    using (new EditorGUI.DisabledScope(filled >= total))
+                    {
+                        if (GUILayout.Button(
+                                $"빈 슬롯 {total - filled}개 한 번에 생성",
+                                GUILayout.Width(150f)))
+                            pendingAction = () => FillSlots(-1);
+                    }
                     GUILayout.Space(8f);
                 }
 
@@ -193,6 +397,10 @@ namespace IdleBattleEditor
                         GUILayout.Width(58f));
                     GUILayout.FlexibleSpace();
                     GUILayout.Label("4개 중 1개 선택", EditorStyles.miniLabel);
+
+                    var index = sectionIndex;
+                    if (GUILayout.Button("이 구간 4개 채우기", GUILayout.Width(122f)))
+                        pendingAction = () => FillSlots(index);
                 }
 
                 var slots = section.FindPropertyRelative("skills");
@@ -266,7 +474,11 @@ namespace IdleBattleEditor
                     content.width,
                     25f);
                 if (GUI.Button(createRect, "+ 새 스킬 생성"))
-                    CreateSkillForSlot(sectionIndex, slotIndex);
+                {
+                    var section = sectionIndex;
+                    var slotNumber = slotIndex;
+                    pendingAction = () => CreateSkillForSlot(section, slotNumber);
+                }
 
                 HandleSkillDrop(cardRect, slot);
                 return;
@@ -335,6 +547,7 @@ namespace IdleBattleEditor
                     96f,
                     96f));
 
+                DrawProperty("owner", "소속 캐릭터");
                 DrawProperty("skillId", "스킬 ID");
                 DrawProperty("displayName", "스킬 이름");
                 DrawProperty("icon", "스킬 이미지");
@@ -450,9 +663,8 @@ namespace IdleBattleEditor
                 : string.Empty;
 
             characters.Clear();
-            allSkills.Clear();
             LoadAssets(characters);
-            LoadAssets(allSkills);
+            RefreshCharacterDataList();
             characters.Sort((left, right) =>
                 string.Compare(
                     CharacterLabel(left),
@@ -478,6 +690,40 @@ namespace IdleBattleEditor
                 if (asset != null)
                     destination.Add(asset);
             }
+        }
+
+        /// <summary>카탈로그 순서대로 캐릭터 데이터와 그 캐릭터의 스킬 채움 상태를 준비한다.</summary>
+        private void RefreshCharacterDataList()
+        {
+            characterDataList.Clear();
+            characterDataList.AddRange(CharacterSkillSetFactory.CatalogOrderedCharacters());
+
+            // 팝업 라벨은 '/'를 하위 메뉴로 해석하므로 슬래시 없이 표기한다.
+            characterDataLabels = characterDataList
+                .Select(data =>
+                {
+                    var name = DisplayName(data.DisplayName);
+                    var set = FindLoadedSkillSet(data);
+                    return set == null
+                        ? $"{name}  ·  스킬셋 없음"
+                        : $"{name}  ·  스킬 {CharacterSkillSetFactory.CountFilledSlots(set)}개";
+                })
+                .ToArray();
+        }
+
+        /// <summary>이미 읽어 둔 세트 목록에서 이 캐릭터의 세트를 찾는다. 에셋을 다시 검색하지 않는다.</summary>
+        private CharacterSkillSetData FindLoadedSkillSet(CharacterData data)
+        {
+            if (data == null) return null;
+            if (data.SkillSet != null) return data.SkillSet;
+
+            var linked = characters.FirstOrDefault(set => set.Character == data);
+            if (linked != null) return linked;
+
+            if (string.IsNullOrWhiteSpace(data.CharacterId)) return null;
+            return characters.FirstOrDefault(set =>
+                set.Character == null &&
+                string.Equals(set.CharacterId, data.CharacterId, StringComparison.Ordinal));
         }
 
         private void SelectCharacter(CharacterSkillSetData character)
@@ -517,27 +763,30 @@ namespace IdleBattleEditor
 
         private void CreateSkillForSlot(int sectionIndex, int slotIndex)
         {
-            EnsureFolder(SkillFolder);
-            var skill = CreateInstance<SkillData>();
-            var id = GenerateId("skill", allSkills.Select(value => value.SkillId));
-            skill.Initialize(
-                id,
-                $"{selectedCharacter.DisplayName} {sectionIndex + 1}-{slotIndex + 1} 스킬");
-            var path = AssetDatabase.GenerateUniqueAssetPath($"{SkillFolder}/{id}.asset");
-            AssetDatabase.CreateAsset(skill, path);
-            AssetDatabase.SaveAssets();
+            var skill = CharacterSkillSetFactory.FillSlot(
+                selectedCharacter,
+                sectionIndex,
+                slotIndex);
+            if (skill == null) return;
 
-            characterObject.Update();
-            var slot = characterObject
-                .FindProperty("sections")
-                .GetArrayElementAtIndex(sectionIndex)
-                .FindPropertyRelative("skills")
-                .GetArrayElementAtIndex(slotIndex);
-            slot.objectReferenceValue = skill;
-            characterObject.ApplyModifiedProperties();
-            EditorUtility.SetDirty(selectedCharacter);
-            allSkills.Add(skill);
+            characterObject?.Update();
             SelectSkill(skill);
+        }
+
+        /// <summary>빈 슬롯에 스킬 에셋을 만들어 채운다. sectionIndex가 -1이면 5구간 전체다.</summary>
+        private void FillSlots(int sectionIndex)
+        {
+            if (selectedCharacter == null) return;
+
+            var created = CharacterSkillSetFactory.FillEmptySlots(selectedCharacter, sectionIndex);
+            var scope = sectionIndex < 0 ? "전체 구간" : $"{sectionIndex + 1}구간";
+            Debug.Log(
+                $"{DisplayName(selectedCharacter.DisplayName)} {scope} · " +
+                $"스킬 {created}개를 새로 만들었습니다.");
+
+            var keep = selectedCharacter;
+            RefreshAssets();
+            SelectCharacter(keep);
         }
 
         private static bool CharacterContainsSkill(
@@ -590,15 +839,7 @@ namespace IdleBattleEditor
 
         private static void EnsureFolder(string folderPath)
         {
-            var parts = folderPath.Split('/');
-            var current = parts[0];
-            for (var i = 1; i < parts.Length; i++)
-            {
-                var next = $"{current}/{parts[i]}";
-                if (!AssetDatabase.IsValidFolder(next))
-                    AssetDatabase.CreateFolder(current, parts[i]);
-                current = next;
-            }
+            CharacterSkillSetFactory.EnsureFolder(folderPath);
         }
 
         private void EnsureStyles()

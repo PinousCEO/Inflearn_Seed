@@ -18,6 +18,7 @@ namespace IdleBattle
         private const float TossDuration = .55f;
         private const float TossHeight = .9f;
         private const float AutoPickupDelay = 3f;
+        private const float RetryInterval = 1f;
 
         private ItemData[] dropTable = Array.Empty<ItemData>();
         private readonly Dictionary<ItemRarity, GameObject> effectPrefabs = new();
@@ -25,12 +26,12 @@ namespace IdleBattle
         private GameObject pickupEffectPrefab;
         private RectTransform mainUi;
         private Camera worldCamera;
+        private float nextInitializeAttempt;
 
         public void Initialize(Camera camera)
         {
             worldCamera = camera != null ? camera : Camera.main;
-            var canvas = FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
-            mainUi = canvas != null ? canvas.transform.Find("Main") as RectTransform : null;
+            mainUi = SceneRefs.Screen("Main") as RectTransform;
             itemDescriptionPrefab = LoadPrefab(ItemDesResourcePath, "Assets/01_Prefabs/UI/ItemDes.prefab");
             pickupEffectPrefab = LoadPrefab(PickupResourcePath, "Assets/01_Prefabs/Effects/Loot_pick_up.prefab");
             dropTable = LoadDropTable();
@@ -53,8 +54,15 @@ namespace IdleBattle
 
         public void RollDrops(Vector3 deathPosition)
         {
+            // 드랍 테이블이 비어 있다고 몬스터가 죽을 때마다 재초기화하면
+            // 씬 탐색과 Resources 로드가 계속 반복됩니다. 재시도 간격을 둡니다.
             if (dropTable.Length == 0)
+            {
+                if (Time.unscaledTime < nextInitializeAttempt) return;
+                nextInitializeAttempt = Time.unscaledTime + RetryInterval;
                 Initialize(worldCamera);
+                if (dropTable.Length == 0) return;
+            }
 
             var droppedItems = dropTable
                 .Where(item => item != null && item.DropRatePercent > 0f &&
