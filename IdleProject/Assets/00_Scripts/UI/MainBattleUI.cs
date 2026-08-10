@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using IdleBattle.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -44,6 +45,7 @@ namespace IdleBattle
         private PlayerDataManager player;
         private float nextHealthPotionTime;
         private float nextManaPotionTime;
+        private bool hasSkillIcons;
 
         // HP/MP는 매 프레임 호출되지만, 값이 그대로면 TMP 메시를 다시 만들 필요가 없다.
         private int lastHpCurrent = int.MinValue;
@@ -62,6 +64,7 @@ namespace IdleBattle
             player.ManaChanged += RefreshMana;
             RefreshHealth(player.CurrentHealth, player.MaxHealth);
             RefreshMana(player.CurrentMana, player.MaxMana);
+            hasSkillIcons = false;
             RefreshSkillIcons();
         }
 
@@ -75,6 +78,11 @@ namespace IdleBattle
         private void Update()
         {
             if (player == null) return;
+            if (!hasSkillIcons)
+            {
+                if (battle == null) battle = SceneRefs.Get<BattleGameController>();
+                RefreshSkillIcons();
+            }
 
             // Domain Reload 비활성화나 씬 재로드 시 이벤트를 놓쳐도 UI는 항상 실제 데이터와 일치한다.
             RefreshHealth(player.CurrentHealth, player.MaxHealth);
@@ -86,6 +94,7 @@ namespace IdleBattle
                 Time.time >= nextHealthPotionTime)
             {
                 player.Heal(healthPotionRecovery);
+                AudioManager.Play(SfxId.PotionHeal);
                 nextHealthPotionTime = Time.time + healthPotionCooldown;
             }
 
@@ -93,6 +102,7 @@ namespace IdleBattle
                 Time.time >= nextManaPotionTime)
             {
                 player.RestoreMana(manaPotionRecovery);
+                AudioManager.Play(SfxId.PotionMana);
                 nextManaPotionTime = Time.time + manaPotionCooldown;
             }
 
@@ -131,13 +141,18 @@ namespace IdleBattle
 
         private void RefreshSkillIcons()
         {
-            if (battle == null) return;
-            for (var i = 0; i < skillSlots.Count && i < battle.Skills.Count; i++)
+            // 전투 컨트롤러가 아직 스킬을 다 읽지 못했으면 다음 프레임에 다시 시도합니다.
+            if (battle == null || battle.Skills.Count == 0) return;
+            for (var i = 0; i < skillSlots.Count; i++)
             {
-                var skill = battle.Skills[i];
-                if (skillSlots[i].Icon != null && skill != null && skill.Icon != null)
-                    skillSlots[i].Icon.sprite = skill.Icon;
+                var icon = skillSlots[i].Icon;
+                if (icon == null) continue;
+                var skill = i < battle.Skills.Count ? battle.Skills[i] : null;
+                icon.sprite = skill != null ? skill.Icon : null;
+                // 그림이 없는 칸이 흰 사각형으로 남지 않게 합니다.
+                icon.enabled = icon.sprite != null;
             }
+            hasSkillIcons = true;
         }
 
         private void RefreshCooldowns()

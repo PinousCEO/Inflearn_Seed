@@ -91,6 +91,9 @@ namespace IdleBattle
             Def(StatType.LightningResistance, "번개 저항", StatCategory.Defense, "받는 번개 피해 감소. 권장 상한 75%.", "0.#", true, 0, -100, false, 75),
             Def(StatType.ChaosResistance, "혼돈 저항", StatCategory.Defense, "독·저주·혼돈 계열 피해 감소. 권장 상한 75%.", "0.#", true, 0, -100, false, 75),
             Def(StatType.HealthRegeneration, "체력 재생", StatCategory.Resource, "초당 회복하는 체력.", "0.#", false, 0, 0, false),
+            // 마나는 스킬을 쓸수록 계속 줄어드는 것이 정상이고(초당 33 남짓 소모),
+            // 되채우는 일은 3초마다 자동으로 먹는 마나 포션이 맡습니다(MainBattleUI).
+            // 그래서 기본 재생은 거의 없는 것이나 마찬가지로 두고, 장비의 "마나 재생"만 여기에 더해집니다.
             Def(StatType.ManaRegeneration, "마나 재생", StatCategory.Resource, "초당 회복하는 마나.", "0.#", false, 1, 0, false),
             Def(StatType.ResourceCostReduction, "자원 소모 감소", StatCategory.Resource, "스킬 마나 소모 감소율.", "0.#", true, 0, 0, false, 60),
             Def(StatType.MovementSpeed, "이동 속도", StatCategory.Utility, "전투 중 이동 속도 증가율.", "0.#", true, 0, -80, false),

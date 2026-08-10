@@ -1,4 +1,5 @@
 using System.Collections;
+using IdleBattle.Audio;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -96,6 +97,8 @@ namespace IdleBattle.UI
             if (selectController != null && !selectController.IsIndexSelectable(index))
             {
                 if (logClicks) Debug.Log($"[SunRay] index {index} 는 잠긴 캐릭터라 선택하지 않습니다.", this);
+                // 눌렸지만 아무 일도 일어나지 않았다는 것을 소리로 알립니다.
+                AudioManager.Play(SfxId.UiDenied);
                 return;
             }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using IdleBattle.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,11 +15,24 @@ namespace IdleBattle.UI
         private const string SelectSceneName = "Select";
         private const string MainSceneName = "Main";
 
+        [Header("테스트 스위치")]
+        [Tooltip("켜면 타이틀에 들어올 때마다 남아 있는 세션(게스트/구글)을 끊고 항상 로그인 판넬부터 시작합니다.\n\n" +
+                 "게스트 계정은 로그아웃하면 다시 들어갈 방법이 없어서, 그 계정에 쌓인 데이터도 함께 버려집니다.\n" +
+                 "이어서 하기를 확인하거나 배포할 때는 꺼 두세요.")]
+        [SerializeField] private bool forceSignOutForTesting = true;
+
         /// <summary>
-        /// 테스트용 스위치. true면 타이틀 진입 시 기존 세션(게스트/구글)을 끊어서
-        /// 항상 로그인 판넬부터 시작하게 만든다. 실제 배포 시에는 false로 둘 것.
+        /// 타이틀 진입 시 기존 세션을 끊을지 여부입니다.
+        /// Title 씬의 TitleLoginController 오브젝트에서 체크를 끄면 게스트 계정이 유지됩니다.
         /// </summary>
-        private const bool ForceSignOutForTesting = true;
+        public bool ForceSignOutForTesting
+        {
+            get => forceSignOutForTesting;
+            set => forceSignOutForTesting = value;
+        }
+
+        private const string InitFailurePopupKey = "title-init-failed";
+        private const string LoginFailurePopupKey = "title-login-failed";
 
         private GameObject tapToStart;
         private GameObject loginPanel;
@@ -55,8 +69,12 @@ namespace IdleBattle.UI
 
                 await FirebaseInitializer.Instance.InitializeAsync();
 
-                if (ForceSignOutForTesting)
+                if (forceSignOutForTesting)
+                {
+                    Debug.Log("[Title] 테스트 스위치가 켜져 있어 남아 있는 세션을 끊습니다. " +
+                              "게스트 계정을 이어서 쓰려면 TitleLoginController의 체크를 끄세요.", this);
                     await FirebaseInitializer.Instance.SignOutForTestingAsync();
+                }
 
                 if (FirebaseInitializer.Instance.IsSignedIn)
                 {
@@ -74,7 +92,23 @@ namespace IdleBattle.UI
                 Debug.LogException(exception, this);
                 ShowLoginPanel();
                 SetStatus("로그인 서비스를 초기화하지 못했습니다.");
+
+                // 초기화가 실패하면 아무것도 할 수 없으므로, 재시도 버튼 하나짜리 팝업으로 막는다.
+                if (!(exception is NetworkUnavailableException))
+                    PopupService.Alert(
+                        "접속 실패",
+                        "서버에 연결하지 못했습니다.\n잠시 후 다시 시도해주세요.",
+                        onConfirm: RetryInitialize,
+                        confirmLabel: "재시도",
+                        key: InitFailurePopupKey);
             }
+        }
+
+        /// <summary>초기화 실패 팝업의 재시도. 타이틀 씬을 처음부터 다시 태웁니다.</summary>
+        private void RetryInitialize()
+        {
+            NetworkMonitor.CheckNow(forceProbe: true);
+            SceneTransition.Instance.LoadScene(TitleSceneName);
         }
 
         private void OnDestroy()
@@ -139,8 +173,12 @@ namespace IdleBattle.UI
                 // 로그인이 풀린 예외 상황 -> 다시 로그인 판넬로
                 ShowLoginPanel();
                 SetStatus("로그인이 필요합니다.");
+                PopupService.Toast("로그인이 필요합니다.");
                 return;
             }
+
+            // 지옥문이 열리는 낮은 종. 타이틀에서 게임으로 넘어가는 순간의 첫인상입니다.
+            AudioManager.Play(SfxId.TitleTap);
 
             isRouting = true;
             SetTapToStartVisible(false);
@@ -208,6 +246,7 @@ namespace IdleBattle.UI
                 await signIn();
                 isSigningIn = false;
                 SetStatus("로그인되었습니다.");
+                AudioManager.Play(SfxId.LoginSuccess);
                 ShowTapToStart();
             }
             catch (Exception exception)
@@ -216,6 +255,11 @@ namespace IdleBattle.UI
                 isSigningIn = false;
                 SetLoginInteractable(true);
                 SetStatus(failureMessage);
+                AudioManager.Play(SfxId.LoginFailed);
+
+                // 네트워크 문제면 이미 끊김 팝업이 떠 있으니 겹쳐 띄우지 않는다.
+                if (!(exception is NetworkUnavailableException))
+                    PopupService.Alert("로그인 실패", failureMessage, confirmLabel: "확인", key: LoginFailurePopupKey);
             }
         }
 
@@ -243,6 +287,7 @@ namespace IdleBattle.UI
             catch (Exception exception)
             {
                 Debug.LogException(exception, this);
+                PopupService.Toast("캐릭터 정보를 불러오지 못했습니다.");
                 return false; // 조회 실패 시에는 안전하게 Select(캐릭터 선택)로 보낸다.
             }
         }

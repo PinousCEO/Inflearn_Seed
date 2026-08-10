@@ -19,6 +19,10 @@ namespace IdleBattle
         private const float FadeDuration = 0.42f;
         private const float StartScale = 1.55f;
         private const float EndScale = 1f;
+        // 치명타는 같은 자리에 섞여 뜨므로, 색만으로는 눈에 잘 들어오지 않습니다.
+        private const float CriticalStartScale = 1.95f;
+        private const float CriticalEndScale = 1.2f;
+        private static readonly Color CriticalColor = new Color(1f, .62f, .22f, 1f);
         private const float HorizontalSpread = 58f;
         private const float VerticalSpread = 32f;
         private const float GoldenAngle = 137.5f;
@@ -35,6 +39,8 @@ namespace IdleBattle
         private Camera canvasCamera;
         private GameObject damagePrefab;
         private float nextInitializeAttempt;
+        private Color normalColor = Color.white;
+        private bool hasNormalColor;
 
         public bool Initialize(Camera camera)
         {
@@ -76,7 +82,7 @@ namespace IdleBattle
             return worldCamera != null;
         }
 
-        public void Show(int damage, Vector3 worldPosition)
+        public void Show(int damage, Vector3 worldPosition, bool isCritical = false)
         {
             // 피해 숫자 하나마다 씬을 다시 훑지 않도록, 준비가 안 된 동안에도 재시도 간격을 둡니다.
             if (canvas == null || pool == null || worldCamera == null)
@@ -99,25 +105,28 @@ namespace IdleBattle
             if (text == null)
                 return;
 
+            var startScale = isCritical ? CriticalStartScale : StartScale;
             text.gameObject.SetActive(true);
             text.transform.SetAsLastSibling();
             text.text = damage.ToString();
+            // 색은 매번 되돌려 줍니다. 재활용된 텍스트가 앞선 치명타의 주황색을 물고 오면 안 됩니다.
+            text.color = isCritical ? CriticalColor : normalColor;
             text.alpha = 1f;
             text.raycastTarget = false;
 
             var rect = text.rectTransform;
-            var popupPosition = ClampToMain(GetSpreadPosition(localPoint), rect);
+            var popupPosition = ClampToMain(GetSpreadPosition(localPoint), rect, startScale);
             rect.anchoredPosition = popupPosition;
-            rect.localScale = Vector3.one * StartScale;
-            StartCoroutine(Animate(text, popupPosition));
+            rect.localScale = Vector3.one * startScale;
+            StartCoroutine(Animate(text, popupPosition, startScale, isCritical ? CriticalEndScale : EndScale));
         }
 
-        private Vector2 ClampToMain(Vector2 position, RectTransform popup)
+        private Vector2 ClampToMain(Vector2 position, RectTransform popup, float startScale)
         {
             if (pool == null || popup == null) return position;
             var bounds = pool.rect;
-            var halfWidth = popup.rect.width * Mathf.Max(popup.pivot.x, 1f - popup.pivot.x) * StartScale;
-            var halfHeight = popup.rect.height * Mathf.Max(popup.pivot.y, 1f - popup.pivot.y) * StartScale;
+            var halfWidth = popup.rect.width * Mathf.Max(popup.pivot.x, 1f - popup.pivot.x) * startScale;
+            var halfHeight = popup.rect.height * Mathf.Max(popup.pivot.y, 1f - popup.pivot.y) * startScale;
             const float padding = 8f;
             position.x = Mathf.Clamp(position.x, bounds.xMin + halfWidth + padding, bounds.xMax - halfWidth - padding);
             position.y = Mathf.Clamp(position.y, bounds.yMin + halfHeight + padding, bounds.yMax - halfHeight - padding);
@@ -136,7 +145,7 @@ namespace IdleBattle
             return hitPosition + offset;
         }
 
-        private IEnumerator Animate(TextMeshProUGUI text, Vector2 origin)
+        private IEnumerator Animate(TextMeshProUGUI text, Vector2 origin, float startScale, float endScale)
         {
             var elapsed = 0f;
 
@@ -152,13 +161,13 @@ namespace IdleBattle
                 var eased = 1f - Mathf.Pow(1f - t, 3f);
                 text.rectTransform.anchoredPosition = origin;
                 text.rectTransform.localScale =
-                    Vector3.one * Mathf.Lerp(StartScale, EndScale, eased);
+                    Vector3.one * Mathf.Lerp(startScale, endScale, eased);
                 text.alpha = 1f;
                 yield return null;
             }
 
             text.rectTransform.anchoredPosition = origin;
-            text.rectTransform.localScale = Vector3.one * EndScale;
+            text.rectTransform.localScale = Vector3.one * endScale;
 
             elapsed = 0f;
             while (elapsed < HoldDuration)
@@ -218,6 +227,14 @@ namespace IdleBattle
                 Debug.LogWarning("Damage 프리팹에 TextMeshProUGUI가 없습니다.", instance);
                 Destroy(instance);
                 return null;
+            }
+
+            // 평타 색은 프리팹이 정한 색을 그대로 씁니다. 여기서 한 번만 기억해 둡니다.
+            if (!hasNormalColor)
+            {
+                normalColor = text.color;
+                normalColor.a = 1f;
+                hasNormalColor = true;
             }
 
             owned.Add(text);

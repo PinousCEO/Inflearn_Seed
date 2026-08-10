@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IdleProject 우편 관리자</title>
+<!--
+  파일 하나짜리 관리자 페이지입니다. 그냥 더블클릭해서 여세요.
+  서버도, SDK도 쓰지 않고 Google REST API에 바로 fetch 합니다.
+    로그인   identitytoolkit.googleapis.com
+    데이터   firestore.googleapis.com
+  두 API 모두 file:// 출처(Origin: null)를 CORS로 허용합니다.
+-->
+<style>
+  :root{
+    --bg:#0a0b0e; --panel:#14161c; --panel-2:#1b1e26; --line:#2a2f3a;
+    --text:#e9e4d6; --muted:#9a9384; --gold:#d5a94e; --green:#b7d879;
+    --red:#e06666; --blue:#7aa7ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.5 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+  a{color:var(--blue)}
+  code{background:#0f1116;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  header{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+         padding:12px 20px;background:#0d0f14;border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:17px;letter-spacing:.02em;color:var(--gold)}
+  header .spacer{flex:1}
+  .chip{padding:3px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
+  .chip.on{color:var(--green);border-color:#3c4a2c}
+  .chip.off{color:var(--red);border-color:#4a2c2c}
+  main{padding:20px;max-width:1680px;margin:0 auto}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:16px}
+  section>h2{margin:0;padding:12px 16px;font-size:14px;color:var(--gold);
+             border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  section>h2 .sub{color:var(--muted);font-size:12px;font-weight:400}
+  .body{padding:16px}
+  .cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px;align-items:start}
+  @media (max-width:1100px){.cols{grid-template-columns:1fr}}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  input,select,textarea,button{font:inherit;color:var(--text)}
+  input,select,textarea{width:100%;background:#0f1116;border:1px solid var(--line);
+        border-radius:6px;padding:7px 9px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:#46506a}
+  textarea{resize:vertical;min-height:74px}
+  input[type=checkbox],input[type=radio]{width:auto}
+  button{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;
+         padding:7px 13px;cursor:pointer}
+  button:hover:not(:disabled){border-color:#4a5266;background:#232733}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.primary{background:#3b2f14;border-color:#6b5220;color:#f4dfae;font-weight:700}
+  button.primary:hover:not(:disabled){background:#4a3a19}
+  button.danger{border-color:#5a2c2c;color:#f0b0b0}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .row>*{flex:1;min-width:120px}
+  .row.tight>*{flex:0 0 auto;min-width:0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .hint{color:var(--muted);font-size:12px;margin:6px 0 0}
+  .warn{background:#241a12;border:1px solid #5a3f1e;color:#e8c893;
+        padding:10px 12px;border-radius:6px;font-size:12.5px;margin:0 0 12px}
+  .tablewrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:7px 10px;border-bottom:1px solid #22252e;text-align:left;white-space:nowrap}
+  th{position:sticky;top:0;background:#171a21;z-index:1;cursor:pointer;user-select:none;font-size:12px;color:var(--muted)}
+  th.nosort{cursor:default}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#191d25}
+  tbody tr.sel{background:#1d2433}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .tag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;
+       border:1px solid var(--line);color:var(--muted)}
+  .tag.mail{color:var(--gold);border-color:#5a4620}
+  pre{margin:0;background:#0f1116;border:1px solid var(--line);border-radius:6px;
+      padding:12px;overflow:auto;font-size:12px;line-height:1.55;max-height:320px;white-space:pre-wrap}
+  .log{max-height:240px;overflow:auto;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  .log div{padding:2px 0;border-bottom:1px solid #1b1e26}
+  .log .ok{color:var(--green)} .log .err{color:var(--red)} .log .info{color:var(--muted)}
+  .bar{height:6px;background:#0f1116;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--gold);width:0;transition:width .15s}
+  .mail-card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#0f1116}
+  .mail-card .t{font-weight:700}
+  .mail-card .m{color:var(--muted);font-size:12px}
+  .mail-card.claimed{opacity:.5}
+  details summary{cursor:pointer;color:var(--muted);padding:4px 0}
+  .stat{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:12.5px;margin-bottom:10px}
+  .stat b{color:var(--text);font-variant-numeric:tabular-nums}
+  .empty{color:var(--muted);padding:24px;text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>IdleProject 우편 관리자</h1>
+  <span class="chip" id="chipProject">프로젝트 —</span>
+  <span class="chip off" id="chipAuth">로그인 안 됨</span>
+  <span class="spacer"></span>
+  <button id="btnSignOut" disabled>로그아웃</button>
+</header>
+
+<main>
+
+  <!-- ── 1. 로그인 ─────────────────────────────────────────────── -->
+  <section>
+    <h2>1. 로그인 <span class="sub">Assets/google-services.json에서 읽어 온 값이 기본으로 들어가 있습니다</span></h2>
+    <div class="body">
+      <div class="row">
+        <div><label>관리자 이메일</label><input id="loginEmail" placeholder="admin@example.com" autocomplete="username"></div>
+        <div><label>비밀번호</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+        <div style="flex:0 0 auto"><button id="btnLogin" class="primary">로그인</button></div>
+        <div style="flex:0 0 auto"><button id="btnAnon" title="게스트로 잠깐 들어가 UID만 확인할 때 씁니다">게스트로 로그인</button></div>
+      </div>
+      <p class="hint" id="uidLine">로그인하면 내 UID가 여기에 표시됩니다.</p>
+
+      <details id="setupDetails">
+        <summary>처음 한 번 해야 하는 설정 (로그인 계정 · 관리자 권한)</summary>
+        <div style="margin-top:8px">
+          <p class="hint"><b>① 이메일 로그인 켜기</b> — Firebase 콘솔 → Authentication → Sign-in method →
+            "이메일/비밀번호" 사용 설정. 그다음 Users 탭에서 관리자 계정을 하나 만듭니다.
+            (현재 이 프로젝트는 꺼져 있어서 <code>PASSWORD_LOGIN_DISABLED</code>가 납니다.)</p>
+          <p class="hint"><b>② 관리자 권한 주기</b> — 아래 규칙을 Firestore → 규칙에 붙여 넣고 게시한 뒤,
+            로그인해서 위에 뜨는 내 UID를 <code>ADMINS</code> 컬렉션의 <b>문서 ID</b>로 하는 빈 문서로 추가하세요.
+            이게 없으면 남의 우편함에 못 씁니다.</p>
+          <pre id="rulesText"></pre>
+          <button id="btnCopyRules" style="margin-top:8px">규칙 복사</button>
+        </div>
+      </details>
+
+      <details id="cfgDetails" style="margin-top:4px">
+        <summary>Firebase 연결 설정 고치기 (보통 손댈 필요 없습니다)</summary>
+        <div class="grid3" style="margin-top:10px">
+          <div><label>apiKey</label><input id="cfgApiKey"></div>
+          <div><label>projectId</label><input id="cfgProjectId"></div>
+          <div><label>USERS 컬렉션 이름</label><input id="cfgCollection"></div>
+        </div>
+        <div class="row tight" style="margin-top:8px">
+          <button id="btnSaveCfg">저장하고 새로고침</button>
+          <button id="btnResetCfg">기본값으로</button>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div class="cols">
+
+    <!-- ── 2. 유저 ────────────────────────────────────────────── -->
+    <section>
+      <h2>2. 유저 <span class="sub" id="userCountSub">— 명</span></h2>
+      <div class="body">
+        <div class="row" style="margin-bottom:10px">
+          <div style="flex:0 0 auto"><button id="btnLoadUsers" class="primary" disabled>유저 불러오기</button></div>
+          <div><label>검색 (이름 · UID)</label><input id="fSearch" placeholder="이름이나 UID 일부"></div>
+          <div><label>직업</label><select id="fClass"></select></div>
+          <div><label>우편함</label>
+            <select id="fMail">
+              <option value="all">전체</option>
+              <option value="has">우편 있음</option>
+              <option value="none">우편 없음</option>
+            </select>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom:10px">
+          <div><label>최소 레벨</label><input id="fLevelMin" type="number" min="1" placeholder="1"></div>
+          <div><label>최대 레벨</label><input id="fLevelMax" type="number" min="1" placeholder="제한 없음"></div>
+          <div><label>구간 선택 (표에 보이는 순서, 1부터)</label>
+            <div class="row tight">
+              <input id="rangeFrom" type="number" min="1" placeholder="시작" style="width:80px">
+              <input id="rangeTo" type="number" min="1" placeholder="끝" style="width:80px">
+              <button id="btnRange">구간 선택</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row tight" style="margin-bottom:10px">
+          <button id="btnSelectFiltered">보이는 유저 모두 선택</button>
+          <button id="btnInvert">선택 반전</button>
+          <button id="btnClearSel">선택 해제</button>
+          <span class="chip" id="selCount">선택 0명</span>
+        </div>
+
+        <div class="stat" id="userStats"></div>
+
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="nosort" style="width:34px"><input type="checkbox" id="chkAll" title="보이는 유저 전체"></th>
+                <th class="nosort" style="width:34px">#</th>
+                <th data-sort="name">이름</th>
+                <th data-sort="characterId">직업</th>
+                <th data-sort="level">레벨</th>
+                <th data-sort="coins">골드</th>
+                <th data-sort="postCount">우편</th>
+                <th data-sort="updatedAt">최근 저장</th>
+                <th data-sort="uid">UID</th>
+              </tr>
+            </thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+        <p class="hint">행을 클릭하면 그 유저의 현재 우편함(POST)이 아래에 열립니다. 체크박스는 Shift+클릭으로 구간 선택이 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- ── 3. 우편 작성 ───────────────────────────────────────── -->
+    <section>
+      <h2>3. 우편 작성 <span class="sub">게임이 읽는 POST 항목과 같은 형식입니다</span></h2>
+      <div class="body">
+        <div style="margin-bottom:10px">
+          <label>받는 대상</label>
+          <div class="row tight">
+            <label style="display:flex;gap:6px;align-items:center;color:var(--text);margin:0">
+              <input type="radio" name="target" value="all"> 전체 유저 <span class="chip" id="chipAll">0명</span>
+            </label>
+            <label style="display:flex;gap:6px;align-items:center;color:var(--text);margin:0">
+              <input type="radio" name="target" value="selected" checked> 선택한 유저 <span class="chip" id="chipSel">0명</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label>id <span style="color:#6b6455">(게임이 수령할 때 이 값으로 우편을 지목합니다)</span></label>
+          <div class="row tight">
+            <input id="mId" style="flex:1">
+            <button id="btnNewId">새로 생성</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:10px"><label>title (제목)</label><input id="mTitle" placeholder="운영자 우편" maxlength="40"></div>
+        <div style="margin-bottom:10px"><label>body (내용) — 한 줄로 짧게</label><textarea id="mBody" placeholder="점검에 협조해 주셔서 감사합니다." maxlength="120"></textarea></div>
+
+        <div class="grid2" style="margin-bottom:10px">
+          <div>
+            <label>rewardType</label>
+            <select id="mRewardType">
+              <option value="gold">gold — 골드</option>
+              <option value="exp">exp — 경험치</option>
+              <option value="item">item — 아이템</option>
+              <option value="none">none — 보상 없음</option>
+            </select>
+          </div>
+          <div><label>rewardAmount</label><input id="mAmount" type="number" min="0" value="50000"></div>
+        </div>
+
+        <div style="margin-bottom:10px" id="itemRow">
+          <label>rewardItemId</label>
+          <input id="mItemId" list="itemList" placeholder="equipment-016">
+          <datalist id="itemList"></datalist>
+          <p class="hint" id="itemName">&nbsp;</p>
+        </div>
+
+        <div class="grid2" style="margin-bottom:10px">
+          <div>
+            <label>expiresAt (만료)</label>
+            <select id="mExpireMode">
+              <option value="days">며칠 뒤</option>
+              <option value="date">날짜 지정</option>
+              <option value="none">만료 없음</option>
+            </select>
+          </div>
+          <div id="expireDaysBox"><label>일수</label><input id="mExpireDays" type="number" min="1" value="7"></div>
+          <div id="expireDateBox" style="display:none"><label>만료 시각</label><input id="mExpireDate" type="datetime-local"></div>
+        </div>
+
+        <label>Firestore에 들어갈 값 (미리보기)</label>
+        <pre id="preview"></pre>
+
+        <div class="row tight" style="margin-top:12px">
+          <button id="btnSend" class="primary" disabled>우편 보내기</button>
+          <button id="btnSavePreset">양식 저장</button>
+          <select id="presetList" style="max-width:180px"><option value="">저장된 양식…</option></select>
+          <button id="btnDeletePreset" class="danger">양식 삭제</button>
+        </div>
+        <div class="bar" style="margin-top:12px"><i id="sendBar"></i></div>
+        <p class="hint" id="sendStatus">&nbsp;</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── 4. 로그 ──────────────────────────────────────────────── -->
+  <section>
+    <h2>4. 발송 기록 <span class="sub">이 페이지를 새로고침하면 사라집니다</span></h2>
+    <div class="body"><div class="log" id="log"><div class="info">아직 발송한 우편이 없습니다.</div></div></div>
+  </section>
+
+  <!-- ── 5. 유저 우편함 ───────────────────────────────────────── -->
+  <section id="detailSection" style="display:none">
+    <h2>5. 유저 우편함 <span class="sub" id="detailWho"></span></h2>
+    <div class="body">
+      <div class="row tight" style="margin-bottom:10px">
+        <button id="btnReloadDetail">다시 읽기</button>
+        <button id="btnCloseDetail">닫기</button>
+      </div>
+      <div id="detailList"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+/* ════════════════════════════════════════════════════════════════
+   설정 — Assets/google-services.json에서 뽑은 값
+   ════════════════════════════════════════════════════════════════ */
+var DEFAULT_CONFIG = {
+  apiKey: "AIzaSyDC_QdLZiVhWK11KYTY7U9tv8kssFJFHlc",
+  projectId: "idleproject-caf03",
+  collection: "USERS"
+};
+var CONFIG_KEY = "idleproject-admin-config";
+var PRESET_KEY = "idleproject-admin-presets";
+var SESSION_KEY = "idleproject-admin-session";
+var POST_FIELD = "POST";
+
+/* Unity의 ItemCatalog / CharacterCatalog에서 뽑아 둔 목록입니다.
+   아이템을 추가했다면 README의 스크립트로 아래 블록만 다시 만드세요. */
+/* CATALOG:BEGIN */
+var CATALOG = {
+  characters: [
+    {"id": "character-01", "name": "바바리안"},
+    {"id": "character-02", "name": "사제"},
+    {"id": "character-03", "name": "헌터"},
+    {"id": "character-04", "name": "위자드"},
+    {"id": "character-05", "name": "닌자"},
+  ],
+  items: [
+    {"id": "Hp_Position", "name": "체력 포션", "type": "Consumable", "rarity": "Common"},
+    {"id": "equipment-001", "name": "몬스터 정수", "type": "Material", "rarity": "Common"},
+    {"id": "equipment-002", "name": "상급 몬스터 정수", "type": "Material", "rarity": "Epic"},
+    {"id": "equipment-003", "name": "무쇠 전투도끼", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-004", "name": "강철 판금 투구", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-005", "name": "강철 판금 갑옷", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-006", "name": "강철 판금 견갑", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-007", "name": "강철 판금 건틀릿", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-008", "name": "강철 판금 허리띠", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-009", "name": "강철 판금 장화", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-010", "name": "힘의 반지", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-011", "name": "수호의 반지", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-012", "name": "생명의 반지", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-013", "name": "격노의 목걸이", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-014", "name": "철벽의 목걸이", "type": "Equipment", "rarity": "Uncommon"},
+    {"id": "equipment-015", "name": "생명의 목걸이", "type": "Equipment", "rarity": "Rare"},
+    {"id": "equipment-016", "name": "전설의 지옥불 도끼", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-017", "name": "전설의 서리 도끼", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-018", "name": "전설의 사자수호 투구", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-019", "name": "전설의 까마귀 투구", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-020", "name": "전설의 수정요새 갑옷", "type": "Material", "rarity": "Legendary"},
+    {"id": "equipment-021", "name": "전설의 뼈감시자 갑옷", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-022", "name": "전설의 폭풍 견갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-023", "name": "전설의 가시 견갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-024", "name": "전설의 용암 건틀릿", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-025", "name": "전설의 룬 건틀릿", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-026", "name": "전설의 거신 허리띠", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-027", "name": "전설의 뱀 허리띠", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-028", "name": "전설의 비익 장화", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-029", "name": "전설의 바위분쇄 장화", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-030", "name": "전설의 용안 반지", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-031", "name": "전설의 공허별 반지", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-032", "name": "전설의 불사조 목걸이", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-033", "name": "전설의 레비아탄 목걸이", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-034", "name": "몬스터 핵", "type": "Material", "rarity": "Rare"},
+    {"id": "equipment-035", "name": "응축된 몬스터 핵", "type": "Material", "rarity": "Epic"},
+    {"id": "equipment-036", "name": "마력 수정", "type": "Material", "rarity": "Rare"},
+    {"id": "equipment-037", "name": "타락한 마력 수정", "type": "Material", "rarity": "Epic"},
+    {"id": "equipment-038", "name": "영혼 가루", "type": "Material", "rarity": "Rare"},
+    {"id": "equipment-039", "name": "고대 영혼 파편", "type": "Material", "rarity": "Epic"},
+    {"id": "equipment-040", "name": "가죽 두건", "type": "Equipment", "rarity": "Common"},
+    {"id": "equipment-041", "name": "가죽 갑옷", "type": "Equipment", "rarity": "Common"},
+    {"id": "equipment-042", "name": "가죽 견갑", "type": "Equipment", "rarity": "Common"},
+    {"id": "equipment-043", "name": "가죽 장갑", "type": "Equipment", "rarity": "Common"},
+    {"id": "equipment-044", "name": "가죽 허리띠", "type": "Equipment", "rarity": "Common"},
+    {"id": "equipment-045", "name": "가죽 장화", "type": "Equipment", "rarity": "Common"},
+    {"id": "equipment-046", "name": "비전 후드", "type": "Equipment", "rarity": "Rare"},
+    {"id": "equipment-047", "name": "비전 로브", "type": "Equipment", "rarity": "Rare"},
+    {"id": "equipment-048", "name": "비전 어깨장식", "type": "Equipment", "rarity": "Rare"},
+    {"id": "equipment-049", "name": "비전 장갑", "type": "Equipment", "rarity": "Rare"},
+    {"id": "equipment-050", "name": "비전 허리띠", "type": "Equipment", "rarity": "Rare"},
+    {"id": "equipment-051", "name": "비전 장화", "type": "Equipment", "rarity": "Rare"},
+    {"id": "equipment-052", "name": "전설의 밤여우 모자", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-053", "name": "전설의 뇌조 모자", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-054", "name": "전설의 피가시 조끼", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-055", "name": "전설의 서리등 조끼", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-056", "name": "전설의 전갈 견갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-057", "name": "전설의 달깃털 견갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-058", "name": "전설의 독발톱 장갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-059", "name": "전설의 태양사격 장갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-060", "name": "전설의 미믹 허리띠", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-061", "name": "전설의 모래시계 허리띠", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-062", "name": "전설의 유령걸음 장화", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-063", "name": "전설의 화산길 장화", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-064", "name": "전설의 성좌예언 모자", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-065", "name": "전설의 버섯현자 모자", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-066", "name": "전설의 시간술사 로브", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-067", "name": "전설의 무덤꽃 로브", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-068", "name": "전설의 불사조 망토", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-069", "name": "전설의 공허눈 망토", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-070", "name": "전설의 폭풍소환 장갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-071", "name": "전설의 연금술사 장갑", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-072", "name": "전설의 천상 허리띠", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-073", "name": "전설의 책룡 허리띠", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-074", "name": "전설의 구름걸음 신발", "type": "Equipment", "rarity": "Legendary"},
+    {"id": "equipment-075", "name": "전설의 심연 신발", "type": "Equipment", "rarity": "Legendary"},
+  ]
+};
+/* CATALOG:END */
+
+var $ = function (id) { return document.getElementById(id); };
+var cfg = (function () {
+  try {
+    var saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || "null");
+    return saved ? Object.assign({}, DEFAULT_CONFIG, saved) : Object.assign({}, DEFAULT_CONFIG);
+  } catch (e) { return Object.assign({}, DEFAULT_CONFIG); }
+})();
+
+$("cfgApiKey").value = cfg.apiKey;
+$("cfgProjectId").value = cfg.projectId;
+$("cfgCollection").value = cfg.collection;
+$("chipProject").textContent = "프로젝트 " + cfg.projectId;
+
+$("btnSaveCfg").onclick = function () {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify({
+    apiKey: $("cfgApiKey").value.trim(),
+    projectId: $("cfgProjectId").value.trim(),
+    collection: $("cfgCollection").value.trim() || "USERS"
+  }));
+  location.reload();
+};
+$("btnResetCfg").onclick = function () { localStorage.removeItem(CONFIG_KEY); location.reload(); };
+
+/* REST 엔드포인트 */
+var IDENTITY = "https://identitytoolkit.googleapis.com/v1/accounts:";
+var SECURETOKEN = "https://securetoken.googleapis.com/v1/token?key=";
+function docsBase() {
+  return "https://firestore.googleapis.com/v1/projects/" + cfg.projectId + "/databases/(default)/documents";
+}
+function docName(uid) { return "projects/" + cfg.projectId + "/databases/(default)/documents/" + cfg.collection + "/" + uid; }
+
+$("rulesText").textContent = "rules_version = '2';\n" +
+"service cloud.firestore {\n" +
+"  match /databases/{database}/documents {\n" +
+"\n" +
+"    function isAdmin() {\n" +
+"      return request.auth != null\n" +
+"          && exists(/databases/$(database)/documents/ADMINS/$(request.auth.uid));\n" +
+"    }\n" +
+"\n" +
+"    // 유저는 자기 문서만, 관리자는 전부 읽고 씁니다.\n" +
+"    match /" + cfg.collection + "/{userId} {\n" +
+"      allow read, write: if request.auth != null && request.auth.uid == userId;\n" +
+"      allow read, write: if isAdmin();\n" +
+"    }\n" +
+"\n" +
+"    // 랭킹. 로그인한 사람이면 누구나 읽고, 쓰기는 자기 문서만 됩니다.\n" +
+"    // 전투력은 게임이 계산해 올리므로 값의 형식만 확인합니다.\n" +
+"    match /RANKING/{userId} {\n" +
+"      allow read: if request.auth != null;\n" +
+"      allow write: if request.auth != null && request.auth.uid == userId\n" +
+"                   && request.resource.data.power is int\n" +
+"                   && request.resource.data.power >= 0;\n" +
+"      allow write: if isAdmin();\n" +
+"    }\n" +
+"\n" +
+"    // 관리자 명단. 문서 ID가 관리자 UID입니다. 추가는 콘솔에서만 하세요.\n" +
+"    match /ADMINS/{uid} {\n" +
+"      allow read: if request.auth != null && request.auth.uid == uid;\n" +
+"      allow write: if false;\n" +
+"    }\n" +
+"  }\n" +
+"}";
+$("btnCopyRules").onclick = function () {
+  navigator.clipboard.writeText($("rulesText").textContent).then(function () {
+    $("btnCopyRules").textContent = "복사했습니다";
+    setTimeout(function () { $("btnCopyRules").textContent = "규칙 복사"; }, 1500);
+  });
+};
+
+/* ════════════════════════════════════════════════════════════════
+   로그인 — Identity Toolkit REST
+   ════════════════════════════════════════════════════════════════ */
+var session = null; // { idToken, refreshToken, uid, email, expiresAt }
+
+function saveSession(next) {
+  session = next;
+  if (next) sessionStorage.setItem(SESSION_KEY, JSON.stringify(next));
+  else sessionStorage.removeItem(SESSION_KEY);
+  renderAuth();
+}
+
+function renderAuth() {
+  var chip = $("chipAuth");
+  chip.className = "chip " + (session ? "on" : "off");
+  chip.textContent = session ? (session.email || "게스트 로그인") : "로그인 안 됨";
+  $("btnSignOut").disabled = !session;
+  $("btnLoadUsers").disabled = !session;
+  $("uidLine").innerHTML = session
+    ? "내 UID: <b>" + escapeHtml(session.uid) + "</b> — 이 값을 <code>ADMINS</code> 컬렉션의 문서 ID로 넣으면 관리자가 됩니다."
+    : "로그인하면 내 UID가 여기에 표시됩니다.";
+  updateSendButton();
+}
+
+async function callIdentity(method, body) {
+  var response = await fetch(IDENTITY + method + "?key=" + encodeURIComponent(cfg.apiKey), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  var data = await response.json().catch(function () { return {}; });
+  if (!response.ok) throw new Error(describeAuthError(data));
+  return data;
+}
+
+function describeAuthError(data) {
+  var message = (data && data.error && data.error.message) || "알 수 없는 오류";
+  if (message.indexOf("PASSWORD_LOGIN_DISABLED") >= 0)
+    return "이메일/비밀번호 로그인이 꺼져 있습니다.\nFirebase 콘솔 → Authentication → Sign-in method에서 켜고, Users 탭에서 관리자 계정을 만들어 주세요.";
+  if (message.indexOf("ADMIN_ONLY_OPERATION") >= 0 || message.indexOf("OPERATION_NOT_ALLOWED") >= 0)
+    return "이 로그인 방식이 꺼져 있습니다. Firebase 콘솔 → Authentication → Sign-in method에서 켜 주세요.";
+  if (message.indexOf("EMAIL_NOT_FOUND") >= 0) return "그런 계정이 없습니다.";
+  if (message.indexOf("INVALID_PASSWORD") >= 0 || message.indexOf("INVALID_LOGIN_CREDENTIALS") >= 0)
+    return "이메일이나 비밀번호가 틀렸습니다.";
+  if (message.indexOf("API key not valid") >= 0 || message.indexOf("blocked") >= 0)
+    return "API 키가 브라우저에서 거부됐습니다.\nGoogle Cloud 콘솔에서 이 키의 애플리케이션 제한을 확인해 주세요.";
+  return message;
+}
+
+function applyLogin(data) {
+  saveSession({
+    idToken: data.idToken,
+    refreshToken: data.refreshToken,
+    uid: data.localId,
+    email: data.email || "",
+    expiresAt: Date.now() + (Number(data.expiresIn || 3600) - 60) * 1000
+  });
+}
+
+$("btnLogin").onclick = async function () {
+  $("btnLogin").disabled = true;
+  try {
+    applyLogin(await callIdentity("signInWithPassword", {
+      email: $("loginEmail").value.trim(),
+      password: $("loginPassword").value,
+      returnSecureToken: true
+    }));
+    $("setupDetails").open = false;
+    loadUsers();
+  } catch (error) { alert(error.message); }
+  finally { $("btnLogin").disabled = false; }
+};
+
+$("btnAnon").onclick = async function () {
+  $("btnAnon").disabled = true;
+  try {
+    applyLogin(await callIdentity("signUp", { returnSecureToken: true }));
+    log("info", "게스트로 로그인했습니다. 이 UID를 ADMINS에 넣어야 전체 유저를 볼 수 있습니다.");
+    loadUsers();
+  } catch (error) { alert(error.message); }
+  finally { $("btnAnon").disabled = false; }
+};
+
+$("btnSignOut").onclick = function () { saveSession(null); };
+
+/** 만료가 가까우면 토큰을 갱신하고 항상 살아 있는 idToken을 돌려줍니다. */
+async function token() {
+  if (!session) throw new Error("로그인이 필요합니다.");
+  if (Date.now() < session.expiresAt) return session.idToken;
+
+  var response = await fetch(SECURETOKEN + encodeURIComponent(cfg.apiKey), {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(session.refreshToken)
+  });
+  var data = await response.json().catch(function () { return {}; });
+  if (!response.ok) { saveSession(null); throw new Error("로그인이 만료됐습니다. 다시 로그인해 주세요."); }
+
+  saveSession(Object.assign({}, session, {
+    idToken: data.id_token,
+    refreshToken: data.refresh_token,
+    expiresAt: Date.now() + (Number(data.expires_in || 3600) - 60) * 1000
+  }));
+  return session.idToken;
+}
+
+async function firestore(path, options) {
+  options = options || {};
+  var response = await fetch(docsBase() + path, {
+    method: options.method || "GET",
+    headers: {
+      "Authorization": "Bearer " + (await token()),
+      "Content-Type": "application/json"
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  var data = await response.json().catch(function () { return {}; });
+  if (!response.ok) {
+    var message = (data && data.error && data.error.message) || ("HTTP " + response.status);
+    if (response.status === 403 || /permission/i.test(message))
+      message = "권한이 없습니다. 보안 규칙을 게시하고 ADMINS 컬렉션에 내 UID 문서를 넣었는지 확인해 주세요.\n(" + message + ")";
+    throw new Error(message);
+  }
+  return data;
+}
+
+/* 세션 복구 */
+try {
+  var stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+  if (stored && stored.refreshToken) session = stored;
+} catch (e) { /* 무시 */ }
+renderAuth();
+
+/* ════════════════════════════════════════════════════════════════
+   Firestore 값 인코딩 / 디코딩 (REST는 타입이 붙은 JSON을 씁니다)
+   ════════════════════════════════════════════════════════════════ */
+function decodeValue(value) {
+  if (!value || typeof value !== "object") return null;
+  if ("nullValue" in value) return null;
+  if ("stringValue" in value) return value.stringValue;
+  if ("booleanValue" in value) return value.booleanValue;
+  if ("integerValue" in value) return Number(value.integerValue);
+  if ("doubleValue" in value) return Number(value.doubleValue);
+  if ("timestampValue" in value) return new Date(value.timestampValue);
+  if ("arrayValue" in value) return (value.arrayValue.values || []).map(decodeValue);
+  if ("mapValue" in value) return decodeFields(value.mapValue.fields || {});
+  return null;
+}
+function decodeFields(fields) {
+  var out = {};
+  Object.keys(fields || {}).forEach(function (key) { out[key] = decodeValue(fields[key]); });
+  return out;
+}
+/** 게임의 MailData가 읽는 그대로의 맵을 Firestore 값으로 만듭니다. */
+function encodeMail(mail) {
+  var fields = {
+    id: { stringValue: mail.id },
+    title: { stringValue: mail.title },
+    body: { stringValue: mail.body },
+    rewardType: { stringValue: mail.rewardType },
+    rewardAmount: { integerValue: String(mail.rewardAmount) },
+    claimed: { booleanValue: false },
+    sentAt: { timestampValue: mail.sentAt.toISOString() }
+  };
+  if (mail.rewardType === "item") fields.rewardItemId = { stringValue: mail.rewardItemId };
+  if (mail.expiresAt) fields.expiresAt = { timestampValue: mail.expiresAt.toISOString() };
+  return { mapValue: { fields: fields } };
+}
+
+/* ════════════════════════════════════════════════════════════════
+   유저 목록
+   ════════════════════════════════════════════════════════════════ */
+var users = [];            // 서버에서 읽은 전체
+var view = [];             // 필터·정렬을 거친 목록
+var selected = {};         // uid -> true
+var selectedCount = 0;
+var sortKey = "level", sortDesc = true;
+var lastIndex = -1;
+var detailUid = null;
+
+function classNameOf(id) {
+  for (var i = 0; i < CATALOG.characters.length; i++)
+    if (CATALOG.characters[i].id === id) return CATALOG.characters[i].name;
+  return id || "—";
+}
+
+$("fClass").innerHTML = '<option value="">전체 직업</option><option value="__none__">직업 미선택</option>' +
+  CATALOG.characters.map(function (c) { return '<option value="' + c.id + '">' + escapeHtml(c.name) + "</option>"; }).join("");
+$("itemList").innerHTML = CATALOG.items.map(function (i) {
+  return '<option value="' + i.id + '">' + escapeHtml(i.name) + " · " + i.rarity + "</option>";
+}).join("");
+
+async function loadUsers() {
+  if (!session) return;
+  setStatus("유저를 읽는 중…");
+  $("btnLoadUsers").disabled = true;
+  try {
+    var all = [], pageToken = "";
+    do {
+      var page = await firestore("/" + cfg.collection + "?pageSize=300" +
+        (pageToken ? "&pageToken=" + encodeURIComponent(pageToken) : ""));
+      (page.documents || []).forEach(function (document_) { all.push(toUserRow(document_)); });
+      pageToken = page.nextPageToken || "";
+      if (pageToken) setStatus("유저를 읽는 중… " + all.length + "명");
+    } while (pageToken);
+
+    users = all;
+    selected = {}; selectedCount = 0; lastIndex = -1;
+    applyFilters();
+    setStatus("유저 " + users.length + "명을 읽었습니다.");
+    log("info", "유저 " + users.length + "명을 읽었습니다.");
+  } catch (error) {
+    setStatus("");
+    log("err", "유저를 읽지 못했습니다: " + error.message);
+    alert("유저 목록을 읽지 못했습니다.\n\n" + error.message);
+  } finally {
+    $("btnLoadUsers").disabled = !session;
+  }
+}
+$("btnLoadUsers").onclick = loadUsers;
+
+function toUserRow(document_) {
+  var uid = String(document_.name || "").split("/").pop();
+  var fields = document_.fields || {};
+  var payload = {};
+  try { payload = JSON.parse(decodeValue(fields.payload) || "{}") || {}; } catch (e) { payload = {}; }
+
+  var rawPost = (fields[POST_FIELD] && fields[POST_FIELD].arrayValue && fields[POST_FIELD].arrayValue.values) || [];
+  var post = rawPost.map(decodeValue);
+
+  return {
+    uid: uid,
+    name: String(payload.playerName || "").trim(),
+    characterId: String(payload.characterId || "").trim(),
+    level: Number(payload.level || 0),
+    coins: Number(payload.coins || 0),
+    post: post,
+    postCount: post.length,
+    unclaimed: post.filter(function (mail) { return mail && !mail.claimed; }).length,
+    updatedAt: decodeValue(fields.updatedAt)
+  };
+}
+
+function applyFilters() {
+  var search = $("fSearch").value.trim().toLowerCase();
+  var klass = $("fClass").value;
+  var mailFilter = $("fMail").value;
+  var min = parseInt($("fLevelMin").value, 10);
+  var max = parseInt($("fLevelMax").value, 10);
+
+  view = users.filter(function (user) {
+    if (search && user.name.toLowerCase().indexOf(search) < 0 && user.uid.toLowerCase().indexOf(search) < 0) return false;
+    if (klass === "__none__" && user.characterId) return false;
+    if (klass && klass !== "__none__" && user.characterId !== klass) return false;
+    if (mailFilter === "has" && user.postCount === 0) return false;
+    if (mailFilter === "none" && user.postCount > 0) return false;
+    if (!isNaN(min) && user.level < min) return false;
+    if (!isNaN(max) && user.level > max) return false;
+    return true;
+  });
+
+  view.sort(function (a, b) {
+    var left = a[sortKey], right = b[sortKey];
+    if (sortKey === "updatedAt") { left = left ? left.getTime() : 0; right = right ? right.getTime() : 0; }
+    if (typeof left === "string") return sortDesc ? right.localeCompare(left) : left.localeCompare(right);
+    return sortDesc ? (right - left) : (left - right);
+  });
+
+  renderUsers();
+}
+
+function renderUsers() {
+  $("userRows").innerHTML = view.map(function (user, index) {
+    var isSel = !!selected[user.uid];
+    return '<tr data-uid="' + user.uid + '" data-index="' + index + '" class="' + (isSel ? "sel" : "") + '">' +
+      '<td><input type="checkbox" class="pick" data-uid="' + user.uid + '" data-index="' + index + '"' + (isSel ? " checked" : "") + "></td>" +
+      '<td class="num">' + (index + 1) + "</td>" +
+      "<td>" + escapeHtml(user.name || "(이름 없음)") + "</td>" +
+      "<td>" + escapeHtml(classNameOf(user.characterId)) + "</td>" +
+      '<td class="num">' + (user.level || "—") + "</td>" +
+      '<td class="num">' + user.coins.toLocaleString("ko-KR") + "</td>" +
+      '<td class="num">' + (user.postCount
+        ? '<span class="tag mail">' + user.unclaimed + " / " + user.postCount + "</span>"
+        : '<span class="tag">0</span>') + "</td>" +
+      "<td>" + (user.updatedAt ? user.updatedAt.toLocaleString("ko-KR") : "—") + "</td>" +
+      '<td style="color:#6b6455">' + escapeHtml(user.uid.slice(0, 12)) + "…</td></tr>";
+  }).join("") || '<tr><td colspan="9" class="empty">조건에 맞는 유저가 없습니다.</td></tr>';
+
+  $("userCountSub").textContent = "전체 " + users.length + "명 · 조건에 맞는 " + view.length + "명";
+  $("chipAll").textContent = users.length + "명";
+
+  var unclaimedTotal = users.reduce(function (sum, user) { return sum + user.unclaimed; }, 0);
+  var withMail = users.filter(function (user) { return user.postCount > 0; }).length;
+  $("userStats").innerHTML =
+    "<span>전체 <b>" + users.length + "</b>명</span>" +
+    "<span>우편 보유 <b>" + withMail + "</b>명</span>" +
+    "<span>미수령 우편 <b>" + unclaimedTotal + "</b>통</span>" +
+    "<span>캐릭터 생성 <b>" + users.filter(function (user) { return !!user.characterId; }).length + "</b>명</span>";
+
+  $("chkAll").checked = view.length > 0 && view.every(function (user) { return !!selected[user.uid]; });
+  updateSelectionChips();
+}
+
+function setSelected(uid, on) {
+  if (on && !selected[uid]) { selected[uid] = true; selectedCount++; }
+  else if (!on && selected[uid]) { delete selected[uid]; selectedCount--; }
+}
+
+$("userRows").addEventListener("click", function (event) {
+  var checkbox = event.target.closest("input.pick");
+  if (checkbox) {
+    var index = Number(checkbox.dataset.index);
+    if (event.shiftKey && lastIndex >= 0) {
+      var from = Math.min(lastIndex, index), to = Math.max(lastIndex, index);
+      for (var i = from; i <= to; i++) setSelected(view[i].uid, checkbox.checked);
+    } else {
+      setSelected(checkbox.dataset.uid, checkbox.checked);
+    }
+    lastIndex = index;
+    renderUsers();
+    return;
+  }
+  var row = event.target.closest("tr[data-uid]");
+  if (row) openDetail(row.dataset.uid);
+});
+
+$("chkAll").onclick = function (event) {
+  view.forEach(function (user) { setSelected(user.uid, event.target.checked); });
+  renderUsers();
+};
+$("btnSelectFiltered").onclick = function () { view.forEach(function (u) { setSelected(u.uid, true); }); renderUsers(); };
+$("btnClearSel").onclick = function () { selected = {}; selectedCount = 0; renderUsers(); };
+$("btnInvert").onclick = function () { view.forEach(function (u) { setSelected(u.uid, !selected[u.uid]); }); renderUsers(); };
+$("btnRange").onclick = function () {
+  var from = parseInt($("rangeFrom").value, 10), to = parseInt($("rangeTo").value, 10);
+  if (isNaN(from) || isNaN(to)) { alert("시작과 끝 번호를 모두 넣어 주세요."); return; }
+  var a = Math.max(1, Math.min(from, to)), b = Math.min(view.length, Math.max(from, to));
+  for (var i = a - 1; i <= b - 1; i++) setSelected(view[i].uid, true);
+  renderUsers();
+};
+
+Array.prototype.forEach.call(document.querySelectorAll("th[data-sort]"), function (th) {
+  th.onclick = function () {
+    if (sortKey === th.dataset.sort) sortDesc = !sortDesc;
+    else { sortKey = th.dataset.sort; sortDesc = true; }
+    applyFilters();
+  };
+});
+["fSearch", "fClass", "fMail", "fLevelMin", "fLevelMax"].forEach(function (id) {
+  $(id).addEventListener("input", applyFilters);
+  $(id).addEventListener("change", applyFilters);
+});
+
+function updateSelectionChips() {
+  $("selCount").textContent = "선택 " + selectedCount + "명";
+  $("chipSel").textContent = selectedCount + "명";
+  updateSendButton();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   우편 작성
+   ════════════════════════════════════════════════════════════════ */
+function newMailId() {
+  var now = new Date();
+  var pad = function (value) { return String(value).padStart(2, "0"); };
+  return "admin-" + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) +
+    "-" + pad(now.getHours()) + pad(now.getMinutes()) + "-" + Math.random().toString(36).slice(2, 6);
+}
+$("mId").value = newMailId();
+$("btnNewId").onclick = function () { $("mId").value = newMailId(); refreshPreview(); };
+
+function expiresAtDate() {
+  var mode = $("mExpireMode").value;
+  if (mode === "none") return null;
+  if (mode === "days") {
+    var days = parseFloat($("mExpireDays").value);
+    return days > 0 ? new Date(Date.now() + days * 86400000) : null;
+  }
+  return $("mExpireDate").value ? new Date($("mExpireDate").value) : null;
+}
+
+function buildMail() {
+  var type = $("mRewardType").value;
+  var amount = Math.max(0, Math.floor(Number($("mAmount").value) || 0));
+  var mail = {
+    id: $("mId").value.trim(),
+    title: $("mTitle").value.trim(),
+    body: $("mBody").value.trim(),
+    rewardType: type,
+    rewardAmount: type === "none" ? 0 : amount,
+    claimed: false,
+    sentAt: new Date()
+  };
+  if (type === "item") mail.rewardItemId = $("mItemId").value.trim();
+  var expires = expiresAtDate();
+  if (expires) mail.expiresAt = expires;
+  return mail;
+}
+
+function refreshPreview() {
+  var mail = buildMail();
+  var shown = Object.assign({}, mail, { sentAt: mail.sentAt.toLocaleString("ko-KR") + " (timestamp)" });
+  if (mail.expiresAt) shown.expiresAt = mail.expiresAt.toLocaleString("ko-KR") + " (timestamp)";
+  $("preview").textContent = JSON.stringify(shown, null, 2);
+
+  var isItem = $("mRewardType").value === "item";
+  $("itemRow").style.display = isItem ? "" : "none";
+  $("expireDaysBox").style.display = $("mExpireMode").value === "days" ? "" : "none";
+  $("expireDateBox").style.display = $("mExpireMode").value === "date" ? "" : "none";
+
+  var wanted = $("mItemId").value.trim();
+  var item = null;
+  for (var i = 0; i < CATALOG.items.length; i++) if (CATALOG.items[i].id === wanted) { item = CATALOG.items[i]; break; }
+  $("itemName").textContent = isItem
+    ? (item ? item.name + " · " + item.type + " · " + item.rarity
+            : "카탈로그에 없는 아이템 ID입니다. 게임에서 보상이 지급되지 않습니다.")
+    : " ";
+  $("itemName").style.color = (isItem && !item && wanted) ? "var(--red)" : "";
+
+  updateSendButton();
+}
+["mId", "mTitle", "mBody", "mRewardType", "mAmount", "mItemId", "mExpireMode", "mExpireDays", "mExpireDate"]
+  .forEach(function (id) {
+    $(id).addEventListener("input", refreshPreview);
+    $(id).addEventListener("change", refreshPreview);
+  });
+Array.prototype.forEach.call(document.querySelectorAll('input[name=target]'), function (radio) {
+  radio.addEventListener("change", updateSendButton);
+});
+
+function targets() {
+  var mode = document.querySelector('input[name=target]:checked').value;
+  return mode === "all" ? users.slice() : users.filter(function (user) { return !!selected[user.uid]; });
+}
+
+function validationError() {
+  if (!session) return "로그인이 필요합니다.";
+  var mail = buildMail();
+  if (!mail.id) return "id를 넣어 주세요.";
+  if (!mail.title) return "제목을 넣어 주세요.";
+  if (mail.rewardType === "item" && !mail.rewardItemId) return "아이템 ID를 넣어 주세요.";
+  if (mail.rewardType !== "none" && mail.rewardAmount <= 0) return "보상 수량은 1 이상이어야 합니다.";
+  if (targets().length === 0) return "받을 유저가 없습니다.";
+  return null;
+}
+
+function updateSendButton() {
+  var error = validationError();
+  $("btnSend").disabled = !!error;
+  $("btnSend").title = error || "";
+  var count = session ? targets().length : 0;
+  $("btnSend").textContent = count ? "우편 보내기 (" + count + "명)" : "우편 보내기";
+}
+
+/* ════════════════════════════════════════════════════════════════
+   발송 — documents:commit 한 방에 여러 명씩
+   ════════════════════════════════════════════════════════════════ */
+var CHUNK = 100; // 커밋 한 번에 보내는 인원 (Firestore 한도 500)
+
+/** 문서가 없어도 만들어지고, 기존 POST 배열 뒤에 한 통만 덧붙는 쓰기입니다. */
+function writeFor(uid, mailValue) {
+  return {
+    update: { name: docName(uid), fields: {} },
+    updateMask: { fieldPaths: [] },
+    updateTransforms: [
+      { fieldPath: POST_FIELD, appendMissingElements: { values: [mailValue] } },
+      { fieldPath: "postUpdatedAt", setToServerValue: "REQUEST_TIME" }
+    ]
+  };
+}
+
+async function commit(writes) {
+  return firestore(":commit", { method: "POST", body: { writes: writes } });
+}
+
+$("btnSend").onclick = async function () {
+  var error = validationError();
+  if (error) { alert(error); return; }
+
+  var list = targets();
+  var mail = buildMail();
+  var label = describeReward(mail);
+  if (!confirm("유저 " + list.length + "명에게 우편을 보냅니다.\n\n제목: " + mail.title +
+               "\n보상: " + label + "\n\n계속할까요?")) return;
+
+  $("btnSend").disabled = true;
+  var mailValue = encodeMail(mail);
+  var done = 0, ok = 0, failed = 0;
+  log("info", "발송 시작 — " + list.length + '명 · "' + mail.title + '" · ' + label);
+
+  for (var start = 0; start < list.length; start += CHUNK) {
+    var chunk = list.slice(start, start + CHUNK);
+    try {
+      await commit(chunk.map(function (user) { return writeFor(user.uid, mailValue); }));
+      chunk.forEach(function (user) { markSent(user, mail); ok++; });
+    } catch (chunkError) {
+      // 묶음이 실패하면 누가 문제인지 알 수 있게 한 명씩 다시 시도합니다.
+      log("err", "묶음 실패, 한 명씩 다시 시도합니다: " + chunkError.message);
+      for (var i = 0; i < chunk.length; i++) {
+        try {
+          await commit([writeFor(chunk[i].uid, mailValue)]);
+          markSent(chunk[i], mail); ok++;
+        } catch (single) {
+          failed++;
+          log("err", (chunk[i].name || "(이름 없음)") + " / " + chunk[i].uid + " — " + single.message);
+        }
+      }
+    }
+    done += chunk.length;
+    $("sendBar").style.width = Math.round((done / list.length) * 100) + "%";
+    setStatus("보내는 중… " + done + " / " + list.length);
+  }
+
+  renderUsers();
+  if (detailUid) openDetail(detailUid, true);
+  setStatus("완료 — 성공 " + ok + "명, 실패 " + failed + "명");
+  log(failed ? "err" : "ok", "발송 완료 — 성공 " + ok + "명, 실패 " + failed + "명 (id: " + mail.id + ")");
+  setTimeout(function () { $("sendBar").style.width = "0"; }, 1200);
+  updateSendButton();
+};
+
+function markSent(user, mail) {
+  user.post.push(mail);
+  user.postCount = user.post.length;
+  user.unclaimed++;
+}
+
+function describeReward(mail) {
+  if (mail.rewardType === "gold") return "골드 " + Number(mail.rewardAmount).toLocaleString("ko-KR");
+  if (mail.rewardType === "exp") return "경험치 " + Number(mail.rewardAmount).toLocaleString("ko-KR");
+  if (mail.rewardType === "item") {
+    var name = mail.rewardItemId;
+    for (var i = 0; i < CATALOG.items.length; i++)
+      if (CATALOG.items[i].id === mail.rewardItemId) { name = CATALOG.items[i].name; break; }
+    return name + " x" + mail.rewardAmount;
+  }
+  return "보상 없음";
+}
+
+/* ════════════════════════════════════════════════════════════════
+   유저 우편함 상세
+   ════════════════════════════════════════════════════════════════ */
+var detailRaw = []; // 서버에서 온 원본 값. 삭제할 때 이걸 잘라 다시 씁니다.
+
+async function openDetail(uid, silent) {
+  detailUid = uid;
+  var user = null;
+  for (var i = 0; i < users.length; i++) if (users[i].uid === uid) { user = users[i]; break; }
+  $("detailSection").style.display = "";
+  $("detailWho").textContent = (user && user.name ? user.name : "(이름 없음)") + " · " + uid;
+  if (!silent) $("detailList").innerHTML = '<div class="empty">읽는 중…</div>';
+
+  try {
+    var document_ = await firestore("/" + cfg.collection + "/" + encodeURIComponent(uid));
+    var fields = document_.fields || {};
+    detailRaw = (fields[POST_FIELD] && fields[POST_FIELD].arrayValue && fields[POST_FIELD].arrayValue.values) || [];
+    var post = detailRaw.map(decodeValue);
+
+    if (user) {
+      user.post = post;
+      user.postCount = post.length;
+      user.unclaimed = post.filter(function (mail) { return mail && !mail.claimed; }).length;
+      renderUsers();
+    }
+    $("detailList").innerHTML = post.length
+      ? post.map(mailCard).join("")
+      : '<div class="empty">이 유저의 우편함은 비어 있습니다.</div>';
+  } catch (error) {
+    $("detailList").innerHTML = '<div class="empty">읽지 못했습니다: ' + escapeHtml(error.message) + "</div>";
+  }
+}
+
+function mailCard(mail, index) {
+  var sent = mail && mail.sentAt instanceof Date ? mail.sentAt : null;
+  var expires = mail && mail.expiresAt instanceof Date ? mail.expiresAt : null;
+  return '<div class="mail-card ' + (mail && mail.claimed ? "claimed" : "") + '">' +
+    '<div class="t">' + escapeHtml((mail && mail.title) || "(제목 없음)") +
+      (mail && mail.claimed ? ' <span class="tag">수령함</span>' : ' <span class="tag mail">미수령</span>') + "</div>" +
+    '<div class="m">' + escapeHtml((mail && mail.body) || "") + "</div>" +
+    '<div class="m">보상: ' + escapeHtml(describeReward({
+        rewardType: (mail && mail.rewardType) || "none",
+        rewardAmount: Number((mail && mail.rewardAmount) || 0),
+        rewardItemId: (mail && mail.rewardItemId) || ""
+      })) + " · id: " + escapeHtml((mail && mail.id) || "—") + "</div>" +
+    '<div class="m">보낸 시각: ' + (sent ? sent.toLocaleString("ko-KR") : "—") +
+      " · 만료: " + (expires ? expires.toLocaleString("ko-KR") : "없음") + "</div>" +
+    '<button class="danger" data-del="' + index + '" style="margin-top:8px">이 우편 삭제</button></div>';
+}
+
+$("detailList").addEventListener("click", async function (event) {
+  var button = event.target.closest("button[data-del]");
+  if (!button || !detailUid) return;
+  if (!confirm("이 우편을 유저의 우편함에서 지웁니다. 계속할까요?")) return;
+
+  var index = Number(button.dataset.del);
+  button.disabled = true;
+  try {
+    var remaining = detailRaw.slice();
+    if (index < 0 || index >= remaining.length) throw new Error("우편이 이미 바뀌었습니다. 다시 읽어 주세요.");
+    remaining.splice(index, 1);
+    await commit([{
+      update: {
+        name: docName(detailUid),
+        fields: (function () {
+          var fields = {};
+          fields[POST_FIELD] = { arrayValue: { values: remaining } };
+          return fields;
+        })()
+      },
+      updateMask: { fieldPaths: [POST_FIELD] },
+      updateTransforms: [{ fieldPath: "postUpdatedAt", setToServerValue: "REQUEST_TIME" }]
+    }]);
+    log("ok", "우편 삭제 — " + detailUid);
+    openDetail(detailUid);
+  } catch (error) {
+    button.disabled = false;
+    alert("삭제하지 못했습니다: " + error.message);
+  }
+});
+
+$("btnReloadDetail").onclick = function () { if (detailUid) openDetail(detailUid); };
+$("btnCloseDetail").onclick = function () { detailUid = null; $("detailSection").style.display = "none"; };
+
+/* ════════════════════════════════════════════════════════════════
+   양식 저장 (이 브라우저에만 남습니다)
+   ════════════════════════════════════════════════════════════════ */
+var PRESET_FIELDS = ["mTitle", "mBody", "mRewardType", "mAmount", "mItemId", "mExpireMode", "mExpireDays"];
+
+function presets() {
+  try { return JSON.parse(localStorage.getItem(PRESET_KEY) || "{}"); } catch (e) { return {}; }
+}
+function renderPresets() {
+  $("presetList").innerHTML = '<option value="">저장된 양식…</option>' +
+    Object.keys(presets()).map(function (name) {
+      return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + "</option>";
+    }).join("");
+}
+$("btnSavePreset").onclick = function () {
+  var name = prompt("양식 이름", $("mTitle").value.trim() || "새 양식");
+  if (!name) return;
+  var saved = presets();
+  saved[name] = {};
+  PRESET_FIELDS.forEach(function (id) { saved[name][id] = $(id).value; });
+  localStorage.setItem(PRESET_KEY, JSON.stringify(saved));
+  renderPresets();
+  $("presetList").value = name;
+};
+$("presetList").onchange = function () {
+  var entry = presets()[$("presetList").value];
+  if (!entry) return;
+  Object.keys(entry).forEach(function (id) { if ($(id)) $(id).value = entry[id]; });
+  $("mId").value = newMailId();
+  refreshPreview();
+};
+$("btnDeletePreset").onclick = function () {
+  var name = $("presetList").value;
+  if (!name || !confirm('양식 "' + name + '"을 지울까요?')) return;
+  var saved = presets();
+  delete saved[name];
+  localStorage.setItem(PRESET_KEY, JSON.stringify(saved));
+  renderPresets();
+};
+renderPresets();
+
+/* ════════════════════════════════════════════════════════════════
+   공용
+   ════════════════════════════════════════════════════════════════ */
+function log(kind, message) {
+  var box = $("log");
+  if (box.dataset.clean !== "1") { box.innerHTML = ""; box.dataset.clean = "1"; }
+  var line = document.createElement("div");
+  line.className = kind;
+  line.textContent = "[" + new Date().toLocaleTimeString("ko-KR") + "] " + message;
+  box.prepend(line);
+}
+function setStatus(text) { $("sendStatus").textContent = text || " "; }
+function escapeHtml(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (character) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+  });
+}
+
+refreshPreview();
+if (session) loadUsers();
+</script>
+</body>
+</html>

@@ -11,15 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 60e30b58e84146fa8c7434f8fb76cf87, type: 3}
   m_Name: skill_03_meteor
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
+  owner: {fileID: 0}
   skillId: skill_03
   displayName: Leap Crush
   description: A crushing landing with dust and flying stones.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 342362fb8f491be4e98db47378679df7, type: 3}
   skillTypes: 32
-  customTypeName:
+  customTypeName: 
   targetType: 2
-  cooldown: 7
+  cooldown: 2.5
   resourceCost: 30
   castTime: 0.5
   duration: 3

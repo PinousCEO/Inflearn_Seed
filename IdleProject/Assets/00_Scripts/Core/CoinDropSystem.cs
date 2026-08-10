@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using IdleBattle.Audio;
 using UnityEngine;
 
 namespace IdleBattle
@@ -27,6 +28,8 @@ namespace IdleBattle
         public void Drop(Vector3 origin, int totalAmount)
         {
             if (totalAmount <= 0 || player == null) return;
+            // 코인 하나하나가 아니라 흩뿌리는 순간에 한 번만 울립니다.
+            AudioManager.PlayAt(SfxId.CoinDrop, origin);
             var count = Mathf.Clamp(Mathf.CeilToInt(totalAmount / 5f), 3, 8);
             var remaining = totalAmount;
             for (var i = 0; i < count; i++)
@@ -85,6 +88,9 @@ namespace IdleBattle
             if (coin != null && player != null)
             {
                 PlayerDataManager.Instance.AddCoins(amount);
+                // 한 번 죽일 때 코인이 3~8개 흩어집니다.
+                // 개당 소리를 내면 딸랑거림이 끊이지 않으므로, 한 무더기에 한 번만 냅니다.
+                if (index == 0) AudioManager.PlayAt(SfxId.CoinPickup, coin.transform.position);
                 var start = coin.transform.position;
                 var startScale = coin.transform.localScale;
                 const float collectDuration = .10f;

@@ -1,4 +1,5 @@
 using System.Collections;
+using IdleBattle.Audio;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -102,6 +103,7 @@ namespace IdleBattle
         public IEnumerator CoverRoutine(float fadeDuration = DefaultFadeDuration)
         {
             ApplyColor();
+            AudioManager.Play(SfxId.SceneFade);
             yield return FadeRoutine(1f, fadeDuration);
         }
 
@@ -111,6 +113,7 @@ namespace IdleBattle
             suppressAutoReveal = true;
 
             ApplyColor();
+            AudioManager.Play(SfxId.SceneFade);
             yield return FadeRoutine(1f, fadeDuration);
 
             var operation = SceneManager.LoadSceneAsync(sceneName);

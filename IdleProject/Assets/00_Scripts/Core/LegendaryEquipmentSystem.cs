@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using IdleBattle.Audio;
 using UnityEngine;
 
 namespace IdleBattle
@@ -11,7 +12,31 @@ namespace IdleBattle
     public sealed class LegendaryEquipmentSystem : MonoBehaviour
     {
         private static LegendaryEquipmentSystem instance;
-        private static readonly string[] LegendaryIds =
+
+        /// <summary>
+        /// 특수효과 1~9번이 붙는 전설 장비입니다. 순서는 장비 화면의 9개 슬롯 순서
+        /// (무기·투구·갑옷·견갑·건틀릿·허리띠·장화·반지·목걸이)와 같습니다.
+        /// 장비 화면도 이 목록을 그대로 쓰므로, 두 곳이 서로 어긋날 일이 없습니다.
+        /// </summary>
+        public static readonly string[] LegendaryIds =
+        {
+            "equipment-016", // 전설의 지옥불 도끼
+            "equipment-018", // 전설의 사자수호 투구
+            "equipment-021", // 전설의 뼈감시자 갑옷
+            "equipment-022", // 전설의 폭풍 견갑
+            "equipment-024", // 전설의 용암 건틀릿
+            "equipment-026", // 전설의 거신 허리띠
+            "equipment-028", // 전설의 비익 장화
+            "equipment-030", // 전설의 용안 반지
+            "equipment-032"  // 전설의 불사조 목걸이
+        };
+
+        /// <summary>
+        /// 예전에 이 자리에 있던 장비입니다. 장비표를 다시 만들면서 같은 번호가
+        /// 일반 등급으로 밀려났습니다. 이것을 끼고 있던 저장 데이터는 같은 자리의
+        /// 전설 장비로 한 번만 옮겨 줍니다.
+        /// </summary>
+        private static readonly string[] LegacyIds =
         {
             "equipment-003", "equipment-004", "equipment-005", "equipment-006", "equipment-007",
             "equipment-008", "equipment-009", "equipment-010", "equipment-011"
@@ -26,6 +51,7 @@ namespace IdleBattle
         private Transform player;
         private BattleGameController battle;
         private Action<EnemyController, int> damageCallback;
+        private bool isSyncing;
 
         public static LegendaryEquipmentSystem Instance
         {
@@ -52,20 +78,70 @@ namespace IdleBattle
             player = playerTransform;
             damageCallback = owner != null ? owner.DamageFromEquipment : null;
             catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
-            EnsureDefaultLoadout();
+
+            // 전투 시작 시점에는 아직 Firestore 로드가 끝나지 않았을 수 있습니다.
+            // 그때 한 번 읽고 마는 대신, 저장 데이터가 바뀔 때마다 다시 맞춥니다.
+            // (로드가 끝나면 PlayerDataManager가 InventoryChanged를 한 번 쏩니다)
             var save = PlayerDataManager.Instance;
-            for (var i = 0; i < LegendaryIds.Length; i++)
-                equipped[i] = save.IsItemEquipped(LegendaryIds[i]);
+            if (save != null)
+            {
+                save.InventoryChanged -= SyncWithSave;
+                save.InventoryChanged += SyncWithSave;
+            }
+            SyncWithSave();
             LoadEffects();
         }
 
-        private void EnsureDefaultLoadout()
+        private void OnDestroy()
+        {
+            var save = PlayerDataManager.Instance;
+            if (save != null) save.InventoryChanged -= SyncWithSave;
+        }
+
+        private void SyncWithSave()
         {
             var data = PlayerDataManager.Instance;
+            // 아래에서 아이템을 주거나 착용을 옮기면 InventoryChanged가 다시 날아옵니다.
+            if (data == null || isSyncing) return;
+
+            isSyncing = true;
+            try
+            {
+                if (data.IsLoaded)
+                {
+                    EnsureDefaultLoadout(data);
+                    MigrateLegacyLoadout(data);
+                }
+                for (var i = 0; i < LegendaryIds.Length; i++)
+                    equipped[i] = data.IsItemEquipped(LegendaryIds[i]);
+            }
+            finally
+            {
+                isSyncing = false;
+            }
+        }
+
+        private void EnsureDefaultLoadout(PlayerDataManager data)
+        {
             if (catalog == null) return;
             foreach (var id in LegendaryIds)
                 if (catalog.TryGet(id, out var item) && data.GetItemCount(item) <= 0)
-                    data.AddItem(item);
+                    data.AddItem(item, 1, false);
+        }
+
+        /// <summary>
+        /// 예전 번호의 장비를 끼고 있었다면, 같은 자리의 전설 장비로 바꿔 끼웁니다.
+        /// 저장된 착용 정보만 옮기므로 한 번 지나가면 다시 실행되지 않습니다.
+        /// </summary>
+        private void MigrateLegacyLoadout(PlayerDataManager data)
+        {
+            for (var i = 0; i < LegacyIds.Length; i++)
+            {
+                if (!data.IsItemEquipped(LegacyIds[i])) continue;
+                data.SetItemEquipped(LegacyIds[i], false);
+                if (!data.IsItemEquipped(LegendaryIds[i]))
+                    data.SetItemEquipped(LegendaryIds[i], true);
+            }
         }
 
         private void LoadEffects()
@@ -210,8 +286,23 @@ namespace IdleBattle
             if (!effects.TryGetValue(key, out var prefab) || prefab == null) return null;
             var effect = Instantiate(prefab, position, Quaternion.identity);
             effect.name = $"Legendary_{key}";
+            AudioManager.PlayAt(GetEffectSound(key), position);
             foreach (var particle in effect.GetComponentsInChildren<ParticleSystem>(true)) { particle.Clear(true); particle.Play(true); }
             return effect;
+        }
+
+        /// <summary>전설 장비가 부르는 이펙트 종류에 맞는 효과음입니다.</summary>
+        private static SfxId GetEffectSound(string key)
+        {
+            switch (key)
+            {
+                case "sand":
+                case "snow": return SfxId.LegendaryTornado;
+                case "quake": return SfxId.LegendaryQuake;
+                case "chain8": return SfxId.LegendaryExplosion;
+                case "chain9": return SfxId.LegendarySky;
+                default: return SfxId.None;
+            }
         }
 
         private static IEnumerator DestroyAfter(GameObject target, float seconds)
