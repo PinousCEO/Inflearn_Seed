@@ -21,12 +21,6 @@ namespace IdleBattle.EditorTools
     /// </summary>
     public static class TextAutoSizeTool
     {
-        /// <summary>Min은 Max의 이 비율입니다. 절반까지 줄어들면 웬만한 번역문은 다 들어갑니다.</summary>
-        private const float MinRatio = .5f;
-
-        /// <summary>이 아래로는 줄이지 않습니다. 더 작아지면 화면에서 읽히지 않습니다.</summary>
-        private const float MinFloor = 10f;
-
         private static readonly string[] ScenePaths =
         {
             "Assets/Scenes/Title.unity",
@@ -41,18 +35,17 @@ namespace IdleBattle.EditorTools
             "Assets/Resources",
         };
 
-        [MenuItem("Tools/Idle Battle/Text/모든 글자 AutoSize 켜기", priority = 300)]
+        [MenuItem("Tools/Idle Battle/Text/모든 글자 AutoSize 끄기", priority = 300)]
         private static void RunAll()
         {
             if (!EditorUtility.DisplayDialog("AutoSize",
-                    "씬 3개와 프리팹의 TMP 글자를 모두 AutoSize로 바꿉니다.\n" +
-                    "지금 크기가 Max가 되고, 칸을 넘칠 때만 줄어듭니다.\n\n" +
-                    "이미 AutoSize가 켜진 글자는 그대로 둡니다.", "실행", "그만두기"))
+                    "씬 3개와 프리팹의 TMP Auto Size를 모두 끕니다.\n" +
+                    "저장된 Max 값을 기본 글자 크기로 복원합니다.", "실행", "그만두기"))
                 return;
 
             var (changed, skipped) = ApplyEverywhere();
             EditorUtility.DisplayDialog("AutoSize",
-                $"바꾼 글자 {changed}개\n이미 켜져 있어 그대로 둔 글자 {skipped}개\n\n자세한 내용은 Console에 있습니다.", "확인");
+                $"복원한 글자 {changed}개\n이미 꺼져 있어 그대로 둔 글자 {skipped}개\n\n자세한 내용은 Console에 있습니다.", "확인");
         }
 
         /// <summary>씬 3개와 우리 프리팹을 모두 손봅니다. 물어보지 않고 바로 저장합니다.</summary>
@@ -96,12 +89,12 @@ namespace IdleBattle.EditorTools
             AssetDatabase.SaveAssets();
             if (!string.IsNullOrEmpty(openScene)) EditorSceneManager.OpenScene(openScene, OpenSceneMode.Single);
 
-            Debug.Log($"[AutoSize] 바꾼 글자 {changed}개 · 이미 켜져 있어 그대로 둔 글자 {skipped}개\n" +
+            Debug.Log($"[AutoSize] 복원한 글자 {changed}개 · 이미 꺼져 있어 그대로 둔 글자 {skipped}개\n" +
                       string.Join("\n", log));
             return (changed, skipped);
         }
 
-        [MenuItem("Tools/Idle Battle/Text/현재 씬만 AutoSize 켜기", priority = 301)]
+        [MenuItem("Tools/Idle Battle/Text/현재 씬만 AutoSize 끄기", priority = 301)]
         private static void RunCurrentScene()
         {
             var scene = SceneManager.GetActiveScene();
@@ -127,25 +120,24 @@ namespace IdleBattle.EditorTools
             foreach (var label in labels)
             {
                 if (label == null) continue;
-                if (label.enableAutoSizing)
+                if (!label.enableAutoSizing)
                 {
                     skipped++;
                     continue;
                 }
 
-                // 켜는 순간 fontSize가 계산값으로 덮이므로, 지금 크기를 먼저 붙잡아 둡니다.
-                var current = label.fontSize;
-                if (current <= 0f)
+                // 일괄 적용 때 기존 크기를 Max에 저장했으므로 그 값을 기본 크기로 복원합니다.
+                var originalSize = label.fontSizeMax;
+                if (originalSize <= 0f)
                 {
                     skipped++;
                     continue;
                 }
 
-                if (record) Undo.RecordObject(label, "AutoSize 켜기");
+                if (record) Undo.RecordObject(label, "AutoSize 끄기");
 
-                label.fontSizeMax = current;
-                label.fontSizeMin = Mathf.Max(MinFloor > current ? current : MinFloor, current * MinRatio);
-                label.enableAutoSizing = true;
+                label.enableAutoSizing = false;
+                label.fontSize = originalSize;
 
                 EditorUtility.SetDirty(label);
                 changed++;

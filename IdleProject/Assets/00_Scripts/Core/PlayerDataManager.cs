@@ -45,6 +45,9 @@ namespace IdleBattle
             }
         }
 
+        /// <summary>새 오브젝트를 만들지 않고 현재 살아 있는 인스턴스만 반환합니다.</summary>
+        public static PlayerDataManager Existing => instance;
+
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
         public bool IsDead => currentHealth <= 0;

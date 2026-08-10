@@ -229,31 +229,46 @@ namespace IdleBattle.Audio
         /// </summary>
         private void EnsureListener()
         {
-            var sceneListener = FindSceneListener();
-            if (sceneListener != null)
+            var listeners = FindObjectsByType<AudioListener>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            AudioListener primary = null;
+            var mainCamera = Camera.main;
+
+            if (mainCamera != null && mainCamera.TryGetComponent(out AudioListener cameraListener) &&
+                cameraListener.gameObject.activeInHierarchy)
+                primary = cameraListener;
+
+            if (primary == null)
             {
-                if (ownedListener != null) Destroy(ownedListener);
-                ownedListener = null;
-                listenerTransform = sceneListener.transform;
-                return;
+                foreach (var listener in listeners)
+                {
+                    if (listener == null || !listener.gameObject.activeInHierarchy) continue;
+                    primary = listener;
+                    break;
+                }
             }
 
-            if (ownedListener != null) return;
+            if (primary == null)
+            {
+                var host = mainCamera != null ? mainCamera.gameObject : gameObject;
+                primary = host.GetComponent<AudioListener>();
+                if (primary == null)
+                {
+                    primary = host.AddComponent<AudioListener>();
+                    ownedListener = primary;
+                }
+            }
 
-            var camera = Camera.main;
-            var host = camera != null ? camera.gameObject : gameObject;
-            ownedListener = host.AddComponent<AudioListener>();
-            listenerTransform = ownedListener.transform;
+            primary.enabled = true;
+            foreach (var listener in listeners)
+                if (listener != null && listener != primary && listener.enabled)
+                    listener.enabled = false;
+
+            if (ownedListener != null && ownedListener != primary)
+                ownedListener = null;
+            listenerTransform = primary.transform;
         }
 
         /// <summary>우리가 붙인 것을 뺀, 씬이 원래 들고 있는 리스너입니다.</summary>
-        private AudioListener FindSceneListener()
-        {
-            foreach (var listener in FindObjectsByType<AudioListener>(FindObjectsSortMode.None))
-                if (listener != null && listener != ownedListener) return listener;
-            return null;
-        }
-
         private void Emit(SfxId id, float volumeScale, bool spatial, Vector3 worldPosition)
         {
             if (id == SfxId.None || muted || sfxSource == null) return;

@@ -222,9 +222,49 @@ namespace IdleBattle.UI
             private void EquipBoundItem()
             {
                 if (boundItem == null || owner == null) return;
+                var item = boundItem;
+                PopupService.Confirm(
+                    "장비 장착",
+                    $"<color=#{RarityColor(item.Rarity)}><b>[{RarityLabel(item.Rarity)}] {item.DisplayName}</b></color>\n" +
+                    "이 장비를 착용하시겠습니까?",
+                    () => Equip(item),
+                    confirmLabel: "장착",
+                    cancelLabel: "취소",
+                    key: $"equip-{item.ItemId}");
+            }
+
+            private static string RarityColor(ItemRarity rarity)
+            {
+                return rarity switch
+                {
+                    ItemRarity.Common => "D8D8D8",
+                    ItemRarity.Uncommon => "4A9FE8",
+                    ItemRarity.Rare => "F2C14E",
+                    ItemRarity.Epic => "B978E6",
+                    ItemRarity.Legendary => "FF7A45",
+                    _ => "FFFFFF"
+                };
+            }
+
+            private static string RarityLabel(ItemRarity rarity)
+            {
+                return rarity switch
+                {
+                    ItemRarity.Common => "일반",
+                    ItemRarity.Uncommon => "고급",
+                    ItemRarity.Rare => "희귀",
+                    ItemRarity.Epic => "영웅",
+                    ItemRarity.Legendary => "전설",
+                    _ => rarity.ToString()
+                };
+            }
+
+            private void Equip(ItemData item)
+            {
+                if (item == null || owner == null) return;
                 var target = owner.Loadout;
-                if (target != null && target.TryEquip(boundItem.ItemId))
-                    PopupService.Toast($"{boundItem.DisplayName} 장착 완료");
+                if (target != null && target.TryEquip(item.ItemId))
+                    PopupService.Toast($"{item.DisplayName} 장착 완료");
                 else
                     AudioManager.Play(SfxId.UiDenied);
             }

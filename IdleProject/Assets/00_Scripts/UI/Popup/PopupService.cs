@@ -245,8 +245,9 @@ namespace IdleBattle.UI
             var scaler = canvasObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.5f;
+            // 메인 UI와 동일하게 기준 화면 전체가 항상 보이도록 합니다.
+            // 기기 비율이 달라지면 남는 축만 확장되고 콘텐츠가 잘리지 않습니다.
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
             canvasObject.AddComponent<GraphicRaycaster>();
 

@@ -290,11 +290,11 @@ namespace IdleBattle
             playerMaterial = MakeMaterial(new Color(.15f, .65f, 1f));
             enemyMaterial = MakeMaterial(new Color(.9f, .2f, .25f));
             markerMaterial = MakeMaterial(new Color(.95f, .73f, .12f, .75f));
-            enemyPrefab = LoadPrefab("01_Prefabs/Enemy", "Assets/01_Prefabs/Enemy.prefab");
-            monsterZonePrefab = LoadPrefab("01_Prefabs/Effects/Monsterzone", "Assets/01_Prefabs/Effects/Monsterzone.prefab");
-            stunPrefab = LoadPrefab("01_Prefabs/Effects/Stun", "Assets/01_Prefabs/Effects/Stun.prefab");
-            hitPrefab = LoadPrefab("01_Prefabs/Effects/Hit", "Assets/01_Prefabs/Effects/Hit.prefab");
-            rowPrefab = LoadPrefab("01_Prefabs/Effects/Row", "Assets/01_Prefabs/Effects/Row.prefab");
+            enemyPrefab = LoadPrefab("01_Prefabs/Enemy", "Assets/Resources/01_Prefabs/Enemy.prefab");
+            monsterZonePrefab = LoadPrefab("01_Prefabs/Effects/Monsterzone", "Assets/Resources/01_Prefabs/Effects/Monsterzone.prefab");
+            stunPrefab = LoadPrefab("01_Prefabs/Effects/Stun", "Assets/Resources/01_Prefabs/Effects/Stun.prefab");
+            hitPrefab = LoadPrefab("01_Prefabs/Effects/Hit", "Assets/Resources/01_Prefabs/Effects/Hit.prefab");
+            rowPrefab = LoadPrefab("01_Prefabs/Effects/Row", "Assets/Resources/01_Prefabs/Effects/Row.prefab");
             CreateEnemyPool();
             damagePopupSystem = GetComponent<DamagePopupSystem>();
             if (damagePopupSystem == null)
@@ -317,7 +317,7 @@ namespace IdleBattle
                 ground.GetComponent<Renderer>().material = MakeMaterial(new Color(.17f, .27f, .2f));
             }
 
-            var characterPrefab = LoadPrefab("01_Prefabs/Character", "Assets/01_Prefabs/Character.prefab");
+            var characterPrefab = LoadPrefab("01_Prefabs/Character", "Assets/Resources/01_Prefabs/Character.prefab");
             GameObject hero;
             if (characterPrefab != null)
             {
@@ -1029,7 +1029,11 @@ namespace IdleBattle
             }
 
             if (damagePopupSystem != null)
-                damagePopupSystem.Show(damage, GetHeadWorldPosition(target.gameObject), isCritical);
+                damagePopupSystem.Show(
+                    damage,
+                    target.transform,
+                    GetHeadWorldPosition(target.gameObject),
+                    isCritical);
             var impactPosition = target.transform.position;
             ShowHit(target);
             target.TakeDamage(damage);
@@ -1107,6 +1111,10 @@ namespace IdleBattle
             Renderer first = null;
             for (var i = 0; i < renderers.Length; i++)
             {
+                // 현재 타깃에는 스턴/슬로우 같은 파티클이 자식으로 붙습니다.
+                // ParticleSystemRenderer의 큰 bounds를 머리 위치로 사용하면 데미지 숫자가
+                // 화면 밖이나 다른 몬스터 위로 튀므로 실제 몸체 Renderer만 사용합니다.
+                if (!IsBodyRenderer(renderers[i])) continue;
                 // Stun 이펙트 자체의 Renderer를 머리 높이 계산에서 제외합니다.
                 // 그렇지 않으면 재생성할 때 이전 이펙트 높이만큼 계속 위로 누적됩니다.
                 var current = renderers[i].transform;
@@ -1128,6 +1136,7 @@ namespace IdleBattle
             var bounds = first.bounds;
             for (var i = 0; i < renderers.Length; i++)
             {
+                if (!IsBodyRenderer(renderers[i])) continue;
                 var current = renderers[i].transform;
                 var isStunVisual = false;
                 while (current != null && current != target.transform)
@@ -1141,6 +1150,16 @@ namespace IdleBattle
 
             result = bounds;
             return true;
+        }
+
+        private static bool IsBodyRenderer(Renderer renderer)
+        {
+            return renderer != null &&
+                   renderer.enabled &&
+                   renderer.gameObject.activeInHierarchy &&
+                   !(renderer is ParticleSystemRenderer) &&
+                   !(renderer is TrailRenderer) &&
+                   !(renderer is LineRenderer);
         }
 
         private void CreateDestination()
@@ -1287,11 +1306,13 @@ namespace IdleBattle
 
         private void OnDestroy()
         {
-            if (PlayerDataManager.Instance == null) return;
-            PlayerDataManager.Instance.ExperienceChanged -= OnExperienceChanged;
-            PlayerDataManager.Instance.CoinsChanged -= OnCoinsChanged;
-            PlayerDataManager.Instance.Died -= OnPlayerDied;
-            PlayerDataManager.Instance.InventoryChanged -= RefreshCriticalProfile;
+            // 씬 종료 중 Instance 프로퍼티를 호출하면 이미 파괴된 매니저를 새로 만들 수 있습니다.
+            var data = PlayerDataManager.Existing;
+            if (data == null) return;
+            data.ExperienceChanged -= OnExperienceChanged;
+            data.CoinsChanged -= OnCoinsChanged;
+            data.Died -= OnPlayerDied;
+            data.InventoryChanged -= RefreshCriticalProfile;
         }
 
         private void RefreshCriticalProfile()

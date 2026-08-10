@@ -153,7 +153,9 @@ namespace IdleBattle
         {
             await InitializeAsync();
 
-            // 구글 세션도 같이 끊어야 다음 로그인 때 계정 선택 창이 다시 뜬다.
+            // This method is called only when the explicit title test switch is ON.
+            // Sign out anonymous users as well so the next Guest login creates a new UID
+            // and therefore routes to Select instead of loading the previous guest save.
             GoogleSignInService.SignOut();
 
             if (auth.CurrentUser == null) return;

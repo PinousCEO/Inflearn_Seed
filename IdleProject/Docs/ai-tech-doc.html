@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AI 활용 기술 문서</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+    font-size: 10.2pt; line-height: 1.65; color: #1c2430; margin: 0;
+  }
+  h1 { font-size: 20pt; margin: 0 0 4px; letter-spacing: -0.4px; }
+  h2 {
+    font-size: 13.5pt; margin: 26px 0 10px; padding: 7px 0 7px 11px;
+    border-left: 4px solid #2f6fed; background: #f2f6fd; letter-spacing: -0.3px;
+  }
+  h3 { font-size: 11.4pt; margin: 18px 0 6px; color: #17408b; letter-spacing: -0.2px; }
+  h4 { font-size: 10.4pt; margin: 13px 0 4px; color: #33415c; }
+  p  { margin: 6px 0; }
+  ul, ol { margin: 6px 0 6px 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+  code {
+    font-family: Consolas, "D2Coding", monospace; font-size: 9pt;
+    background: #eef1f6; padding: 1px 4px; border-radius: 3px; color: #223;
+  }
+  pre {
+    font-family: Consolas, "D2Coding", monospace; font-size: 8.6pt; line-height: 1.5;
+    background: #f7f9fc; border: 1px solid #dde4ee; border-left: 3px solid #2f6fed;
+    padding: 9px 11px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap;
+    margin: 8px 0; color: #223;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 9px 0; font-size: 9.3pt; }
+  th, td { border: 1px solid #d6dee9; padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: #eef3fb; font-weight: 600; color: #17408b; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .cover {
+    border: 1.5px solid #2f6fed; border-radius: 8px; padding: 26px 28px;
+    margin-bottom: 18px; background: linear-gradient(180deg,#f7faff 0%,#ffffff 100%);
+  }
+  .cover .sub { color: #46536b; font-size: 10.6pt; margin-top: 6px; }
+  .meta { margin-top: 16px; font-size: 9.4pt; color: #46536b; }
+  .meta b { color: #1c2430; display: inline-block; min-width: 74px; }
+  .note {
+    background: #fff9ec; border: 1px solid #f0dcae; border-left: 3px solid #e0a83a;
+    padding: 8px 11px; border-radius: 4px; margin: 10px 0; font-size: 9.4pt;
+  }
+  .note b { color: #8a6114; }
+  .flow {
+    background: #f7f9fc; border: 1px solid #dde4ee; border-radius: 5px;
+    padding: 12px; margin: 10px 0; font-family: Consolas, "D2Coding", monospace;
+    font-size: 8.5pt; line-height: 1.7; white-space: pre; overflow-x: auto;
+  }
+  .pagebreak { page-break-before: always; }
+  .avoid { page-break-inside: avoid; }
+  .quote {
+    border-left: 3px solid #b9c6db; padding: 3px 0 3px 12px; margin: 7px 0;
+    color: #34405a; font-style: normal;
+  }
+  .kpi { display: table; width: 100%; margin: 10px 0; border-spacing: 6px 0; }
+  .kpi > div { display: table-cell; width: 25%; background: #f2f6fd; border: 1px solid #dbe5f5;
+               border-radius: 5px; padding: 9px 10px; text-align: center; }
+  .kpi .v { font-size: 15pt; font-weight: 700; color: #17408b; line-height: 1.2; }
+  .kpi .l { font-size: 8.4pt; color: #46536b; margin-top: 2px; }
+  footer { margin-top: 26px; padding-top: 8px; border-top: 1px solid #dde4ee;
+           font-size: 8.6pt; color: #6b7688; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>AI 활용 기술 문서</h1>
+  <div class="sub">Unity 기반 방치형 RPG · AI 코딩 에이전트를 활용한 개발 구조와 지시 설계</div>
+  <div class="meta">
+    <div><b>프로젝트</b> Inflearn_Seed / IdleProject</div>
+    <div><b>엔진</b> Unity 6000.3.13f1 (Universal Render Pipeline 17.3.0)</div>
+    <div><b>저장소</b> github.com/PinousCEO/Inflearn_Seed</div>
+    <div><b>작성일</b> 2026-08-10</div>
+  </div>
+</div>
+
+<h2>1. 문서 개요</h2>
+<p>
+이 문서는 본 프로젝트에서 AI를 <b>어떤 구조로 개발 과정에 결합했는지</b>, 그리고 그 AI에게
+<b>어떤 지시를 어떤 방식으로 주었는지</b>를 기술한다. 마지막 장에는 사용한 외부 에셋과
+오픈소스의 출처를 정리했다.
+</p>
+<p>
+본 프로젝트에서 AI는 "코드를 대신 타이핑해 주는 도구"가 아니라,
+<b>Unity 에디터에 직접 접속해 자신이 만든 결과를 검증하는 실행 주체</b>로 사용되었다.
+아래 3장의 파이프라인 구조가 이 문서의 핵심이다.
+</p>
+
+<div class="kpi">
+  <div><div class="v">85</div><div class="l">C# 스크립트</div></div>
+  <div><div class="v">22,423</div><div class="l">코드 라인</div></div>
+  <div><div class="v">20</div><div class="l">에디터 자동화 도구</div></div>
+  <div><div class="v">61</div><div class="l">절차적 합성 효과음</div></div>
+</div>
+
+<h2>2. AI 활용 개요</h2>
+
+<h3>2.1 사용 도구</h3>
+<table>
+  <tr><th style="width:22%">도구</th><th style="width:26%">역할</th><th>비고</th></tr>
+  <tr>
+    <td><b>Claude Code</b><br>(Anthropic)</td>
+    <td>주 개발 에이전트. 코드 작성·리팩터링·디버깅·에셋 데이터 생성</td>
+    <td>터미널에서 저장소에 직접 접근. 프로젝트 로컬 설정은
+        <code>IdleProject/.claude/settings.local.json</code>에 누적되어 있으며,
+        6개 이상의 개별 작업 세션 기록이 남아 있다.</td>
+  </tr>
+  <tr>
+    <td><b>Unity MCP</b><br>(<code>com.unity.ai.assistant</code> 2.17.0-pre.1)</td>
+    <td>AI ↔ Unity 에디터 연결 통로</td>
+    <td>AI가 에디터 안에서 C# 코드를 컴파일·실행하고, 콘솔 로그와 카메라 렌더 결과를
+        회수할 수 있게 하는 브리지</td>
+  </tr>
+  <tr>
+    <td>보조 CLI 에이전트</td>
+    <td>일부 작업 구간에서 병행 사용</td>
+    <td>저장소 stash에 <code>codex-before-pull-2026-08-05</code> 기록이 남아 있음</td>
+  </tr>
+</table>
+
+<h3>2.2 AI가 담당한 영역과 사람이 담당한 영역</h3>
+<table>
+  <tr><th style="width:50%">AI가 주로 수행</th><th>사람(개발자)이 수행</th></tr>
+  <tr>
+    <td>
+      <ul>
+        <li>게임 시스템 C# 구현 전반</li>
+        <li>에디터 자동화 도구 작성</li>
+        <li>효과음 절차적 합성 알고리즘</li>
+        <li>ScriptableObject 데이터 에셋 생성</li>
+        <li>3개 국어 로컬라이제이션 표 구성</li>
+        <li>버그 원인 추적 및 수치 밸런싱 시뮬레이션</li>
+      </ul>
+    </td>
+    <td>
+      <ul>
+        <li>게임 기획·재미 판단·최종 의사결정</li>
+        <li>3D/2D 에셋 선정 및 씬 아트 배치</li>
+        <li>애니메이션 클립 확보 및 임포트</li>
+        <li>실제 플레이 테스트와 체감 피드백</li>
+        <li>AI 결과물에 대한 검수·반려·재지시</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<div class="note">
+<b>기록의 한계 안내.</b> 본 문서는 저장소에 실제로 남아 있는 증거(설정 파일, 커밋 이력,
+코드 및 주석, 패키지 매니페스트)에 근거해 작성했다. 개발 초기 일부 구간의 도구 사용 내역은
+로그로 남아 있지 않아, 확인 가능한 범위로 한정해 기술했다.
+</div>
+
+<div class="pagebreak"></div>
+<h2>3. 개발 파이프라인 구조</h2>
+
+<h3>3.1 AI ↔ Unity 직결 구조</h3>
+<p>
+일반적인 AI 코딩은 <i>텍스트 파일을 고치는 것</i>에서 끝나고, 그 결과가 실제로 동작하는지는
+사람이 에디터를 열어 확인해야 한다. 본 프로젝트는 그 확인 단계까지 AI가 스스로 수행하도록
+<b>Unity MCP 브리지</b>를 개발 루프에 포함시켰다.
+</p>
+
+<div class="flow">┌──────────────┐   ① 지시(자연어)    ┌────────────────────┐
+│   개발자     │ ─────────────────▶ │   Claude Code      │
+│              │ ◀───────────────── │  (AI 에이전트)     │
+└──────────────┘   ⑥ 결과 · 근거    └────────┬───────────┘
+                                              │
+                       ② 파일 읽기/수정        │ ③ 검증 코드 실행
+                                              ▼
+                                    ┌────────────────────┐
+                                    │   Unity MCP 브리지 │
+                                    └────────┬───────────┘
+                                              │
+                                              ▼
+                                    ┌────────────────────┐
+                                    │   Unity Editor     │
+                                    │  · C# 컴파일/실행  │
+                                    │  · 씬 · 에셋 조작  │
+                                    │  · 콘솔 로그       │
+                                    │  · 카메라 렌더링   │
+                                    └────────┬───────────┘
+                                              │ ④ 실행 결과 · 로그 · 이미지
+                                              ▼
+                                        ⑤ AI가 스스로 판정
+                                     (통과 → 보고 / 실패 → ②로 회귀)</div>
+
+<p>이 구조에서 AI가 실제로 수행할 수 있는 검증은 다음과 같다.</p>
+<table>
+  <tr><th style="width:30%">검증 수단</th><th>확인할 수 있는 것</th></tr>
+  <tr><td>에디터 내 C# 실행</td><td>컴파일 성공 여부, 에셋·씬의 실제 직렬화 값, 참조 연결 상태</td></tr>
+  <tr><td>콘솔 로그 회수</td><td>런타임 예외, 경고, 누락된 참조</td></tr>
+  <tr><td>카메라 렌더 캡처</td><td>화면에 실제로 보이는 결과(색상·배치·연출)</td></tr>
+  <tr><td>씬 오브젝트 순회</td><td>인스펙터 연결 누락, 계층 구조 이상</td></tr>
+</table>
+
+<h3>3.2 검증 루프의 실제 효과</h3>
+<p>
+이 구조 덕분에 <b>"코드는 맞는데 에디터 설정이 틀린"</b> 유형의 결함을 AI가 스스로 잡아낼 수 있었다.
+이 유형은 코드만 읽어서는 절대 발견되지 않는다. 대표적인 두 사례는 6장에서 상세히 다룬다.
+</p>
+
+<h3>3.3 코드 생성이 아니라 "생성기 생성"</h3>
+<p>
+UI 화면을 AI가 만들 때, 완성된 씬 파일을 직접 편집하는 대신
+<b>그 화면을 만들어 내는 에디터 스크립트를 작성</b>하는 방식을 택했다.
+Unity의 <code>.unity</code>/<code>.prefab</code>은 거대한 YAML이라 AI가 직접 편집하면
+파손 위험이 크고 재현이 어렵기 때문이다.
+</p>
+<table>
+  <tr><th style="width:34%">에디터 자동화 도구</th><th>생성 대상</th></tr>
+  <tr><td><code>ShopPanelBuilder</code></td><td>상점 화면 전체 계층</td></tr>
+  <tr><td><code>MailboxPanelBuilder</code></td><td>우편함 화면</td></tr>
+  <tr><td><code>SettingsPanelBuilder</code></td><td>설정 화면</td></tr>
+  <tr><td><code>EquipmentPanelBuilder</code></td><td>장비 화면 및 스크롤바</td></tr>
+  <tr><td><code>PassiveTreePrefabBuilder</code></td><td>패시브 스킬 트리 노드/연결선</td></tr>
+  <tr><td><code>BottomNavigationSetup</code></td><td>하단 내비게이션 바</td></tr>
+  <tr><td><code>LootRarityPrefabBuilder</code></td><td>등급별 전리품 연출 프리팹</td></tr>
+  <tr><td><code>CharacterAnimatorSkillSetup</code></td><td>애니메이터 스킬 상태·전이 배선</td></tr>
+  <tr><td><code>LocalizationBinder</code></td><td>씬 텍스트에 번역 키 일괄 부착</td></tr>
+  <tr><td><code>EquipmentItemDataBuilder</code> 외</td><td>아이템·스킬·스탯 데이터 에셋 일괄 생성</td></tr>
+</table>
+<p>
+총 20개의 에디터 도구(약 5,966줄)가 이 목적으로 작성되었다. 결과적으로 UI 구성이
+<b>재실행 가능한 코드로 문서화</b>되어, 수정이 필요하면 도구를 고쳐 다시 돌리면 된다.
+</p>
+
+<div class="pagebreak"></div>
+<h2>4. AI 활용 주요 사례</h2>
+
+<h3>4.1 효과음 절차적 합성 — 음원 파일 없는 사운드</h3>
+<p>
+본 게임의 효과음은 <b>구매하거나 녹음한 음원 파일이 아니다.</b>
+<code>SfxSynth</code>가 런타임에 파형을 직접 계산해 <code>AudioClip</code>을 만든다.
+저장소에 포함된 오디오 파일은 BGM 2개(<code>Title_BGM.wav</code>, <code>Main_BGM.wav</code>)뿐이며,
+<b>61종의 효과음은 전부 코드로 합성</b>된다.
+</p>
+<table>
+  <tr><th style="width:26%">합성 기본기</th><th>용도</th></tr>
+  <tr><td><code>Tone</code> / <code>Noise</code></td><td>사인파 스윕, 시드 고정 잡음</td></tr>
+  <tr><td><code>Bell</code></td><td>배음별 감쇠 속도를 달리한 오르골·유리·마림바 음색</td></tr>
+  <tr><td><code>LowPass</code> / <code>HighPass</code> / <code>BandPass</code> / <code>Resonant</code></td><td>필터. 휘두르는 바람, 빔의 훑는 느낌</td></tr>
+  <tr><td><code>Pluck</code> / <code>Shape</code> / <code>Swell</code> / <code>FadeOut</code></td><td>포락선. 타격의 날카로움, 지속음의 부풀기</td></tr>
+  <tr><td><code>Reverb</code> / <code>Tremolo</code> / <code>Normalize</code></td><td>공간감과 최종 정리</td></tr>
+</table>
+<p>
+난수는 <code>xorshift</code> 시드를 코드에 고정해, <b>어느 기기에서 실행해도 동일한 소리</b>가 나도록 했다.
+AI에게는 소리를 "파일로 구해 오라"가 아니라 <b>"이런 인상의 소리를 이 재료들로 조립하라"</b>고 지시했고,
+그 결과 아래처럼 각 스킬의 성격을 수치로 설명하는 코드가 만들어졌다.
+</p>
+<pre>/// 4 · Battle Roar — 화면 안의 모든 몬스터를 다섯 번 치는 마무리 기술입니다.
+///
+/// 눈에 보이는 피해가 다섯 번 들어가므로 소리도 **다섯 번 두드립니다.**
+/// 한 번만 크게 울리면 화면과 소리의 횟수가 어긋나 얻어맞는 느낌이 사라집니다.
+/// 뒤로 갈수록 조금씩 높고 작게 해서, 퍼져 나가며 잦아드는 충격파로 들리게 합니다.
+private static float[] SkillBattleRoar()
+{
+    var mix = SfxSynth.Buffer(.95f);
+    SfxSynth.Mix(mix, Swing(.26f, 260f, 1600f, 5971u, .7f), .6f);   // 내지르는 준비 동작
+    SfxSynth.Mix(mix, Rumble(.9f, 58f, 30f, 9f, 5972u), .5f);
+
+    for (var i = 0; i &lt; 5; i++)                                     // 다섯 번의 타격
+    {
+        var start = .1f + i * .16f;
+        var fade  = 1f - i * .13f;
+        var seed  = (uint)(5973 + i * 3);
+        SfxSynth.Mix(mix, Slam(.34f, 300f + i * 40f, 30f, seed, .92f), fade, start);
+        SfxSynth.Mix(mix, Cut(.09f, seed + 1), .34f * fade, start);
+        SfxSynth.Mix(mix, Debris(.28f, 8, seed + 2, 700f, 3400f), .34f * fade, start + .02f);
+    }
+
+    SfxSynth.Reverb(mix, .5f, 1.6f, .45f);
+    return SfxSynth.Normalize(mix, .92f);
+}</pre>
+
+<h3>4.2 수치 밸런싱 — 감이 아니라 시뮬레이션</h3>
+<p>
+스킬 쿨타임·마나 소모 같은 수치를 조정할 때, AI에게 값을 "적당히" 정하게 하지 않고
+<b>전투 루프를 재현하는 시뮬레이터를 먼저 작성해 후보안을 계량 비교</b>하도록 지시했다.
+</p>
+<p>실제로 "스킬이 끊기지 않게 해 달라"는 요구를 처리할 때 산출한 지표는 다음과 같다.</p>
+<table>
+  <tr><th>쿨타임 조합(초)</th><th class="num">빈 시간</th><th class="num">최장 공백</th><th class="num">마나 최저</th><th>1번 스킬 비중</th></tr>
+  <tr><td>3 / 5 / 7 / 8 / 9 (초기값)</td><td class="num">26.70 %</td><td class="num">1.86 s</td><td class="num">고갈</td><td>—</td></tr>
+  <tr><td>0.9 / 3 / 4 / 5 / 9</td><td class="num">0.00 %</td><td class="num">0.00 s</td><td class="num">4,947</td><td>36.2 %</td></tr>
+  <tr><td><b>1.1 / 2 / 2.5 / 3 / 8 (채택)</b></td><td class="num"><b>0.00 %</b></td><td class="num"><b>0.00 s</b></td><td class="num"><b>4,957</b></td><td><b>22.7 %</b></td></tr>
+</table>
+<p>
+각 후보안은 시드를 바꿔 가며 20,000초 분량을 반복 시뮬레이션했고,
+무작위 선택뿐 아니라 <b>가장 불리한 선택을 유도하는 적대적 시나리오</b>까지 돌려
+"한 번도 비지 않음"을 확인한 뒤 적용했다.
+</p>
+
+<h3>4.3 로컬라이제이션</h3>
+<p>
+한국어·일본어·영어 3개 국어를 <code>Resources/Localization/Localization.csv</code> 한 장
+(289행)에서 관리한다. 씬의 텍스트에는 <code>LocalizedText</code> 컴포넌트가 번역 키를 들고 있으며,
+<code>LocalizationBinder</code> 에디터 도구가 이 부착 작업을 일괄 처리한다.
+</p>
+
+<div class="pagebreak"></div>
+<h2>5. AI 대상 주요 프롬프트 및 지시사항</h2>
+
+<h3>5.1 상시 적용 지시 (코딩 규약)</h3>
+<p>매 작업마다 반복해 말하지 않도록, 아래 규칙을 상시 지시로 고정해 두었다.</p>
+<table>
+  <tr><th style="width:34%">지시</th><th>의도</th></tr>
+  <tr>
+    <td>주석은 한국어로 쓰고, <b>"무엇을 하는지"가 아니라 "왜 그렇게 했는지"</b>를 남길 것</td>
+    <td>코드를 읽으면 무엇을 하는지는 보인다. 나중에 지우면 안 되는 이유를 남기게 함</td>
+  </tr>
+  <tr>
+    <td>UI <b>레이아웃</b> 요청은 씬만 수정하고 C# 스크립트를 만들지 말 것.
+        단 "클릭하면 ~된다" 같은 <b>동작</b> 요청은 스크립트까지 구현할 것</td>
+    <td>단순 배치 변경에 불필요한 스크립트가 늘어나는 것을 방지</td>
+  </tr>
+  <tr>
+    <td>게임 내 설명 텍스트는 <b>15~25자 한 문장</b>으로. 두 문장 금지</td>
+    <td>모바일 UI에서 문장이 길면 잘리거나 폰트가 과도하게 줄어듦</td>
+  </tr>
+  <tr>
+    <td>번역은 <b>CSV 한 장</b>에서만 관리. 씬에 직접 문자열을 넣지 말 것</td>
+    <td>같은 이름의 형제 오브젝트가 많아 경로만으로는 식별이 어려움</td>
+  </tr>
+  <tr>
+    <td>수치(밸런스) 변경은 <b>근거 수치를 제시한 뒤</b> 적용할 것</td>
+    <td>감으로 조정하면 회귀가 반복됨</td>
+  </tr>
+  <tr>
+    <td>작업 후 <b>Unity 콘솔 에러를 직접 확인</b>하고 결과를 사실대로 보고할 것</td>
+    <td>"완료했습니다"만 하고 실제로는 깨져 있는 상황 방지</td>
+  </tr>
+</table>
+
+<h3>5.2 작업 유형별 프롬프트 패턴</h3>
+
+<h4>① 기능 추가 — 맥락과 기존 규칙을 함께 준다</h4>
+<div class="quote">
+"Skill5라는 캐릭터 애니메이션을 추가했어. 캐릭터 애니메이터에 넣어뒀고
+<b>그거를 기존처럼 연결해서</b> 5번째 스킬이 발동되게 해줘.
+<code>01_Prefabs/Effects</code> 안에 Row라는 스킬 프리팹을 넣어뒀으니 5번째 스킬이 발동되면 저게 실행되면 되고,
+저건 <b>모든 몬스터에게 5차례 피해를 주는</b> 스킬로 만들어줘."
+</div>
+<p>
+"기존처럼"이라는 한 마디가 핵심이다. AI가 먼저 기존 스킬 1~4번의 배선 방식(애니메이터 파라미터,
+애니메이션 이벤트, 데이터 에셋 구조)을 조사한 뒤 <b>같은 규칙을 따르도록</b> 유도한다.
+새 방식을 발명하지 않게 하는 것이 목적이다.
+</p>
+
+<h4>② 판단 위임 — 근거를 요구한다</h4>
+<div class="quote">
+"현재 몬스터 피격 시 붉은색으로 노출되는데 그냥 하얀색으로 하면 어떨까?
+<b>이건 너의 추천대로 맞춰줘.</b>"
+</div>
+<p>
+이 지시에 대해 AI는 색상 값을 바로 바꾸지 않고, 몬스터를 배치한 임시 씬에서
+1.0 / 1.4 / 1.8 / 2.4 밝기를 나란히 렌더링해 비교한 뒤 <b>1.8을 근거와 함께 제시</b>했다.
+(순백 1.0은 이미 흰색인 재질에 아무 변화를 주지 못하고, 2.4는 명암이 날아가 실루엣만 남는다.)
+</p>
+
+<h4>③ 결함 지적 — 증상만 말하고 원인은 AI가 찾게 한다</h4>
+<div class="quote">
+"쿨타임이 다 넉넉하게 남아있는데 도대체 왜 T-Pose가 나오는거야? 절대 안 나오게 해줘"
+</div>
+<div class="quote">
+"몬스터를 너무 자주 찾잖아. 내가 사냥하던 몬스터가 죽었을 때에만 다른 몬스터를 타겟팅해야지"
+</div>
+<p>
+원인을 지정해 주지 않는 편이 결과가 좋았다. 원인을 짚어 주면 AI가 그 가설에 갇혀
+표면만 고치는 경우가 있었기 때문이다.
+</p>
+
+<h4>④ 반려와 재지시 — 짧고 분명하게</h4>
+<div class="quote">
+"아직도 1번이 너무 많이 발동돼. 1번을 쿨타임 늘리고 나머지를 좀 더 줄여줘"
+</div>
+<p>
+이 지시에 대해 AI는 <b>요청을 그대로 따르면 오히려 손이 비게 된다</b>는 점을
+시뮬레이션 수치로 제시하고, 목적(1번 비중 축소)은 달성하되 방법을 바꾼 대안
+(1번은 유지하고 2~5번을 단축)을 채택했다. <b>지시를 맹종하지 않고 목적을 달성하는 것</b>을
+바람직한 행동으로 요구했다.
+</p>
+
+<h3>5.3 프롬프트 설계에서 얻은 원칙</h3>
+<ul>
+  <li><b>목적을 말하고 수단은 열어 둔다.</b> "이 값을 3으로 바꿔"보다 "쉬지 않고 이어지게 해줘"가 결과가 좋다.</li>
+  <li><b>기존 코드를 기준점으로 지정한다.</b> "기존처럼"이 새 규칙 발명을 막는다.</li>
+  <li><b>검증 방법까지 지시한다.</b> "확인하고 알려줘"가 있으면 AI가 에디터에서 실제로 돌려 본다.</li>
+  <li><b>모르는 것은 모른다고 하게 한다.</b> 확인하지 못한 항목은 보고에 명시하도록 요구했다.</li>
+</ul>
+
+<div class="pagebreak"></div>
+<h2>6. 사례 연구 — AI 검증 루프가 잡아낸 결함</h2>
+
+<h3>6.1 대기 자세가 T-Pose로 보이던 문제</h3>
+<p><b>증상</b> — 전투 중 스킬을 쓰지 않는 동안 캐릭터가 T자로 서 있음.</p>
+<p>
+<b>기존 코드의 대응</b> — 이전까지는 이 현상을 "전환 타이밍 문제"로 보고,
+스킬이 끝난 뒤 <code>0.5초를 강제로 쉬게</code> 하는 코드가 들어가 있었다. 주석에도 그렇게 적혀 있었다.
+</p>
+<p>
+<b>AI가 확인한 실제 원인</b> — 에디터에서 애니메이터를 직접 열어 전 상태의 모션 참조를 출력한 결과:
+</p>
+<pre>CombatIdle  ->  MOTION IS NULL          ← 모션이 비어 있음
+Run         ->  Run.fbx     bones 23/23
+Skill1      ->  1-1.fbx     bones 23/23
+Skill2      ->  1-2.fbx     bones 23/23
+...</pre>
+<p>
+<code>.controller</code> 파일은 애니메이션 클립을 <code>fileID</code>라는 숫자로 참조하는데,
+FBX가 재임포트되면서 이 번호가 바뀌어 <b>참조가 끊어져 있었다.</b>
+모션이 없는 상태는 Write Defaults 설정에 의해 모든 본을 바인드 포즈(= T-Pose)로 되돌린다.
+</p>
+<p>
+<b>조치</b> — 올바른 클립을 다시 연결하고, 나아가 <b>같은 사고가 재발하지 않도록</b>
+에디터 로드 시 모션이 빈 상태를 찾아 <b>번호가 아닌 에셋 경로로 다시 연결하는 복구 루틴</b>을 추가했다.
+복구할 수 없으면 조용히 T-Pose가 되게 두지 않고 에러 로그로 알린다.
+그리고 원인이 제거되었으므로 <b>땜빵이던 0.5초 강제 대기를 제거</b>했다.
+</p>
+<div class="note">
+<b>시사점.</b> 코드만 읽어서는 "0.5초 대기"가 왜 있는지 알 수 없고, 지우면 증상이 재발한다.
+에디터의 <b>직렬화된 실제 값</b>을 조회할 수 있었기 때문에 근본 원인에 도달할 수 있었다.
+</div>
+
+<h3>6.2 포션 쿨타임 UI가 동작하지 않던 문제</h3>
+<p><b>증상</b> — 체력/마나 포션 아이콘의 원형 게이지(Fill)가 전혀 움직이지 않음.</p>
+<p>
+AI가 씬의 컴포넌트 직렬화 값을 조회한 결과, 코드에는 문제가 없고
+<b>인스펙터 참조 4개 중 3개가 비어 있었다.</b>
+</p>
+<pre>healthPotionCooldownFill = &gt;&gt;&gt; 비어 있음 &lt;&lt;&lt;
+healthPotionCooldownText = Count
+manaPotionCooldownFill   = &gt;&gt;&gt; 비어 있음 &lt;&lt;&lt;
+manaPotionCooldownText   = &gt;&gt;&gt; 비어 있음 &lt;&lt;&lt;</pre>
+<p>
+씬에는 <code>HPPosition/Fill</code>, <code>MPPosition/Fill</code>이 Radial 방식으로 정상 존재했으나
+스크립트에 연결되지 않은 상태였다. AI가 계층을 탐색해 해당 컴포넌트를 찾아 연결하고 씬을 저장했다.
+</p>
+
+<div class="pagebreak"></div>
+<h2>7. 외부 에셋 · 오픈소스 출처</h2>
+
+<h3>7.1 게임 엔진 및 공식 패키지</h3>
+<table>
+  <tr><th style="width:34%">이름</th><th style="width:16%">버전</th><th>비고</th></tr>
+  <tr><td>Unity</td><td>6000.3.13f1</td><td>Unity Companion License / 각 요금제 약관</td></tr>
+  <tr><td>Universal Render Pipeline</td><td>17.3.0</td><td>Unity 공식 패키지</td></tr>
+  <tr><td>Shader Graph / VFX Graph</td><td>17.3.0</td><td>Unity 공식 패키지</td></tr>
+  <tr><td>TextMesh Pro</td><td>내장</td><td>Unity 공식 패키지</td></tr>
+  <tr><td>Input System</td><td>1.19.0</td><td>Unity 공식 패키지</td></tr>
+  <tr><td>AI Navigation</td><td>2.0.12</td><td>Unity 공식 패키지</td></tr>
+  <tr><td>Post Processing</td><td>3.5.4</td><td>Unity 공식 패키지</td></tr>
+  <tr><td>Unity AI Assistant</td><td>2.17.0-pre.1</td><td>본 문서 3장의 MCP 브리지</td></tr>
+</table>
+
+<h3>7.2 백엔드 · 인증 SDK</h3>
+<table>
+  <tr><th style="width:34%">이름</th><th style="width:16%">버전</th><th>용도 / 라이선스</th></tr>
+  <tr><td>Firebase Unity SDK (App / Auth / Firestore)</td><td>13.14.0</td><td>계정 인증 및 플레이어 데이터 저장 · Apache License 2.0</td></tr>
+  <tr><td>Google Sign-In for Unity</td><td>—</td><td>구글 계정 로그인 · Apache License 2.0</td></tr>
+  <tr><td>External Dependency Manager for Unity</td><td>—</td><td>네이티브 의존성 해석 · Apache License 2.0</td></tr>
+</table>
+<p>
+Firebase 네이티브 바이너리는 GitHub 단일 파일 100MB 제한을 초과하는 항목
+(<code>FirebaseCppApp-13_14_0.bundle</code>, 106MB)이 있어 <b>Git LFS</b>로 관리한다.
+LFS 대상은 <code>.gitattributes</code>에 정의되어 있다.
+</p>
+
+<h3>7.3 아트 · VFX 에셋 (Unity Asset Store)</h3>
+<table>
+  <tr><th style="width:32%">에셋</th><th style="width:22%">제작자</th><th>사용처</th></tr>
+  <tr><td>Suntail Village</td><td>Raygeas</td><td>전투 스테이지 배경 환경</td></tr>
+  <tr><td>Mummy Monster</td><td>amusedART</td><td>몬스터 모델 및 애니메이션</td></tr>
+  <tr><td>Modern UI Pack (v5.5.28)</td><td>Michsky</td><td>UI 컴포넌트 및 애니메이션</td></tr>
+  <tr><td>Casual RPG VFX / Environment VFX Pack</td><td>Lana Studio</td><td>스킬 및 환경 이펙트</td></tr>
+  <tr><td>Hyper Casual FX Vol.1 · Vol.2</td><td>Kyeoms (VFX_Klaus)</td><td>타격·획득 연출</td></tr>
+  <tr><td>Top Down Effects</td><td>SineVFX</td><td>스킬 범위 연출</td></tr>
+  <tr><td>Wooden Shield Pack</td><td>Korzanowski</td><td>장비(방패) 모델</td></tr>
+</table>
+<div class="note">
+위 에셋은 모두 Unity Asset Store를 통해 취득했으며, 각 에셋의 <b>Asset Store EULA</b>를 따른다.
+재배포 가능 형태가 아니므로 저장소에는 프로젝트 사용 목적으로만 포함되어 있다.
+</div>
+
+<h3>7.4 캐릭터 · 애니메이션</h3>
+<table>
+  <tr><th style="width:32%">항목</th><th>출처 / 비고</th></tr>
+  <tr><td>플레이어 캐릭터 모델</td><td>프로젝트 자체 리소스 (<code>Assets/Pinous</code>)</td></tr>
+  <tr><td>캐릭터 애니메이션 클립</td><td>Mixamo 기반 클립 (클립 내부 식별자가 <code>mixamo.com</code>).
+      Mixamo는 Adobe 계정 보유 시 상업적 사용이 허용된다.</td></tr>
+  <tr><td>UI 디자인 리소스</td><td>프로젝트 자체 제작 (<code>Assets/Pinous/03_Design</code>)</td></tr>
+</table>
+
+<h3>7.5 사운드</h3>
+<table>
+  <tr><th style="width:32%">항목</th><th>출처</th></tr>
+  <tr><td>효과음 61종</td><td><b>전량 자체 생성</b> — <code>SfxSynth</code>가 런타임 합성. 외부 음원 없음</td></tr>
+  <tr><td>BGM 2종</td><td><code>Title_BGM.wav</code>, <code>Main_BGM.wav</code></td></tr>
+</table>
+
+<h3>7.6 폰트</h3>
+<p>
+TextMesh Pro 폰트 에셋 4종(<code>Outline_KR</code>, <code>NoOutline_KR</code>,
+<code>Outline_JP</code>, <code>NoOutline_JP</code>)을 사용한다.
+한국어와 일본어의 글리프 범위가 달라 폰트를 분리했으며,
+일본어 문자는 <code>*_JP</code> 폰트 에셋에서만 정상 렌더링된다.
+</p>
+
+<h2>8. 정리</h2>
+<ul>
+  <li>AI를 <b>편집기가 아니라 검증 주체</b>로 세운 것이 이 프로젝트의 핵심 구조다.
+      Unity MCP를 통해 AI가 자기 결과를 에디터에서 직접 확인함으로써,
+      코드만 봐서는 찾을 수 없는 <b>에셋·참조 계층의 결함</b>을 잡아낼 수 있었다.</li>
+  <li>UI는 완성물을 편집하지 않고 <b>생성기(에디터 도구)를 작성</b>하게 하여,
+      화면 구성이 재실행 가능한 코드로 남았다.</li>
+  <li>밸런스 수치는 <b>시뮬레이션으로 계량 비교한 뒤</b> 적용했다.</li>
+  <li>지시는 <b>목적을 말하고 수단은 열어 두는</b> 형태가 가장 결과가 좋았으며,
+      요청을 그대로 따르면 목적을 해치는 경우 AI가 근거를 들어 대안을 제시하도록 요구했다.</li>
+</ul>
+
+<footer>
+AI 활용 기술 문서 · Inflearn_Seed / IdleProject · 2026-08-10<br>
+본 문서의 수치와 코드 인용은 저장소의 실제 파일 및 Unity 에디터 조회 결과에 근거한다.
+</footer>
+
+</body>
+</html>
