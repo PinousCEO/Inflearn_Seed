@@ -221,6 +221,10 @@ namespace IdleBattle
 
         public void ApplySlow(float duration, float multiplier, GameObject auraPrefab)
         {
+            // 죽은 적은 풀로 돌아가며 즉시 비활성화될 수 있습니다.
+            // 비활성 오브젝트에서는 코루틴을 시작할 수 없으므로 아무 효과도 적용하지 않습니다.
+            if (!isActiveAndEnabled || !gameObject.activeInHierarchy || IsDead) return;
+
             StopCoroutine(nameof(ClearSlow));
             slowMultiplier = Mathf.Clamp(multiplier, .1f, 1f);
             AudioManager.PlayAt(SfxId.EnemySlow, transform.position);

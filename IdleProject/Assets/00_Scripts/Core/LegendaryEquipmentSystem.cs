@@ -94,7 +94,8 @@ namespace IdleBattle
 
         private void OnDestroy()
         {
-            var save = PlayerDataManager.Instance;
+            // 종료 중에는 싱글턴을 새로 생성하지 않고 기존 인스턴스가 있을 때만 해제합니다.
+            var save = PlayerDataManager.Existing;
             if (save != null) save.InventoryChanged -= SyncWithSave;
         }
 
@@ -146,12 +147,12 @@ namespace IdleBattle
 
         private void LoadEffects()
         {
-            effects["sand"] = LoadPrefab("01_Prefabs/Effects/Tornado_sand", "Assets/01_Prefabs/Effects/Tornado_sand.prefab");
-            effects["snow"] = LoadPrefab("01_Prefabs/Effects/Tornado_snow", "Assets/01_Prefabs/Effects/Tornado_snow.prefab");
-            effects["quake"] = LoadPrefab("01_Prefabs/Effects/EarthQuake", "Assets/01_Prefabs/Effects/EarthQuake.prefab");
-            effects["slow"] = LoadPrefab("01_Prefabs/Effects/Aura_slowdown", "Assets/01_Prefabs/Effects/Aura_slowdown.prefab");
-            effects["chain8"] = LoadPrefab("01_Prefabs/Effects/8", "Assets/01_Prefabs/Effects/8.prefab");
-            effects["chain9"] = LoadPrefab("01_Prefabs/Effects/9", "Assets/01_Prefabs/Effects/9.prefab");
+            effects["sand"] = LoadPrefab("01_Prefabs/Effects/Tornado_sand", "Assets/Resources/01_Prefabs/Effects/Tornado_sand.prefab");
+            effects["snow"] = LoadPrefab("01_Prefabs/Effects/Tornado_snow", "Assets/Resources/01_Prefabs/Effects/Tornado_snow.prefab");
+            effects["quake"] = LoadPrefab("01_Prefabs/Effects/EarthQuake", "Assets/Resources/01_Prefabs/Effects/EarthQuake.prefab");
+            effects["slow"] = LoadPrefab("01_Prefabs/Effects/Aura_slowdown", "Assets/Resources/01_Prefabs/Effects/Aura_slowdown.prefab");
+            effects["chain8"] = LoadPrefab("01_Prefabs/Effects/8", "Assets/Resources/01_Prefabs/Effects/8.prefab");
+            effects["chain9"] = LoadPrefab("01_Prefabs/Effects/9", "Assets/Resources/01_Prefabs/Effects/9.prefab");
         }
 
         public void OnSkill(int skillIndex, EnemyController[] targets, Action<EnemyController, int> damage)

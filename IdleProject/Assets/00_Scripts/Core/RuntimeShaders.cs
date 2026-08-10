@@ -8,7 +8,10 @@ namespace IdleBattle
     /// </summary>
     public static class RuntimeShaders
     {
+        private const string RuntimeLitResourcePath = "Runtime/RuntimeLit";
+
         private static Shader lit;
+        private static Material runtimeLitMaterial;
 
         /// <summary>URP Lit 셰이더. URP가 없는 프로젝트에서는 Standard로 대체합니다.</summary>
         public static Shader Lit
@@ -16,7 +19,22 @@ namespace IdleBattle
             get
             {
                 if (lit != null) return lit;
+
+                // Keep a material using URP/Lit in Resources so Unity's build-time shader
+                // stripping cannot remove the shader used by runtime-created materials.
+                runtimeLitMaterial = Resources.Load<Material>(RuntimeLitResourcePath);
+                if (runtimeLitMaterial != null)
+                {
+                    lit = runtimeLitMaterial.shader;
+                }
+
+                if (lit != null) return lit;
                 lit = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                if (lit == null)
+                {
+                    Debug.LogError(
+                        $"Required runtime shader is missing. Restore Resources/{RuntimeLitResourcePath}.mat before building.");
+                }
                 return lit;
             }
         }
@@ -26,6 +44,7 @@ namespace IdleBattle
         {
             // Domain Reload를 끈 상태에서 이전 플레이의 참조가 남지 않게 합니다.
             lit = null;
+            runtimeLitMaterial = null;
         }
     }
 }

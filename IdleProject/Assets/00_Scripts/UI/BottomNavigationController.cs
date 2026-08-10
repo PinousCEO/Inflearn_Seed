@@ -69,13 +69,19 @@ namespace IdleBattle.UI
         {
             var canvas = GetComponentInParent<Canvas>(true);
             if (canvas == null) return;
-            var root = canvas.transform;
+            // Bottom is below the nested SafeArea canvas. Searching from the nearest
+            // canvas disconnects screens that live beside SafeArea on the root canvas.
+            var root = canvas.rootCanvas != null ? canvas.rootCanvas.transform : canvas.transform;
 
             if (mainScreen == null) mainScreen = root.Find("Main")?.gameObject;
             if (equipmentScreen == null) equipmentScreen = root.Find("Equipment")?.gameObject;
             if (skillScreen == null) skillScreen = root.Find("Skill")?.gameObject;
             if (dungeonScreen == null) dungeonScreen = root.Find("Dungeon")?.gameObject;
             if (shopScreen == null) shopScreen = root.Find("Shop")?.gameObject;
+
+            if (mainScreen == null || equipmentScreen == null || skillScreen == null ||
+                dungeonScreen == null || shopScreen == null)
+                Debug.LogError("Bottom navigation could not resolve all five root screens.", this);
         }
 
         private void CacheNavigation()

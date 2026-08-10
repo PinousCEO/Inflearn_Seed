@@ -19,7 +19,7 @@ namespace IdleBattle.UI
         [Tooltip("켜면 타이틀에 들어올 때마다 남아 있는 세션(게스트/구글)을 끊고 항상 로그인 판넬부터 시작합니다.\n\n" +
                  "게스트 계정은 로그아웃하면 다시 들어갈 방법이 없어서, 그 계정에 쌓인 데이터도 함께 버려집니다.\n" +
                  "이어서 하기를 확인하거나 배포할 때는 꺼 두세요.")]
-        [SerializeField] private bool forceSignOutForTesting = true;
+        [SerializeField] private bool forceSignOutForTesting;
 
         /// <summary>
         /// 타이틀 진입 시 기존 세션을 끊을지 여부입니다.
@@ -43,7 +43,9 @@ namespace IdleBattle.UI
         private TMP_Text statusText;
         private bool isSigningIn;
         private bool isRouting;
-        private Task<bool> characterProbe;
+        private Task<bool?> characterProbe;
+        private string characterProbeUserId;
+        private int initializationRun;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void InstallOnTitleScene()
@@ -55,7 +57,23 @@ namespace IdleBattle.UI
             host.AddComponent<TitleLoginController>();
         }
 
-        private async void Start()
+        private void OnEnable()
+        {
+            if (!Application.isPlaying) return;
+            var run = ++initializationRun;
+            _ = InitializeControllerAsync(run);
+        }
+
+        private void OnDisable()
+        {
+            initializationRun++;
+            isSigningIn = false;
+            isRouting = false;
+            characterProbe = null;
+            characterProbeUserId = null;
+        }
+
+        private async Task InitializeControllerAsync(int run)
         {
             try
             {
@@ -68,15 +86,17 @@ namespace IdleBattle.UI
                 SetLoginInteractable(false);
 
                 await FirebaseInitializer.Instance.InitializeAsync();
+                if (!IsCurrentInitialization(run)) return;
 
                 if (forceSignOutForTesting)
                 {
                     Debug.Log("[Title] 테스트 스위치가 켜져 있어 남아 있는 세션을 끊습니다. " +
                               "게스트 계정을 이어서 쓰려면 TitleLoginController의 체크를 끄세요.", this);
                     await FirebaseInitializer.Instance.SignOutForTestingAsync();
+                    if (!IsCurrentInitialization(run)) return;
                 }
 
-                if (FirebaseInitializer.Instance.IsSignedIn)
+                if (!forceSignOutForTesting && FirebaseInitializer.Instance.IsSignedIn)
                 {
                     // 이미 로그인된 상태 -> 바로 TapToStart 노출
                     ShowTapToStart();
@@ -89,6 +109,7 @@ namespace IdleBattle.UI
             }
             catch (Exception exception)
             {
+                if (!IsCurrentInitialization(run)) return;
                 Debug.LogException(exception, this);
                 ShowLoginPanel();
                 SetStatus("로그인 서비스를 초기화하지 못했습니다.");
@@ -102,6 +123,11 @@ namespace IdleBattle.UI
                         confirmLabel: "재시도",
                         key: InitFailurePopupKey);
             }
+        }
+
+        private bool IsCurrentInitialization(int run)
+        {
+            return this != null && isActiveAndEnabled && initializationRun == run;
         }
 
         /// <summary>초기화 실패 팝업의 재시도. 타이틀 씬을 처음부터 다시 태웁니다.</summary>
@@ -143,7 +169,8 @@ namespace IdleBattle.UI
                     "Title scene requires TapToStart, Login, GuestBtn, GoogleBtn, and LoadingBar objects.");
 
             // 로딩바 오브젝트는 꺼진 상태로 대기하므로, 코루틴은 항상 켜져 있는 이 호스트에서 돌린다.
-            loadingBar = gameObject.AddComponent<TitleLoadingBar>();
+            loadingBar = GetComponent<TitleLoadingBar>();
+            if (loadingBar == null) loadingBar = gameObject.AddComponent<TitleLoadingBar>();
             if (!loadingBar.Bind(loadingBarObject))
                 throw new MissingReferenceException("LoadingBar requires a child Image named 'Fill'.");
 
@@ -184,10 +211,21 @@ namespace IdleBattle.UI
             SetTapToStartVisible(false);
             SetLoginPanelVisible(false);
 
-            var hasCharacter = await (characterProbe ??= ProbeHasCharacterAsync());
+            var hasCharacter = await GetCharacterProbeAsync();
             if (this == null) return;
 
-            if (hasCharacter)
+            if (!hasCharacter.HasValue)
+            {
+                characterProbe = null;
+                characterProbeUserId = null;
+                isRouting = false;
+                SetStatus("저장 데이터를 확인하지 못했습니다. 다시 시도해 주세요.");
+                PopupService.Toast("저장 데이터 확인에 실패했습니다. 다시 눌러 주세요.");
+                ShowTapToStart();
+                return;
+            }
+
+            if (hasCharacter.Value)
             {
                 // 이미 캐릭터가 있는 사용자 -> Main으로. 무거운 씬이라 로딩바로 진행한다.
                 loadingBar.Load(MainSceneName);
@@ -195,7 +233,7 @@ namespace IdleBattle.UI
             else
             {
                 // 신규 사용자 -> Select에서 직업 선택 + 이름 입력.
-                SceneTransition.Instance.LoadScene(SelectSceneName);
+                loadingBar.Load(SelectSceneName);
             }
         }
 
@@ -270,26 +308,45 @@ namespace IdleBattle.UI
             SetTapToStartVisible(true);
 
             // TapToStart를 누르는 순간 바로 분기할 수 있도록, 저장된 캐릭터 유무를 미리 조회해 둔다.
+            characterProbeUserId = FirebaseInitializer.Instance.UserId;
             characterProbe = ProbeHasCharacterAsync();
         }
 
-        /// <summary>Firestore 저장본에 캐릭터(직업)가 이미 있는지 확인한다. 있으면 Main, 없으면 Select로 간다.</summary>
-        private async Task<bool> ProbeHasCharacterAsync()
+        private Task<bool?> GetCharacterProbeAsync()
         {
-            try
+            var currentUserId = FirebaseInitializer.Instance.UserId;
+            if (characterProbe == null ||
+                !string.Equals(characterProbeUserId, currentUserId, StringComparison.Ordinal))
             {
-                var json = await FirebaseInitializer.Instance.LoadPlayerJsonAsync();
-                if (string.IsNullOrWhiteSpace(json)) return false;
+                characterProbeUserId = currentUserId;
+                characterProbe = ProbeHasCharacterAsync();
+            }
+            return characterProbe;
+        }
 
-                var probe = JsonUtility.FromJson<CharacterProbe>(json);
-                return probe != null && !string.IsNullOrWhiteSpace(probe.characterId);
-            }
-            catch (Exception exception)
+        /// <summary>Firestore 저장본에 캐릭터(직업)가 이미 있는지 확인한다. 있으면 Main, 없으면 Select로 간다.</summary>
+        private async Task<bool?> ProbeHasCharacterAsync()
+        {
+            const int maxAttempts = 3;
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                Debug.LogException(exception, this);
-                PopupService.Toast("캐릭터 정보를 불러오지 못했습니다.");
-                return false; // 조회 실패 시에는 안전하게 Select(캐릭터 선택)로 보낸다.
+                try
+                {
+                    var json = await FirebaseInitializer.Instance.LoadPlayerJsonAsync();
+                    if (string.IsNullOrWhiteSpace(json)) return false;
+
+                    var probe = JsonUtility.FromJson<CharacterProbe>(json);
+                    return probe != null && !string.IsNullOrWhiteSpace(probe.characterId);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogWarning($"캐릭터 저장 조회 실패 ({attempt}/{maxAttempts}): {exception.Message}", this);
+                    if (attempt < maxAttempts)
+                        await Task.Delay(350 * attempt);
+                }
             }
+
+            return null;
         }
 
         /// <summary>저장 JSON에서 characterId 하나만 뽑아 보기 위한 최소 구조체.</summary>

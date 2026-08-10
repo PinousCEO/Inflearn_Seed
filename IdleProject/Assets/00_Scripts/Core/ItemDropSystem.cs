@@ -33,8 +33,8 @@ namespace IdleBattle
         {
             worldCamera = camera != null ? camera : Camera.main;
             mainUi = SceneRefs.Screen("Main") as RectTransform;
-            itemDescriptionPrefab = LoadPrefab(ItemDesResourcePath, "Assets/01_Prefabs/UI/ItemDes.prefab");
-            pickupEffectPrefab = LoadPrefab(PickupResourcePath, "Assets/01_Prefabs/Effects/Loot_pick_up.prefab");
+            itemDescriptionPrefab = LoadPrefab(ItemDesResourcePath, "Assets/Resources/01_Prefabs/UI/ItemDes.prefab");
+            pickupEffectPrefab = LoadPrefab(PickupResourcePath, "Assets/Resources/01_Prefabs/Effects/Loot_pick_up.prefab");
             dropTable = LoadDropTable();
 
             foreach (ItemRarity rarity in Enum.GetValues(typeof(ItemRarity)))
@@ -42,7 +42,7 @@ namespace IdleBattle
                 var rarityName = rarity.ToString();
                 var prefab = LoadPrefab(
                     EffectResourceRoot + rarityName,
-                    $"Assets/01_Prefabs/Effects/Loot_{rarityName}.prefab");
+                    $"Assets/Resources/01_Prefabs/Effects/Loot_{rarityName}.prefab");
                 if (prefab != null)
                     effectPrefabs[rarity] = prefab;
             }
