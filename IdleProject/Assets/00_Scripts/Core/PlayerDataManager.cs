@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using IdleBattle.Audio;
 using UnityEngine;
 
 namespace IdleBattle
@@ -11,10 +12,17 @@ namespace IdleBattle
     {
         private static PlayerDataManager instance;
 
-        [SerializeField, Min(1)] private int maxHealth = 100;
-        [SerializeField, Min(0)] private int currentHealth = 100;
-        [SerializeField, Min(1)] private int maxMana = 100;
-        [SerializeField, Min(0)] private int currentMana = 100;
+        /// <summary>
+        /// 씬에 배치된 인스턴스가 없을 때 코드로 만드는 인스턴스가 쓰는 기본값입니다.
+        /// Main 씬의 인스펙터 값과 같게 맞춰 둡니다.
+        /// </summary>
+        private const int DefaultMaxHealth = 5000;
+        private const int DefaultMaxMana = 5000;
+
+        [SerializeField, Min(1)] private int maxHealth = DefaultMaxHealth;
+        [SerializeField, Min(0)] private int currentHealth = DefaultMaxHealth;
+        [SerializeField, Min(1)] private int maxMana = DefaultMaxMana;
+        [SerializeField, Min(0)] private int currentMana = DefaultMaxMana;
         [SerializeField, Min(1)] private int level = 1;
         [SerializeField, Min(0)] private int experience;
         [SerializeField, Min(0)] private long coins;
@@ -72,6 +80,10 @@ namespace IdleBattle
         {
             if (instance != null && instance != this)
             {
+                // Title·Select에서 Instance를 먼저 건드리면 코드로 만든 쪽이 살아남기 때문에,
+                // 씬에 배치된 이쪽이 사라지기 전에 인스펙터에서 정한 최대 체력/마나를 넘겨준다.
+                // 이 전달이 없으면 전투 씬이 남의 기본값으로 시작한다.
+                instance.ApplyAuthoredVitals(maxHealth, maxMana);
                 Destroy(gameObject);
                 return;
             }
@@ -98,7 +110,16 @@ namespace IdleBattle
             currentHealth = Mathf.Max(0, currentHealth - amount);
             Damaged?.Invoke(previousHealth - currentHealth);
             HealthChanged?.Invoke(currentHealth, maxHealth);
-            if (currentHealth == 0) Died?.Invoke();
+
+            // 피격음은 내지 않습니다.
+            // 몬스터 여러 마리가 각자 1초 남짓마다 때려서 계속 "퉁퉁" 울렸고,
+            // 몬스터의 공격 동작이 눈에 잘 띄지 않아 소리만 따로 노는 것처럼 들렸습니다.
+            // 체력 변화는 HP 바로 충분히 보입니다.
+            if (currentHealth == 0)
+            {
+                AudioManager.Play(SfxId.PlayerDeath);
+                Died?.Invoke();
+            }
         }
 
         public void Heal(int amount)
@@ -128,6 +149,26 @@ namespace IdleBattle
             HealthChanged?.Invoke(currentHealth, maxHealth);
         }
 
+        /// <summary>체력과 마나를 최대치로 되돌립니다. 전투 씬 진입과 부활에서 씁니다.</summary>
+        public void ResetVitals()
+        {
+            currentHealth = maxHealth;
+            currentMana = maxMana;
+            HealthChanged?.Invoke(currentHealth, maxHealth);
+            ManaChanged?.Invoke(currentMana, maxMana);
+        }
+
+        /// <summary>
+        /// 씬에 배치된 인스턴스가 인스펙터에서 정한 최대치를 살아남는 인스턴스에 넘깁니다.
+        /// 전투 씬으로 들어올 때마다 불리므로, 체력·마나를 가득 채워 시작하게 합니다.
+        /// </summary>
+        private void ApplyAuthoredVitals(int authoredMaxHealth, int authoredMaxMana)
+        {
+            maxHealth = Mathf.Max(1, authoredMaxHealth);
+            maxMana = Mathf.Max(1, authoredMaxMana);
+            ResetVitals();
+        }
+
         public bool TrySpendMana(int amount)
         {
             if (amount < 0 || currentMana < amount) return false;
@@ -152,7 +193,11 @@ namespace IdleBattle
             ManaChanged?.Invoke(currentMana, maxMana);
         }
 
-        public void AddItem(ItemData item, int amount = 1)
+        /// <param name="save">
+        /// 여러 종류를 연달아 넣을 때는 false로 두고 마지막에 <see cref="Save"/>를 한 번만 부르세요.
+        /// 오프라인 보상처럼 수십 종이 한꺼번에 들어오면 저장도 그만큼 일어납니다.
+        /// </param>
+        public void AddItem(ItemData item, int amount = 1, bool save = true)
         {
             if (!IsLoaded) return;
             if (item == null || string.IsNullOrWhiteSpace(item.ItemId) || amount <= 0)
@@ -161,7 +206,7 @@ namespace IdleBattle
             inventory.TryGetValue(item.ItemId, out var currentAmount);
             var newAmount = currentAmount + amount;
             inventory[item.ItemId] = newAmount;
-            Save();
+            if (save) Save();
             ItemAcquired?.Invoke(item, newAmount);
             InventoryChanged?.Invoke();
         }
@@ -176,6 +221,7 @@ namespace IdleBattle
             if (!IsLoaded) return;
             if (amount <= 0) return;
             experience += amount;
+            var levelBeforeGain = level;
             while (experience >= GetExperienceRequirement(level))
             {
                 experience -= GetExperienceRequirement(level);
@@ -185,18 +231,21 @@ namespace IdleBattle
                 currentHealth = maxHealth;
                 currentMana = maxMana;
             }
+            // 한 번에 여러 레벨이 올라도 축하음은 한 번만 냅니다.
+            if (level > levelBeforeGain) AudioManager.Play(SfxId.LevelUp);
             Save();
             ExperienceChanged?.Invoke(level, experience, GetExperienceRequirement(level));
             HealthChanged?.Invoke(currentHealth, maxHealth);
             ManaChanged?.Invoke(currentMana, maxMana);
         }
 
-        public void AddCoins(long amount)
+        /// <param name="save">아이템과 함께 지급할 때는 false로 두고 마지막에 <see cref="Save"/>를 한 번만 부르세요.</param>
+        public void AddCoins(long amount, bool save = true)
         {
             if (!IsLoaded) return;
             if (amount <= 0) return;
             coins = Math.Max(0L, coins + amount);
-            Save();
+            if (save) Save();
             CoinsChanged?.Invoke(coins);
         }
 

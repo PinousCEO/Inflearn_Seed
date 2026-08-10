@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using IdleBattle.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -246,6 +248,7 @@ namespace IdleBattle.UI
             if (!data.IsPlayable)
             {
                 SetHint(data.LockedMessage, hintErrorColor);
+                AudioManager.Play(SfxId.UiDenied);
                 return;
             }
 
@@ -269,6 +272,8 @@ namespace IdleBattle.UI
             {
                 StartCoroutine(source.ShakeRoutine());
                 SetHint(data.LockedMessage, hintErrorColor);
+                AudioManager.Play(SfxId.UiDenied);
+                PopupService.Toast(data.LockedMessage);
                 return;
             }
 
@@ -280,6 +285,9 @@ namespace IdleBattle.UI
             if (data == null) return;
 
             current = data;
+
+            // 처음 화면을 채울 때(animate=false)는 조용히 두고, 실제로 고른 순간에만 울립니다.
+            if (animate) AudioManager.Play(SfxId.CharacterFocus);
 
             foreach (var button in buttons)
                 if (button != null)
@@ -363,6 +371,7 @@ namespace IdleBattle.UI
 
             var duration = Mathf.Max(0.01f, statFillDuration);
             var elapsed = 0f;
+            var lastShownValue = -1;
             while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
@@ -370,7 +379,14 @@ namespace IdleBattle.UI
                 var shown = target * t;
 
                 if (row.slider != null) row.slider.value = shown;
-                if (row.value != null) row.value.text = Mathf.RoundToInt(shown).ToString();
+                var rounded = Mathf.RoundToInt(shown);
+                if (row.value != null) row.value.text = rounded.ToString();
+                // 숫자가 실제로 올라간 프레임에만 아주 작은 틱을 냅니다.
+                if (rounded != lastShownValue)
+                {
+                    lastShownValue = rounded;
+                    AudioManager.Play(SfxId.StatTick);
+                }
                 yield return null;
             }
 
@@ -523,7 +539,7 @@ namespace IdleBattle.UI
             nameHintText.color = color;
         }
 
-        private async void OnStartClicked()
+        private void OnStartClicked()
         {
             if (isStarting) return;
             if (current == null || !current.IsPlayable) return;
@@ -532,6 +548,8 @@ namespace IdleBattle.UI
             if (!CharacterData.IsValidPlayerName(playerName, out var message))
             {
                 SetHint(message, hintErrorColor);
+                AudioManager.Play(SfxId.UiDenied);
+                PopupService.Toast(message);
                 return;
             }
 
@@ -541,8 +559,21 @@ namespace IdleBattle.UI
                 return;
             }
 
+            // 직업과 이름은 계정에 그대로 저장되어 되돌릴 수 없으므로, 두 개짜리 버튼으로 한 번 더 묻는다.
+            PopupService.Confirm(
+                "모험 시작",
+                $"{current.DisplayName} · {playerName}(으)로 시작합니다.\n직업과 이름은 바꿀 수 없습니다.",
+                onConfirm: () => _ = StartAdventureAsync(playerName),
+                confirmLabel: "시작",
+                cancelLabel: "취소");
+        }
+
+        private async Task StartAdventureAsync(string playerName)
+        {
+            if (isStarting) return;
             isStarting = true;
             if (startButton != null) startButton.interactable = false;
+            AudioManager.Play(SfxId.AdventureStart);
 
             // 로컬 캐시(빠른 참조용)와 계정 저장본(Firestore)에 모두 남긴다.
             CharacterSelection.Save(current.CharacterId, playerName);

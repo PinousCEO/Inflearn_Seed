@@ -1,4 +1,5 @@
 using System.Collections;
+using IdleBattle.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -148,14 +149,19 @@ namespace IdleBattle.UI
 
         private void ShowUserInfo()
         {
-            if (userInfoPanel == null) return;
+            if (userInfoPanel == null || userInfoPanel.activeSelf) return;
             userInfoPanel.SetActive(true);
             userInfoPanel.transform.SetAsLastSibling();
+            UiSfxBinder.Bind(userInfoPanel);
+            AudioManager.Play(SfxId.UiPanelOpen);
         }
 
         private void HideUserInfo()
         {
-            if (userInfoPanel != null) userInfoPanel.SetActive(false);
+            if (userInfoPanel == null) return;
+            // 이미 닫혀 있으면(초기 설정에서 부를 때) 소리를 내지 않습니다.
+            if (userInfoPanel.activeSelf) AudioManager.Play(SfxId.UiPanelClose);
+            userInfoPanel.SetActive(false);
         }
 
         public void Select(int index)
@@ -166,6 +172,7 @@ namespace IdleBattle.UI
             // reference the same object, which would deactivate it at completion.
             if (index == selectedIndex) return;
 
+            AudioManager.Play(SfxId.UiTabSwitch);
             if (transitionRoutine != null) StopCoroutine(transitionRoutine);
             transitionRoutine = StartCoroutine(TransitionTo(index));
         }
@@ -193,6 +200,8 @@ namespace IdleBattle.UI
             }
 
             next.SetActive(true);
+            // 화면마다 처음 켜질 때 새 버튼이 드러나므로, 그때 클릭음을 붙여 줍니다.
+            UiSfxBinder.Bind(next);
             var nextGroup = GetCanvasGroup(next);
             nextGroup.alpha = 0f;
             nextGroup.blocksRaycasts = false;

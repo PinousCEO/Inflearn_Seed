@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Text;
+using IdleBattle.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -47,12 +48,12 @@ namespace IdleBattle.UI
             loadingLabel = FindComponent<TMP_Text>(root.transform, "Loading");
             percentageLabel = FindComponent<TMP_Text>(root.transform, "Percentage");
 
-            if (loadingLabel != null)
-            {
-                var text = loadingLabel.text;
-                if (!string.IsNullOrWhiteSpace(text))
-                    baseLabel = text.TrimEnd('.', '·', '…', ' ');
-            }
+            // 씬에는 "로딩중..." 처럼 점까지 적혀 있습니다. 점은 코드가 붙이므로 떼고 씁니다.
+            // 표에 키가 있으면 그 글자를, 없으면 씬에 적힌 글자를 그대로 씁니다.
+            var sceneLabel = loadingLabel != null && !string.IsNullOrWhiteSpace(loadingLabel.text)
+                ? loadingLabel.text.TrimEnd('.', '·', '…', ' ')
+                : baseLabel;
+            baseLabel = Localization.GetOr("title.loading", sceneLabel);
 
             SetProgress(0f);
             return fill != null;
@@ -103,6 +104,7 @@ namespace IdleBattle.UI
 
             SetProgress(1f);
             AnimateLabel(animationTime);
+            AudioManager.Play(SfxId.LoadingComplete);
 
             yield return new WaitForSecondsRealtime(CompleteHoldSeconds);
 

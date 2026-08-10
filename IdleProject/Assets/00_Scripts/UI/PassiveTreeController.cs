@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using IdleBattle.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -126,6 +127,7 @@ namespace IdleBattle
 
         public void GainLevel()
         {
+            AudioManager.Play(SfxId.LevelUp);
             level++;
             availablePoints++;
             LevelChanged?.Invoke(level);
@@ -150,7 +152,12 @@ namespace IdleBattle
 
         private void InvestSelected()
         {
-            if (!CanInvest(selected)) return;
+            if (!CanInvest(selected))
+            {
+                AudioManager.Play(SfxId.UiDenied);
+                return;
+            }
+            AudioManager.Play(SfxId.PassiveInvest);
             availablePoints -= selected.PointCost;
             investedNodeIds.Add(selected.NodeId);
             EffectChanged?.Invoke(selected.EffectType, selected.EffectValue);
@@ -163,7 +170,12 @@ namespace IdleBattle
             if (selected == null || !IsInvested(selected.NodeId) || selected.NodeId == "origin") return;
             var hasInvestedDependent = nodes.Values.Any(node =>
                 IsInvested(node.NodeId) && node.PrerequisiteIds.Contains(selected.NodeId));
-            if (hasInvestedDependent) return;
+            if (hasInvestedDependent)
+            {
+                AudioManager.Play(SfxId.UiDenied);
+                return;
+            }
+            AudioManager.Play(SfxId.PassiveRefund);
             investedNodeIds.Remove(selected.NodeId);
             availablePoints += selected.PointCost;
             EffectChanged?.Invoke(selected.EffectType, -selected.EffectValue);

@@ -1,3 +1,4 @@
+using IdleBattle.Audio;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,8 +10,9 @@ namespace IdleBattle.UI
     [DisallowMultipleComponent]
     public sealed class EquipmentLoadoutController : MonoBehaviour
     {
-        private static readonly string[] ItemIds =
-        { "equipment-003", "equipment-004", "equipment-005", "equipment-006", "equipment-007", "equipment-008", "equipment-009", "equipment-010", "equipment-011" };
+        // 특수효과가 붙는 전설 9종을 그대로 씁니다. 목록이 한 곳에만 있어야
+        // 슬롯 순서와 효과 번호(1~9)가 어긋나지 않습니다.
+        private static readonly string[] ItemIds = LegendaryEquipmentSystem.LegendaryIds;
         private readonly bool[] equipped = new bool[9];
         private ItemCatalog catalog;
         private PlayerDataManager data;
@@ -72,7 +74,11 @@ namespace IdleBattle.UI
                 button.transition = Selectable.Transition.None;
                 button.onClick.AddListener(() =>
                 {
-                    if (equipped[index]) TryUnequip(ItemIds[index]);
+                    if (!equipped[index]) return;
+                    var itemName = catalog != null && catalog.TryGet(ItemIds[index], out var item)
+                        ? item.DisplayName
+                        : "장비";
+                    if (TryUnequip(ItemIds[index])) PopupService.Toast($"{itemName} 해제 완료");
                 });
             }
             data.InventoryChanged += Refresh;
@@ -90,6 +96,9 @@ namespace IdleBattle.UI
             ClearUpgradeLabels();
             for (var i = 0; i < ItemIds.Length; i++)
             {
+                // 착용 상태는 항상 저장 데이터에서 다시 읽습니다.
+                // Awake 시점에는 아직 로그인/로드 전이라 전부 미착용으로 보이기 때문입니다.
+                equipped[i] = data.IsItemEquipped(ItemIds[i]);
                 if (i >= slotViews.Length || slotViews[i].Root == null) continue;
                 if (!catalog.TryGet(ItemIds[i], out var item)) continue;
                 var slot = slotViews[i];
@@ -138,6 +147,7 @@ namespace IdleBattle.UI
                 equipped[i] = true;
                 LegendaryEquipmentSystem.Instance.SetEquipped(i + 1, true);
                 data.SetItemEquipped(itemId, true);
+                AudioManager.Play(SfxId.Equip);
                 Refresh();
                 return true;
             }
@@ -159,6 +169,7 @@ namespace IdleBattle.UI
                 equipped[i] = false;
                 LegendaryEquipmentSystem.Instance.SetEquipped(i + 1, false);
                 data.SetItemEquipped(itemId, false);
+                AudioManager.Play(SfxId.Unequip);
                 Refresh();
                 return true;
             }

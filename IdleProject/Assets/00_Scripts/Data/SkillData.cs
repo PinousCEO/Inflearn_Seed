@@ -79,7 +79,7 @@ namespace IdleBattle
         [SerializeField, Min(0f)] private float duration;
         [SerializeField] private GameObject effectPrefab;
         [SerializeField, Min(1)] private int damage = 30;
-        [SerializeField, Range(0, 3)] private int animationIndex;
+        [SerializeField, Range(0, 4)] private int animationIndex;
 
         [Header("스킬 능력")]
         [Tooltip("damage, radius, projectileCount처럼 런타임에서 사용할 키와 수치를 자유롭게 추가합니다.")]
@@ -160,7 +160,7 @@ namespace IdleBattle
             castTime = Mathf.Max(0f, castTime);
             duration = Mathf.Max(0f, duration);
             damage = Mathf.Max(1, damage);
-            animationIndex = Mathf.Clamp(animationIndex, 0, 3);
+            animationIndex = Mathf.Clamp(animationIndex, 0, 4);
             abilities ??= new List<SkillAbility>();
 
             foreach (var ability in abilities)

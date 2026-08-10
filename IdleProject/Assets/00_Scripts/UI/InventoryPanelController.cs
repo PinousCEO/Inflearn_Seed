@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using IdleBattle.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -213,6 +214,9 @@ namespace IdleBattle.UI
                 button = root.GetComponent<Button>() ?? root.AddComponent<Button>();
                 button.transition = Selectable.Transition.None;
                 button.onClick.AddListener(EquipBoundItem);
+                // 아이템 칸은 일반 버튼보다 밝은 선택음을 냅니다. 복제한 칸도 여기서 함께 처리됩니다.
+                UiSfxBinder.SetSound(button, SfxId.UiSelect);
+                UiSfxBinder.Bind(root);
             }
 
             private void EquipBoundItem()
@@ -220,7 +224,9 @@ namespace IdleBattle.UI
                 if (boundItem == null || owner == null) return;
                 var target = owner.Loadout;
                 if (target != null && target.TryEquip(boundItem.ItemId))
-                    Debug.Log($"장비 장착: {boundItem.DisplayName}");
+                    PopupService.Toast($"{boundItem.DisplayName} 장착 완료");
+                else
+                    AudioManager.Play(SfxId.UiDenied);
             }
 
             public void Bind(OwnedItem owned, Sprite rarityFrame)

@@ -14,8 +14,15 @@ namespace IdleBattle
         [SerializeField] private float lookAtHeight = 0.3f;
         [SerializeField] private bool snapOnTargetAssigned = true;
 
+        [Header("Shake")]
+        [SerializeField, Min(0f)] private float maxShakeStrength = 0.6f;
+
         private Vector3 velocity;
         private bool pendingInitialSnap;
+        private Vector3 shakeOffset;
+        private float shakeStrength;
+        private float shakeTimer;
+        private float shakeDuration;
 
         public void SetTarget(Transform newTarget)
         {
@@ -31,8 +38,22 @@ namespace IdleBattle
         {
             if (target == null) return;
 
+            shakeOffset = Vector3.zero;
             transform.position = target.position + followOffset;
             LookAtTarget();
+        }
+
+        /// <summary>
+        /// 화면을 잠깐 흔듭니다. 겹쳐 들어오면 더 센 쪽/긴 쪽으로 이어 붙습니다.
+        /// </summary>
+        public void Shake(float strength, float duration)
+        {
+            if (strength <= 0f || duration <= 0f) return;
+            if (!GameSettings.ScreenShakeEnabled) return;
+
+            shakeStrength = Mathf.Min(Mathf.Max(shakeStrength, strength), maxShakeStrength);
+            shakeDuration = Mathf.Max(shakeDuration, duration);
+            shakeTimer = Mathf.Max(shakeTimer, duration);
         }
 
         private void LateUpdate()
@@ -48,13 +69,36 @@ namespace IdleBattle
             }
 
             var desiredPosition = target.position + followOffset;
-            transform.position = Vector3.SmoothDamp(
-                transform.position,
+            // 흔들림은 추적 결과 위에 얹는 값이라, 보간은 흔들리기 전 위치에서 이어 갑니다.
+            var followPosition = Vector3.SmoothDamp(
+                transform.position - shakeOffset,
                 desiredPosition,
                 ref velocity,
                 smoothTime);
 
+            transform.position = followPosition;
             LookAtTarget();
+
+            shakeOffset = NextShakeOffset();
+            transform.position = followPosition + shakeOffset;
+        }
+
+        private Vector3 NextShakeOffset()
+        {
+            if (shakeTimer <= 0f) return Vector3.zero;
+
+            shakeTimer -= Time.deltaTime;
+            if (shakeTimer <= 0f)
+            {
+                shakeStrength = 0f;
+                shakeDuration = 0f;
+                return Vector3.zero;
+            }
+
+            // 남은 시간에 비례해 잦아들고, 화면에 평행한 방향으로만 흔듭니다.
+            var amount = shakeStrength * (shakeTimer / shakeDuration);
+            var random = Random.insideUnitCircle * amount;
+            return transform.right * random.x + transform.up * random.y;
         }
 
         private void LookAtTarget()

@@ -1,0 +1,289 @@
+key,ko,ja,en,note
+common.confirm,확인,確認,OK,공용 팝업 확인 버튼
+common.cancel,취소,キャンセル,Cancel,공용 팝업 취소 버튼
+common.close,닫기,閉じる,Close,설정/언어팝업 닫기 버튼
+common.retry,재시도,再試行,Retry,접속 실패 팝업
+common.start,시작,開始,Start,모험 시작 확인 팝업
+common.on,켜짐,オン,On,설정 음소거/흔들림 토글
+common.off,꺼짐,オフ,Off,설정 음소거/흔들림 토글
+common.enter,입장,入場,Enter,던전 입장 버튼
+common.reset,초기화,リセット,Reset,스킬 초기화 버튼
+common.claim,받기,受け取る,Claim,우편 개별 받기
+common.claim_all,모두 받기,すべて受け取る,Claim All,우편 모두 받기
+common.grade,등급,レア度,Rarity,인벤토리 정렬 라벨
+common.player,플레이어,プレイヤー,Player,이름 없는 유저 기본 표시
+common.coming_soon,COMING SOON,COMING SOON,COMING SOON,미해금 캐릭터 배지
+common.per_second,/초,/秒,/s,마나 재생 단위
+title.tap_to_start,Tap To Start,タップしてスタート,Tap To Start,Title 씬 시작 안내
+title.loading,로딩중,読み込み中,Loading,Title 로딩바 라벨
+title.login.no_data,저장된 데이터가 없습니다.\n로그인 방법을 선택해주세요.,保存されたデータがありません。\nログイン方法を選んでください。,No saved data found.\nChoose how to sign in.,Title 로그인 패널 안내문
+title.login.google,Google로 로그인,Googleでログイン,Sign in with Google,Title 로그인 버튼
+title.login.guest,Guest로 로그인,ゲストでログイン,Play as Guest,Title 로그인 버튼
+title.status.init_failed,로그인 서비스를 초기화하지 못했습니다.,ログインサービスを初期化できませんでした。,Could not start the sign-in service.,Title 상태 문구
+title.status.need_login,로그인이 필요합니다.,ログインが必要です。,Sign-in required.,Title 상태 문구 / 토스트
+title.status.guest_signing,게스트 로그인 중...,ゲストログイン中...,Signing in as guest...,Title 상태 문구
+title.status.guest_failed,게스트 로그인에 실패했습니다. 다시 시도해주세요.,ゲストログインに失敗しました。もう一度お試しください。,Guest sign-in failed. Please try again.,Title 상태 문구
+title.status.google_unavailable,구글 로그인을 사용할 수 없습니다.,Googleログインは利用できません。,Google sign-in is unavailable.,Title 상태 문구
+title.status.google_android_only,구글 로그인은 안드로이드 빌드에서만 동작합니다.,Googleログインは Android ビルドのみ対応します。,Google sign-in works on Android builds only.,Title 상태 문구
+title.status.google_signing,구글 로그인 중...,Googleログイン中...,Signing in with Google...,Title 상태 문구
+title.status.google_failed,구글 로그인에 실패했습니다. 다시 시도해주세요.,Googleログインに失敗しました。もう一度お試しください。,Google sign-in failed. Please try again.,Title 상태 문구
+title.status.signed_in,로그인되었습니다.,ログインしました。,Signed in.,Title 상태 문구
+title.popup.connect_failed_title,접속 실패,接続失敗,Connection Failed,Title 팝업 제목
+title.popup.connect_failed_body,서버에 연결하지 못했습니다.\n잠시 후 다시 시도해주세요.,サーバーに接続できませんでした。\nしばらくしてからお試しください。,Could not reach the server.\nPlease try again in a moment.,Title 팝업 본문
+title.popup.login_failed_title,로그인 실패,ログイン失敗,Sign-in Failed,Title 팝업 제목
+title.toast.character_load_failed,캐릭터 정보를 불러오지 못했습니다.,キャラクター情報を読み込めませんでした。,Could not load character data.,Title 토스트
+select.title,영웅 선택,ヒーロー選択,Choose Your Hero,Select 씬 헤더
+select.subtitle,함께 모험을 시작할 영웅을 선택하세요,一緒に冒険を始めるヒーローを選んでください,Pick the hero you'll adventure with,Select 씬 헤더 설명
+select.name.label,캐릭터 이름,キャラクター名,Character Name,Select 이름 입력 라벨
+select.name.placeholder,이름을 입력하세요,名前を入力してください,Enter a name,Select 이름 입력 플레이스홀더
+select.name.rule,{0}~{1}자의 한글 · 영문 · 숫자를 사용할 수 있습니다,{0}～{1}文字の英数字が使えます,Use {0}-{1} letters or numbers,Select 이름 규칙 안내 (검사식은 한글·영문·숫자만 허용)
+select.name.too_short,이름은 {0}자 이상이어야 합니다,名前は{0}文字以上にしてください,Name must be at least {0} characters,Select 이름 검증
+select.name.too_long,이름은 {0}자까지 사용할 수 있습니다,名前は{0}文字までです,Name can be up to {0} characters,Select 이름 검증
+select.name.invalid_char,특수문자와 공백은 사용할 수 없습니다,記号と空白は使えません,Symbols and spaces are not allowed,Select 이름 검증
+select.name.available,‘{0}’ · 사용 가능한 이름입니다,‘{0}’ · この名前は使えます,‘{0}’ · This name is available,Select 이름 검증
+select.start,모험 시작,冒険を始める,Start Adventure,Select 시작 버튼
+select.start_notice,선택한 영웅과 이름은 게임 시작 후 변경할 수 없습니다.,選んだヒーローと名前は後から変更できません。,Your hero and name cannot be changed later.,Select 시작 버튼 하단 안내
+select.confirm.title,모험 시작,冒険を始める,Start Adventure,Select 시작 확인 팝업 제목
+select.confirm.body,{0} · {1}(으)로 시작합니다.\n직업과 이름은 바꿀 수 없습니다.,{0} · {1} で始めます。\n職業と名前は変更できません。,Starting as {0} · {1}.\nClass and name are permanent.,Select 시작 확인 팝업 본문
+select.skill_hint,시작 스킬 {0} · 나머지 스킬은 Lv.5부터 순차 해금됩니다,開始スキル {0} · 残りは Lv.5 から順に解放されます,Starting skill {0} · The rest unlock from Lv.5,Select 스킬 안내
+select.skill_hint_none,시작 스킬을 스킬 관리 창에서 지정하세요,開始スキルをスキル管理画面で設定してください,Set a starting skill in the skill manager,Select 스킬 안내 (데이터 미설정)
+select.skill_hint_unlinked,스킬 세트가 아직 연결되지 않았습니다,スキルセットがまだ紐づいていません,No skill set is linked yet,Select 스킬 안내 (데이터 미설정)
+select.locked,준비 중인 영웅입니다,準備中のヒーローです,This hero is coming soon,Select 미해금 캐릭터 안내
+select.detail_stats,상세 능력치,詳細ステータス,Detailed Stats,Select/Main 상세 능력치 패널 제목
+charstat.attack,공격력,攻撃力,Attack,Select 캐릭터 능력 막대
+charstat.survival,생존력,生存力,Survival,Select 캐릭터 능력 막대
+charstat.defense,방어력,防御力,Defense,Select 캐릭터 능력 막대
+charstat.mobility,기동성,機動力,Mobility,Select 캐릭터 능력 막대
+charstat.critical,치명타,会心,Critical,Select 캐릭터 능력 막대
+charstat.aoe,광역,範囲,Area,Select 캐릭터 능력 막대
+character.barbarian.name,바바리안,バーバリアン,Barbarian,Select 캐릭터 이름
+character.barbarian.role,근접 · 광폭,近接 · 狂乱,Melee · Fury,Select 캐릭터 역할
+character.barbarian.desc,체력이 낮을수록 강해지는 북방의 광전사.,体力が低いほど強くなる北方の狂戦士。,A northern berserker who grows stronger as HP drops.,Select 캐릭터 소개
+character.priest.name,사제,プリースト,Priest,Select 캐릭터 이름
+character.priest.role,보조 · 회복,補助 · 回復,Support · Heal,Select 캐릭터 역할
+character.hunter.name,헌터,ハンター,Hunter,Select 캐릭터 이름
+character.hunter.role,원거리 · 치명타,遠距離 · 会心,Ranged · Crit,Select 캐릭터 역할
+character.wizard.name,위자드,ウィザード,Wizard,Select 캐릭터 이름
+character.wizard.role,원거리 · 마법,遠距離 · 魔法,Ranged · Magic,Select 캐릭터 역할
+character.ninja.name,닌자,ニンジャ,Ninja,Select 캐릭터 이름
+character.ninja.role,근접 · 암살,近接 · 暗殺,Melee · Assassin,Select 캐릭터 역할
+character.tag.ranged_dealer,원거리 딜러,遠距離アタッカー,Ranged Dealer,Select 캐릭터 태그 칩
+stat.group.core,핵심,コア,Core,상세 능력치 그룹 헤더
+stat.group.offense,공격,攻撃,Offense,상세 능력치 그룹 헤더
+stat.group.defense,저항,耐性,Resistance,상세 능력치 그룹 헤더
+stat.group.utility,자원 및 탐색,資源・探索,Resource & Utility,상세 능력치 그룹 헤더
+stat.cap_notice,상한 75%,上限 75%,Cap 75%,저항 그룹 상한 안내
+stat.attack_power,공격력,攻撃力,Attack,능력치 이름
+stat.defense,방어력,防御力,Defense,능력치 이름
+stat.max_health,최대 체력,最大HP,Max HP,능력치 이름
+stat.max_mana,최대 마나,最大MP,Max MP,능력치 이름
+stat.critical_chance,치명타 확률,会心率,Crit Rate,능력치 이름
+stat.critical_damage,치명타 피해,会心ダメージ,Crit Damage,능력치 이름
+stat.attack_speed,공격 속도,攻撃速度,Attack Speed,능력치 이름
+stat.cooldown_reduction,재사용 대기시간 감소,クールダウン短縮,Cooldown Reduction,능력치 이름
+stat.skill_damage,스킬 피해,スキルダメージ,Skill Damage,능력치 이름
+stat.armor_penetration,방어구 관통,防御貫通,Armor Penetration,능력치 이름
+stat.fire_resistance,화염 저항,火炎耐性,Fire Resistance,능력치 이름
+stat.cold_resistance,냉기 저항,冷気耐性,Cold Resistance,능력치 이름
+stat.lightning_resistance,번개 저항,雷撃耐性,Lightning Resistance,능력치 이름
+stat.chaos_resistance,혼돈 저항,混沌耐性,Chaos Resistance,능력치 이름
+stat.health_regeneration,체력 재생,HP再生,Health Regen,능력치 이름
+stat.mana_regeneration,마나 재생,MP再生,Mana Regen,능력치 이름
+stat.resource_cost_reduction,자원 소모 감소,消費軽減,Cost Reduction,능력치 이름
+stat.movement_speed,이동 속도,移動速度,Move Speed,능력치 이름
+stat.magic_find,아이템 발견,アイテム発見,Magic Find,능력치 이름
+stat.life_steal,생명력 흡수,生命吸収,Life Steal,능력치 이름
+stat.gold_find,재화 발견,ゴールド発見,Gold Find,능력치 이름
+stat.rare_find,희귀 발견,レア発見,Rare Find,Main 장비 요약 능력치
+stat.desc.attack_power,기본 공격과 공격력 계수를 사용하는 스킬의 기준 피해.,通常攻撃と攻撃力係数スキルの基準ダメージ。,Base damage for basic attacks and attack-scaling skills.,능력치 설명
+stat.desc.defense,물리 피해 감소 계산에 사용.,物理ダメージ軽減の計算に使用。,Used to reduce incoming physical damage.,능력치 설명
+stat.desc.max_health,생존 가능한 최대 체력.,生存できる最大HP。,Maximum health you can hold.,능력치 설명
+stat.desc.max_mana,스킬 사용에 쓰는 최대 자원.,スキル使用に使う最大リソース。,Maximum resource used to cast skills.,능력치 설명
+stat.desc.critical_chance,공격과 스킬이 치명타가 될 확률.,攻撃とスキルが会心になる確率。,Chance for attacks and skills to critically hit.,능력치 설명
+stat.desc.critical_damage,치명타 발생 시 적용되는 총 피해 배율.,会心時に適用される総ダメージ倍率。,Total damage multiplier applied on a critical hit.,능력치 설명
+stat.desc.attack_speed,기본 공격 동작 속도 증가율.,通常攻撃モーションの速度上昇率。,Increases basic attack animation speed.,능력치 설명
+stat.desc.cooldown_reduction,스킬 재사용 대기시간 감소율. 권장 상한 60%.,スキルのクールダウン短縮率。推奨上限60%。,Reduces skill cooldowns. Recommended cap 60%.,능력치 설명
+stat.desc.skill_damage,모든 스킬 피해 증가율.,すべてのスキルダメージ上昇率。,Increases damage from all skills.,능력치 설명
+stat.desc.armor_penetration,적의 물리 방어력을 무시하는 비율.,敵の物理防御を無視する割合。,Portion of enemy armor you ignore.,능력치 설명
+stat.desc.fire_resistance,받는 화염 피해 감소. 권장 상한 75%.,受ける火炎ダメージを軽減。推奨上限75%。,Reduces fire damage taken. Recommended cap 75%.,능력치 설명
+stat.desc.cold_resistance,받는 냉기 피해 감소. 권장 상한 75%.,受ける冷気ダメージを軽減。推奨上限75%。,Reduces cold damage taken. Recommended cap 75%.,능력치 설명
+stat.desc.lightning_resistance,받는 번개 피해 감소. 권장 상한 75%.,受ける雷撃ダメージを軽減。推奨上限75%。,Reduces lightning damage taken. Recommended cap 75%.,능력치 설명
+stat.desc.chaos_resistance,독·저주·혼돈 계열 피해 감소. 권장 상한 75%.,毒・呪い・混沌系ダメージを軽減。推奨上限75%。,"Reduces poison, curse and chaos damage. Cap 75%.",능력치 설명
+stat.desc.health_regeneration,초당 회복하는 체력.,毎秒回復するHP。,Health restored each second.,능력치 설명
+stat.desc.mana_regeneration,초당 회복하는 마나.,毎秒回復するMP。,Mana restored each second.,능력치 설명
+stat.desc.resource_cost_reduction,스킬 마나 소모 감소율.,スキルのMP消費軽減率。,Reduces the mana cost of skills.,능력치 설명
+stat.desc.movement_speed,전투 중 이동 속도 증가율.,戦闘中の移動速度上昇率。,Increases movement speed in combat.,능력치 설명
+stat.desc.magic_find,희귀 등급 장비가 등장할 상대 가중치를 증가시킴.,レア装備の出現重みを上げる。,Raises the relative chance of rare gear dropping.,능력치 설명
+stat.desc.life_steal,가한 피해 일부를 체력으로 회복.,与えたダメージの一部をHPとして回復。,Recovers part of the damage you deal as health.,능력치 설명
+main.nav.equipment,장비,装備,Gear,Main 하단 내비게이션
+main.nav.dungeon,던전,ダンジョン,Dungeon,Main 하단 내비게이션
+main.nav.main,메인,メイン,Main,Main 하단 내비게이션
+main.nav.skill,스킬,スキル,Skill,Main 하단 내비게이션
+main.nav.shop,상점,ショップ,Shop,Main 하단 내비게이션
+main.top.book,도감,図鑑,Codex,Main 상단 아이콘 버튼
+main.top.mail,우편함,メール,Mail,Main 상단 아이콘 버튼
+main.top.rank,랭킹,ランキング,Ranking,Main 상단 아이콘 버튼
+main.top.setting,설정,設定,Settings,Main 상단 아이콘 버튼
+main.profile.exp,EXP {0},EXP {0},EXP {0},Main 상단 프로필 경험치
+main.profile.level,LV.{0},LV.{0},LV.{0},Main 상단 프로필 레벨
+main.stage.name,지옥 {0}-{1},地獄 {0}-{1},Inferno {0}-{1},Main 상단 스테이지 이름
+main.stage.wave,Wave <color=#D9CA57>{0}/{1},Wave <color=#D9CA57>{0}/{1},Wave <color=#D9CA57>{0}/{1},Main 상단 웨이브 표시
+main.stage.monster_left,남은 몬스터 <color=#D9CA57>{0},残りモンスター <color=#D9CA57>{0},Monsters Left <color=#D9CA57>{0},Main 상단 남은 몬스터
+main.get_item,아이템을 획득하였습니다. <color=#FFFF00>[{0}],アイテムを獲得しました。<color=#FFFF00>[{0}],You obtained <color=#FFFF00>[{0}],Main 아이템 획득 안내
+battle.state.exploring,지역 탐색 중,エリア探索中,Exploring,전투 상태 표시
+battle.state.moving,다음 전투 지역으로 이동 중,次のエリアへ移動中,Moving to next area,전투 상태 표시
+battle.state.chasing,몬스터 추적 중,モンスター追跡中,Chasing monsters,전투 상태 표시
+battle.state.skill_wait,스킬 사용 대기 중,スキル待機中,Waiting for skill,전투 상태 표시
+battle.state.down,쓰러짐 · 부활 대기,戦闘不能 · 復活待ち,Down · Reviving,전투 상태 표시
+battle.toast.revive,잠시 후 부활합니다,まもなく復活します,Reviving shortly,전투 토스트
+battle.round.boss,보스 등장,ボス出現,Boss Incoming,라운드 표시
+battle.round.normal,일반 라운드 {0},通常ラウンド {0},Round {0},라운드 표시
+settings.title,설정,設定,Settings,Settings 판넬 제목
+settings.desc,소리와 화면 효과를 조절합니다,音と画面効果を調整します,Adjust sound and screen effects,Settings 판넬 설명
+settings.bgm,배경음악,BGM,Music,Settings 항목 라벨
+settings.sfx,효과음,効果音,Sound Effects,Settings 항목 라벨
+settings.language,언어,言語,Language,Settings 항목 라벨
+settings.shake,화면 흔들림,画面の揺れ,Screen Shake,Settings 항목 라벨
+settings.language_popup.title,언어 선택,言語選択,Select Language,언어 선택 팝업 제목
+language.ko,한국어,한국어,한국어,언어 선택 옵션 (항상 원어 표기)
+language.ja,日本語,日本語,日本語,언어 선택 옵션 (항상 원어 표기)
+language.en,English,English,English,언어 선택 옵션 (항상 원어 표기)
+equip.title,장비,装備,Gear,Equipment 판넬 제목
+equip.combat_power,전투력,戦闘力,Combat Power,Equipment 캐릭터 요약
+equip.detail_info,상세 정보,詳細情報,Details,Equipment 상세 정보 버튼
+equip.tab.gear,장비,装備,Gear,인벤토리 탭
+equip.tab.consumable,소모품,消耗品,Consumables,인벤토리 탭
+equip.tab.etc,기타,その他,Misc,인벤토리 탭
+equip.equip_btn,장착,装備する,Equip,아이템 정보 버튼
+equip.merge_btn,합성,合成,Fuse,아이템 정보 버튼
+equip.upgrade_btn,강화,強化,Upgrade,아이템 정보 버튼
+equip.slot_default,장비,装備,Gear,빈 장비 슬롯 기본 이름
+equip.rarity.hero,영웅,ヒーロー,Heroic,아이템 등급 칩
+equip.item.hero_helmet,영웅의 투구,ヒーローの兜,Heroic Helm,아이템 이름 (씬 예시값)
+equip.toast.equipped,{0} 장착 완료,{0} を装備しました,Equipped {0},장비 토스트
+equip.toast.unequipped,{0} 해제 완료,{0} を外しました,Unequipped {0},장비 토스트
+inventory.bag_count,{0}/{1},{0}/{1},{0}/{1},인벤토리 가방 개수
+skill.title,스킬,スキル,Skill,Skill 판넬 제목
+skill.point,스킬 포인트,スキルポイント,Skill Points,Skill 판넬 포인트 라벨
+skill.section,{0}구간,第{0}区間,Tier {0},스킬 구간 헤더 (코드에서 번호를 채울 때)
+skill.section.1,1구간,第1区間,Tier 1,씬에 박혀 있는 스킬 구간 헤더
+skill.section.2,2구간,第2区間,Tier 2,씬에 박혀 있는 스킬 구간 헤더
+skill.section.3,3구간,第3区間,Tier 3,씬에 박혀 있는 스킬 구간 헤더
+skill.section.4,4구간,第4区間,Tier 4,씬에 박혀 있는 스킬 구간 헤더
+skill.section.5,5구간,第5区間,Tier 5,씬에 박혀 있는 스킬 구간 헤더
+skill.pick_one,1개 선택,1つ選択,Pick 1,스킬 구간 안내
+skill.info_title,스킬 정보,スキル情報,Skill Info,스킬 상세 기본 화면
+skill.select_prompt,스킬을 선택해 주세요,スキルを選んでください,Select a skill,스킬 상세 기본 화면
+skill.info_desc,아이콘을 누르면 상세 효과와 레벨업 정보를\n확인할 수 있습니다.,アイコンをタップすると効果とレベルアップ情報が見られます。,Tap an icon to see its effects and level-up info.,스킬 상세 기본 화면
+skill.level_format,Lv. {0}<color=#F88700>/{1},Lv. {0}<color=#F88700>/{1},Lv. {0}<color=#F88700>/{1},스킬 아이콘 레벨 표시
+skill.name.starlight_blade,별빛 검무,星光剣舞,Starlight Dance,바바리안 1구간 스킬
+skill.name.beast_claw,맹수의 발톱,猛獣の爪,Beast Claw,바바리안 1구간 스킬
+skill.name.shield_bash,방패 가격,シールドバッシュ,Shield Bash,바바리안 1구간 스킬
+skill.name.executioner_strike,처형자의 일격,処刑人の一撃,Executioner's Blow,바바리안 1구간 스킬
+skill.name.whirlwind,소용돌이,旋風,Whirlwind,바바리안 2구간 스킬
+skill.name.wolf_pack,늑대 무리,狼の群れ,Wolf Pack,바바리안 2구간 스킬
+skill.name.shield_sweep,방패 휩쓸기,シールドスイープ,Shield Sweep,바바리안 2구간 스킬
+skill.name.blood_cleave,피의 절단,血の斬撃,Blood Cleave,바바리안 2구간 스킬
+skill.name.iron_skin,강철 피부,鉄の皮膚,Iron Skin,바바리안 3구간 스킬
+skill.name.predator_roar,포식자의 함성,捕食者の咆哮,Predator's Roar,바바리안 3구간 스킬
+skill.name.shield_formation,방패 진형,シールドフォーメーション,Shield Formation,바바리안 3구간 스킬
+skill.name.blood_thirst,피의 갈증,血の渇き,Bloodthirst,바바리안 3구간 스킬
+skill.name.leap_assault,도약 강습,跳躍強襲,Leap Assault,바바리안 4구간 스킬
+skill.name.great_bear_call,큰곰의 부름,大熊の呼び声,Great Bear's Call,바바리안 4구간 스킬
+skill.name.shield_charge,방패 돌진,シールドチャージ,Shield Charge,바바리안 4구간 스킬
+skill.name.chain_harpoon,사슬 작살,鎖の銛,Chain Harpoon,바바리안 4구간 스킬
+skill.name.storm_whirlwind,폭풍의 소용돌이,嵐の渦,Storm Whirlwind,바바리안 5구간 스킬
+skill.name.beast_legion,야수 군단,野獣軍団,Beast Legion,바바리안 5구간 스킬
+skill.name.indomitable_fortress,불굴의 성채,不屈の城塞,Indomitable Fortress,바바리안 5구간 스킬
+skill.name.earth_shatter,대지 파쇄,大地破砕,Earth Shatter,바바리안 5구간 스킬
+shop.title,상점,ショップ,Shop,Shop 판넬 제목
+shop.daily_reset,일일 초기화,デイリーリセット,Daily Reset,Shop 초기화 라벨
+shop.tab.special,특별,特別,Special,Shop 탭
+shop.tab.summon,소환,召喚,Summon,Shop 탭
+shop.tab.currency,재화,通貨,Currency,Shop 탭
+shop.tab.growth,성장,成長,Growth,Shop 탭
+dungeon.title,던전,ダンジョン,Dungeon,Dungeon 판넬 제목
+dungeon.tab.growth,성장,成長,Growth,Dungeon 탭
+dungeon.tab.challenge,도전,挑戦,Challenge,Dungeon 탭
+dungeon.tab.infinite,무한,無限,Endless,Dungeon 탭
+dungeon.floor,{0}층,{0}階,Floor {0},Dungeon 층 표시
+dungeon.clear_reward,주요 보상,主な報酬,Key Rewards,Dungeon 보상 라벨
+dungeon.reset_in,초기화까지 {0},リセットまで {0},Resets in {0},Dungeon 입장 횟수 초기화
+dungeon.entry_count,{0}/{1},{0}/{1},{0}/{1},Dungeon 남은 입장 횟수
+dungeon.frost_throne.name,서리 왕좌,霜の玉座,Frost Throne,Dungeon 이름
+dungeon.frost_throne.desc,얼어붙은 왕좌가 지배하는 냉혹한 궁전\n도망간 왕에게 왕좌의 보물을 획득하라.,凍りついた玉座が支配する冷酷な宮殿\n逃げた王から玉座の宝を奪い取れ。,A frozen palace ruled by an icy throne.\nTake the throne's treasure from the fled king.,Dungeon 소개
+dungeon.dragon_heart.name,용의 심장부,竜の心臓部,Dragon's Heart,Dungeon 이름
+dungeon.dragon_heart.desc,용이 잠들어 있는 심장 깊은 곳\n화룡 이그나스는 그 어떠한 물체도 녹일 수 있다.,竜が眠る心臓の奥深く\n火竜イグナスはどんな物でも溶かせる。,Deep in the heart where a dragon sleeps.\nIgnas the fire drake melts anything it touches.,Dungeon 소개
+dungeon.forgotten_crypt.name,망각의 지하묘지,忘却の地下墓地,Forgotten Catacombs,Dungeon 이름
+dungeon.forgotten_crypt.desc,잊혀진 자들의 원한이 서린 묘지\n흑마법사들의 보물이 숨겨져 있다.,忘れられた者たちの怨念が宿る墓地\n黒魔術師たちの宝が隠されている。,A graveyard steeped in forgotten grudges.\nThe warlocks' treasure lies hidden here.,Dungeon 소개
+mail.title,우편함,メールボックス,Mailbox,Mailbox 판넬 제목
+mail.count,{0} / {1},{0} / {1},{0} / {1},Mailbox 보유 개수
+mail.empty,받을 수 있는 우편이 없습니다.,受け取れるメールはありません。,No mail to claim.,Mailbox 빈 목록
+mail.notice,우편은 받은 뒤 7일이 지나면 자동으로 삭제됩니다.,メールは受信から7日後に自動削除されます。,Mail is deleted automatically 7 days after arrival.,Mailbox 안내
+mail.expire.days,{0}일 {1}시간 남음,残り {0}日 {1}時間,{0}d {1}h left,Mailbox 남은 기간
+mail.expire.hours,{0}시간 {1}분 남음,残り {0}時間 {1}分,{0}h {1}m left,Mailbox 남은 기간
+mail.expire.minutes,{0}분 남음,残り {0}分,{0}m left,Mailbox 남은 기간
+mail.expire.none,기간 제한 없음,期限なし,No expiry,Mailbox 남은 기간
+mail.expire.expired,기간이 지났습니다,期限が切れました,Expired,Mailbox 남은 기간
+mail.no_title,제목 없음,タイトルなし,No Title,Mailbox 기본값
+mail.no_reward,보상 없음,報酬なし,No Reward,Mailbox 기본값
+mail.system.title,운영자 우편,運営からのメール,Message from the Team,기본 지급 우편 제목
+mail.system.body,모험의 시작을 응원합니다.,冒険の始まりを応援します。,Here's to the start of your adventure.,기본 지급 우편 본문
+mail.first_login.title,첫 접속 보상,初回ログイン報酬,First Login Reward,기본 지급 우편 제목
+mail.first_login.body,우편함에서 보상을 받아 가세요.,メールボックスから報酬を受け取ってください。,Claim your reward from the mailbox.,기본 지급 우편 본문
+mail.toast.load_failed,우편을 불러오지 못했습니다.,メールを読み込めませんでした。,Could not load mail.,Mailbox 토스트
+mail.toast.claimed,우편 {0}통을 받았습니다.,メール {0}通を受け取りました。,Claimed {0} mail.,Mailbox 토스트
+mail.toast.claimed_one,{0} 받았습니다.,{0} を受け取りました。,Received {0}.,Mailbox 토스트
+mail.toast.nothing,받을 우편이 없습니다.,受け取れるメールはありません。,No mail to claim.,Mailbox 토스트
+mail.toast.claim_failed,우편을 받지 못했습니다.,メールを受け取れませんでした。,Could not claim the mail.,Mailbox 토스트
+ranking.title,랭킹,ランキング,Ranking,Ranking 판넬 제목
+ranking.tab.combat_power,전투력,戦闘力,Combat Power,Ranking 탭
+ranking.tab.stage,스테이지,ステージ,Stage,Ranking 탭
+ranking.tab.guild,길드,ギルド,Guild,Ranking 탭
+ranking.season_end,시즌 종료까지 {0},シーズン終了まで {0},Season ends in {0},Ranking 시즌 표시
+ranking.level,Lv.{0},Lv.{0},Lv.{0},Ranking 행 레벨 표시
+ranking.coming_soon,아직 준비 중인 랭킹입니다,まだ準備中のランキングです,This ranking is coming soon,Ranking 미구현 탭
+ranking.toast.load_failed,랭킹을 불러오지 못했습니다.,ランキングを読み込めませんでした。,Could not load the ranking.,Ranking 토스트
+offline.title,오프라인 보상,オフライン報酬,Offline Rewards,OfflineReward 판넬 제목
+offline.desc,자리를 비운 동안 동료들이 모아둔 전리품입니다.,留守の間に仲間が集めた戦利品です。,Loot your allies gathered while you were away.,OfflineReward 설명
+offline.cap,보상은 최대 {0}시간까지 쌓입니다.,報酬は最大 {0}時間まで蓄積されます。,Rewards accrue for up to {0} hours.,OfflineReward 안내
+offline.capped,{0}시간까지만 쌓여 여기서 멈췄습니다.,{0}時間で上限に達して止まりました。,Capped at {0} hours.,OfflineReward 안내
+offline.time,오프라인 시간  {0},オフライン時間  {0},Offline Time  {0},OfflineReward 시간 표시
+offline.claim,보상 받기,報酬を受け取る,Claim Rewards,OfflineReward 버튼
+offline.double_claim,광고 보고 2배 받기,広告を見て2倍受け取る,Watch Ad for 2x,OfflineReward 버튼
+offline.toast.claimed,오프라인 {0} 보상을 받았습니다.,オフライン {0} の報酬を受け取りました。,Claimed {0} of offline rewards.,OfflineReward 토스트
+offline.toast.gold,오프라인 보상 골드 {0},オフライン報酬 ゴールド {0},Offline reward: {0} gold,OfflineReward 토스트
+offline.toast.ad_soon,광고는 아직 준비 중입니다.,広告はまだ準備中です。,Ads are not ready yet.,OfflineReward 토스트
+offline.duration.hours,{0}시간 {1}분,{0}時間 {1}分,{0}h {1}m,오프라인 경과 시간
+offline.duration.minutes,{0}분,{0}分,{0}m,오프라인 경과 시간
+offline.duration.under_minute,1분 미만,1分未満,Under a minute,오프라인 경과 시간
+network.title,네트워크 연결,ネットワーク接続,Network,네트워크 팝업 제목
+network.disconnected,네트워크 연결이 해제되었습니다.\n인터넷 상태를 확인해주세요.,ネットワーク接続が切れました。\nインターネットの状態を確認してください。,You've gone offline.\nPlease check your connection.,네트워크 팝업 본문
+network.offline,네트워크에 연결되어 있지 않습니다.,ネットワークに接続されていません。,Not connected to a network.,네트워크 예외 메시지
+shop.featured.badge,추천,おすすめ,Featured,Shop 배너 배지
+shop.featured.title,모험 준비 패키지,冒険準備パック,Adventure Starter Pack,Shop 배너 상품명
+shop.featured.desc,모험에 필요한 것을 한 번에,冒険に必要な物をまとめて,Everything you need at once,Shop 배너 설명
+shop.featured.limit,1회 한정,1回限り,One time only,Shop 배너 구매 제한
+shop.daily.title,매일 무료 상품,毎日無料アイテム,Daily Free Gift,Shop 무료 상품 줄 제목
+shop.daily.desc,하루 한 번 무료로 받으세요,1日1回無料で受け取れます,Claim one free item a day,Shop 무료 상품 줄 설명
+shop.daily.claim,무료 받기,無料で受取,Claim Free,Shop 무료 상품 받기 버튼
+shop.item.equipment_chest,장비 상자,装備の箱,Equipment Chest,Shop 상품명
+shop.item.equipment_chest.desc,여러 등급의 장비를 얻습니다,いろいろな等級の装備が出ます,Gear of many grades,Shop 상품 설명
+shop.item.gem_bundle,보석 묶음,ジェムパック,Gem Bundle,Shop 상품명
+shop.item.gem_bundle.desc,보석을 한 번에 넉넉히 받습니다,ジェムをまとめて受け取ります,A generous stack of gems,Shop 상품 설명
+shop.item.growth_elixir,성장의 비약,成長の秘薬,Growth Elixir,Shop 상품명
+shop.item.growth_elixir.desc,경험치를 크게 올려 줍니다,経験値を大きく上げます,Gives a big EXP boost,Shop 상품 설명
+shop.item.skill_book,스킬의 서,スキルの書,Skill Tome,Shop 상품명
+shop.item.skill_book.desc,스킬을 올릴 때 쓰는 재료입니다,スキル強化に使う材料です,Material for raising skills,Shop 상품 설명
+shop.item.dungeon_ticket,던전 입장권,ダンジョン入場券,Dungeon Ticket,Shop 상품명
+shop.item.dungeon_ticket.desc,던전에 한 번 더 들어갑니다,ダンジョンにもう一度入れます,One more dungeon entry,Shop 상품 설명
+shop.item.exp_booster,경험치 부스터,経験値ブースター,EXP Booster,Shop 상품명
+shop.item.exp_booster.desc,한동안 경험치가 더 들어옵니다,しばらく経験値が増えます,Extra EXP for a while,Shop 상품 설명
+shop.item.gold_pouch,골드 주머니,ゴールド袋,Gold Pouch,Shop 상품명
+shop.item.gold_pouch.desc,골드를 넉넉히 채워 줍니다,ゴールドをたっぷり補充します,Tops up your gold,Shop 상품 설명
+shop.item.summon_key,소환의 열쇠,召喚の鍵,Summon Key,Shop 상품명
+shop.item.summon_key.desc,소환을 열 번 돌릴 수 있습니다,召喚を10回まわせます,Ten summons in one,Shop 상품 설명
+shop.item.upgrade_kit,강화 재료 묶음,強化素材セット,Upgrade Kit,Shop 상품명
+shop.item.upgrade_kit.desc,장비를 올릴 때 쓰는 재료입니다,装備強化に使う材料です,Material for upgrading gear,Shop 상품 설명
+shop.item.mana_set,마나 물약 세트,マナポーションセット,Mana Potion Set,Shop 상품명
+shop.item.mana_set.desc,싸우는 동안 마나를 채워 줍니다,戦闘中にマナを回復します,Restores mana in battle,Shop 상품 설명

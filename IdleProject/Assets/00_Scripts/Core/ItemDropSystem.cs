@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using IdleBattle.Audio;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -92,6 +93,8 @@ namespace IdleBattle
             var effect = Instantiate(effectPrefab, startPosition, Quaternion.identity);
             effect.name = $"Drop_{item.ItemId}";
             effect.transform.localScale *= EffectScale;
+            // 등급이 높을수록 화려한 종소리가 나므로, 좋은 아이템이 떨어진 것을 소리만으로도 압니다.
+            AudioManager.PlayAt(GetDropSound(item.Rarity), startPosition);
 
             var particles = effect.GetComponentsInChildren<ParticleSystem>(true);
             foreach (var particle in particles)
@@ -147,8 +150,20 @@ namespace IdleBattle
             Destroy(drop);
         }
 
+        private static SfxId GetDropSound(ItemRarity rarity)
+        {
+            switch (rarity)
+            {
+                case ItemRarity.Legendary: return SfxId.LootLegendary;
+                case ItemRarity.Epic: return SfxId.LootEpic;
+                case ItemRarity.Rare: return SfxId.LootRare;
+                default: return SfxId.LootCommon;
+            }
+        }
+
         private void PlayPickupEffect(Vector3 position)
         {
+            AudioManager.PlayAt(SfxId.LootPickup, position);
             if (pickupEffectPrefab == null)
             {
                 Debug.LogWarning("Loot_pick_up 이펙트를 찾지 못했습니다.", this);

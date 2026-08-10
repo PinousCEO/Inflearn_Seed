@@ -32,6 +32,6 @@ MonoBehaviour:
   characterPrefab: {fileID: 0}
   themeColor: {r: 0.36, g: 0.6, b: 0.86, a: 1}
   skillSet: {fileID: 0}
-  isPlayable: 1
-  lockedLabel: 
-  lockedMessage: 
+  isPlayable: 0
+  lockedLabel: COMING SOON
+  lockedMessage: "\uC900\uBE44 \uC911\uC778 \uC601\uC6C5\uC785\uB2C8\uB2E4"
