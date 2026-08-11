@@ -215,7 +215,7 @@ namespace IdleBattle
 
         private void LoadSkills()
         {
-            skills = Resources.LoadAll<SkillData>("Data/Skills");
+            skills = AddressableContent.LoadAll<SkillData>(AddressableContent.SkillLabel);
             Array.Sort(skills, (a, b) => string.CompareOrdinal(a.SkillId, b.SkillId));
             skillReadyTimes = new float[skills.Length];
             for (var i = 0; i < skillReadyTimes.Length; i++)
@@ -226,7 +226,7 @@ namespace IdleBattle
 
         private void SetupStage()
         {
-            stageData = Resources.Load<StageData>("Data/StageData");
+            stageData = AddressableContent.Load<StageData>("Data/StageData");
             if (stageData != null && stageData.TryGetRule(currentStage, out currentStageRule))
                 return;
 
@@ -398,7 +398,7 @@ namespace IdleBattle
 
         private static GameObject LoadPrefab(string resourcesPath, string assetPath)
         {
-            var prefab = Resources.Load<GameObject>(resourcesPath);
+            var prefab = AddressableContent.Load<GameObject>(resourcesPath);
 #if UNITY_EDITOR
             if (prefab == null)
                 prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
@@ -1317,7 +1317,7 @@ namespace IdleBattle
 
         private void RefreshCriticalProfile()
         {
-            if (itemCatalog == null) itemCatalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+            if (itemCatalog == null) itemCatalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
             criticalProfile = CombatPower.GetCritical(PlayerDataManager.Instance, itemCatalog);
             manaRegenerationPerSecond = CombatPower.GetManaRegeneration(PlayerDataManager.Instance, itemCatalog);
         }

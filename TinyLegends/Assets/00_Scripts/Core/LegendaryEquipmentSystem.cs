@@ -77,7 +77,7 @@ namespace IdleBattle
             battle = owner;
             player = playerTransform;
             damageCallback = owner != null ? owner.DamageFromEquipment : null;
-            catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+            catalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
 
             // 전투 시작 시점에는 아직 Firestore 로드가 끝나지 않았을 수 있습니다.
             // 그때 한 번 읽고 마는 대신, 저장 데이터가 바뀔 때마다 다시 맞춥니다.
@@ -311,7 +311,7 @@ namespace IdleBattle
 
         private static GameObject LoadPrefab(string resourcesPath, string assetPath)
         {
-            var prefab = Resources.Load<GameObject>(resourcesPath);
+            var prefab = AddressableContent.Load<GameObject>(resourcesPath);
 #if UNITY_EDITOR
             if (prefab == null) prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
 #endif

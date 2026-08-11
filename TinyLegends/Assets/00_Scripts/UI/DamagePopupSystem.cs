@@ -433,7 +433,7 @@ namespace IdleBattle
 
         private static GameObject LoadDamagePrefab()
         {
-            var prefab = Resources.Load<GameObject>("01_Prefabs/UI/Damage");
+            var prefab = AddressableContent.Load<GameObject>("01_Prefabs/UI/Damage");
 #if UNITY_EDITOR
             if (prefab == null)
                 prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(

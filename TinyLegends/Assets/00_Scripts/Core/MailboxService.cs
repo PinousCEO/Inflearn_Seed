@@ -67,7 +67,7 @@ namespace IdleBattle
         {
             get
             {
-                if (catalog == null) catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+                if (catalog == null) catalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
                 return catalog;
             }
         }

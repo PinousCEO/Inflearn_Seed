@@ -64,6 +64,12 @@ namespace IdleBattle.UI
             if (root != null) root.SetActive(false);
         }
 
+        public void ShowProgress(float value)
+        {
+            if (root != null) root.SetActive(true);
+            SetProgress(Mathf.Clamp01(value));
+        }
+
         /// <summary>로딩바를 켜고 대상 씬을 비동기로 로드한다.</summary>
         public void Load(string sceneName)
         {

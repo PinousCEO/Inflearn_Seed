@@ -197,10 +197,10 @@ namespace IdleBattle
 
         private static ItemData[] LoadDropTable()
         {
-            var catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+            var catalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
             var items = catalog != null
                 ? catalog.Items.Where(item => item != null).ToArray()
-                : Resources.LoadAll<ItemData>("Data/Items");
+                : AddressableContent.LoadAll<ItemData>(AddressableContent.ItemLabel);
 #if UNITY_EDITOR
             if (items.Length == 0)
             {
@@ -217,7 +217,7 @@ namespace IdleBattle
 
         private static GameObject LoadPrefab(string resourcesPath, string assetPath)
         {
-            var prefab = Resources.Load<GameObject>(resourcesPath);
+            var prefab = AddressableContent.Load<GameObject>(resourcesPath);
 #if UNITY_EDITOR
             if (prefab == null)
                 prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);

@@ -43,7 +43,7 @@ namespace IdleBattle.UI
         private void Awake()
         {
             SceneRefs.Register(this);
-            catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+            catalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
             dataManager = PlayerDataManager.Instance;
             var inventory = transform.Find("SafeArea/Inventory");
             var scrollRect = inventory?.Find("Scroll View")?.GetComponent<ScrollRect>();

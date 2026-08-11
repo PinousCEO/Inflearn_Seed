@@ -68,7 +68,7 @@ namespace IdleBattle
         {
             get
             {
-                if (catalog == null) catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+                if (catalog == null) catalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
                 return catalog;
             }
         }
@@ -177,7 +177,7 @@ namespace IdleBattle
 
         private int CoinPerMonster()
         {
-            if (stageData == null) stageData = Resources.Load<StageData>("Data/StageData");
+            if (stageData == null) stageData = AddressableContent.Load<StageData>("Data/StageData");
             if (stageData != null && stageData.TryGetRule(RewardStage, out var rule)) return rule.CoinPerMonster;
 
             Debug.LogWarning($"[Offline] Stage {RewardStage} 규칙을 찾지 못해 골드를 0으로 둡니다.", this);
@@ -193,7 +193,7 @@ namespace IdleBattle
         private IReadOnlyList<RewardItem> RollItems(int monsters)
         {
             if (monsters <= 0) return Array.Empty<RewardItem>();
-            if (catalog == null) catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+            if (catalog == null) catalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
             if (catalog == null)
             {
                 Debug.LogWarning("[Offline] ItemCatalog를 찾지 못해 아이템 보상을 건너뜁니다.", this);

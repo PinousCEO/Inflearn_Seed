@@ -150,7 +150,7 @@ namespace IdleBattle
 
         private static void Load()
         {
-            var asset = Resources.Load<TextAsset>(ResourcePath);
+            var asset = AddressableContent.Load<TextAsset>(ResourcePath);
             if (asset == null)
             {
                 Debug.LogWarning($"[Localization] Assets/Resources/{ResourcePath}.csv 를 찾지 못했습니다. " +

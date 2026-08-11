@@ -40,7 +40,7 @@ namespace IdleBattle.UI
         {
             // 다른 UI가 씬 전체를 훑지 않고 이 컨트롤러를 찾을 수 있게 등록합니다.
             SceneRefs.Register(this);
-            catalog = Resources.Load<ItemCatalog>("Data/ItemCatalog");
+            catalog = AddressableContent.Load<ItemCatalog>("Data/ItemCatalog");
             data = PlayerDataManager.Instance;
             cachedLabels = GetComponentsInChildren<TMP_Text>(true);
 

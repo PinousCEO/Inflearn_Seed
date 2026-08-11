@@ -37,6 +37,8 @@ namespace IdleBattle.UI
         private GameObject tapToStart;
         private GameObject loginPanel;
         private GameObject loadingBarObject;
+        private GameObject downloadPopup;
+        private TMP_Text downloadText;
         private TitleLoadingBar loadingBar;
         private Button guestButton;
         private Button googleButton;
@@ -82,11 +84,25 @@ namespace IdleBattle.UI
                 // 초기화가 끝날 때까지는 모두 감춘다.
                 SetTapToStartVisible(false);
                 SetLoginPanelVisible(false);
+                SetDownloadVisible(false);
                 HideLoadingBar();
                 SetLoginInteractable(false);
 
                 await FirebaseInitializer.Instance.InitializeAsync();
                 if (!IsCurrentInitialization(run)) return;
+
+                SetDownloadVisible(true);
+                SetDownloadText("다운로드 리소스를 확인하고 있습니다...");
+                loadingBar.ShowProgress(0f);
+                await AddressablesInitializer.InitializeAndDownloadAsync(progress =>
+                {
+                    if (!IsCurrentInitialization(run)) return;
+                    loadingBar.ShowProgress(progress.Percent);
+                    SetDownloadText(FormatDownloadProgress(progress));
+                });
+                if (!IsCurrentInitialization(run)) return;
+                SetDownloadVisible(false);
+                HideLoadingBar();
 
                 if (forceSignOutForTesting)
                 {
@@ -155,6 +171,7 @@ namespace IdleBattle.UI
                 tapToStart ??= FindChild(root.transform, "TapToStart")?.gameObject;
                 loginPanel ??= FindChild(root.transform, "Login")?.gameObject;
                 loadingBarObject ??= FindChild(root.transform, "LoadingBar")?.gameObject;
+                downloadPopup ??= FindChild(root.transform, "Download")?.gameObject;
                 var guestObject = FindChild(root.transform, "GuestBtn")?.gameObject;
                 if (guestButton == null && guestObject != null)
                     guestButton = GetOrAddButton(guestObject);
@@ -164,15 +181,16 @@ namespace IdleBattle.UI
             }
 
             if (tapToStart == null || loginPanel == null || guestButton == null || googleButton == null ||
-                loadingBarObject == null)
+                loadingBarObject == null || downloadPopup == null)
                 throw new MissingReferenceException(
-                    "Title scene requires TapToStart, Login, GuestBtn, GoogleBtn, and LoadingBar objects.");
+                    "Title scene requires TapToStart, Login, GuestBtn, GoogleBtn, Download, and LoadingBar objects.");
 
             // 로딩바 오브젝트는 꺼진 상태로 대기하므로, 코루틴은 항상 켜져 있는 이 호스트에서 돌린다.
             loadingBar = GetComponent<TitleLoadingBar>();
             if (loadingBar == null) loadingBar = gameObject.AddComponent<TitleLoadingBar>();
             if (!loadingBar.Bind(loadingBarObject))
                 throw new MissingReferenceException("LoadingBar requires a child Image named 'Fill'.");
+            downloadText = downloadPopup.GetComponentInChildren<TMP_Text>(true);
 
             var startButton = GetOrAddButton(tapToStart);
             startButton.onClick.RemoveListener(OnTapToStart);
@@ -303,6 +321,7 @@ namespace IdleBattle.UI
 
         private void ShowTapToStart()
         {
+            SetDownloadVisible(false);
             SetLoginPanelVisible(false);
             HideLoadingBar();
             SetTapToStartVisible(true);
@@ -358,6 +377,7 @@ namespace IdleBattle.UI
 
         private void ShowLoginPanel()
         {
+            SetDownloadVisible(false);
             SetTapToStartVisible(false);
             HideLoadingBar();
             SetLoginPanelVisible(true);
@@ -368,6 +388,30 @@ namespace IdleBattle.UI
         {
             if (loadingBar != null) loadingBar.Hide();
             else if (loadingBarObject != null) loadingBarObject.SetActive(false);
+        }
+
+        private void SetDownloadVisible(bool visible)
+        {
+            if (downloadPopup != null) downloadPopup.SetActive(visible);
+        }
+
+        private void SetDownloadText(string message)
+        {
+            if (downloadText != null) downloadText.text = message;
+        }
+
+        private static string FormatDownloadProgress(AddressablesDownloadProgress progress)
+        {
+            if (progress.TotalBytes <= 0L)
+                return "다운로드할 리소스가 없습니다.\n<color=#FFFF00>100%</color>";
+            return $"필요한 리소스를 다운로드합니다.\n<color=#FFFF00>{FormatBytes(progress.DownloadedBytes)}</color>/{FormatBytes(progress.TotalBytes)}";
+        }
+
+        private static string FormatBytes(long bytes)
+        {
+            const double megabyte = 1024d * 1024d;
+            if (bytes < megabyte) return $"{bytes / 1024d:F1}KB";
+            return $"{bytes / megabyte:F1}MB";
         }
 
         private void SetTapToStartVisible(bool visible)

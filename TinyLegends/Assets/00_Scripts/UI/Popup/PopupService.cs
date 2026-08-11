@@ -306,7 +306,7 @@ namespace IdleBattle.UI
 
         private static GameObject LoadPrefab(string resourcesPath, string assetPath)
         {
-            var prefab = Resources.Load<GameObject>(resourcesPath);
+            var prefab = AddressableContent.Load<GameObject>(resourcesPath);
 #if UNITY_EDITOR
             if (prefab == null) prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
 #endif

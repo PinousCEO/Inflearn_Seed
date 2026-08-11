@@ -12,7 +12,7 @@ namespace IdleBattle.Editor
     public sealed class BuildShaderValidator : IPreprocessBuildWithReport
     {
         private const string RuntimeLitPath = "Assets/Resources/Runtime/RuntimeLit.mat";
-        private static readonly string[] RequiredResourcePrefabs =
+        private static readonly string[] RequiredAddressablePrefabs =
         {
             "Character", "Enemy", "UI/Damage", "UI/ItemDes",
             "Effects/Monsterzone", "Effects/Stun", "Effects/Hit", "Effects/Row",
@@ -28,7 +28,7 @@ namespace IdleBattle.Editor
         {
             var failures = new List<string>();
             ValidateRuntimeLit(failures);
-            ValidateRequiredResources(failures);
+            ValidateRequiredAddressables(failures);
             ValidateMaterials(failures);
             ValidateAndroidGlesShaders(report.summary.platform, failures);
 
@@ -41,10 +41,10 @@ namespace IdleBattle.Editor
             Debug.Log("[BuildShaderValidator] Shader validation passed.");
         }
 
-        private static void ValidateRequiredResources(List<string> failures)
+        private static void ValidateRequiredAddressables(List<string> failures)
         {
-            const string root = "Assets/Resources/01_Prefabs/";
-            foreach (string relativePath in RequiredResourcePrefabs)
+            const string root = "Assets/AddressableContent/01_Prefabs/";
+            foreach (string relativePath in RequiredAddressablePrefabs)
             {
                 string path = root + relativePath + ".prefab";
                 if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)

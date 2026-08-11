@@ -1,0 +1,2 @@
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\TinyLegends\obj\Debug\Firebase.App.Internal.csproj.AssemblyReference.cache
+C:\Users\dlfgu\Documents\GitHub\Inflearn_Seed\TinyLegends\obj\Debug\Firebase.App.Internal.csproj.CoreCompileInputs.cache

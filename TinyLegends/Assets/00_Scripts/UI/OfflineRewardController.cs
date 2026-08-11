@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using IdleBattle.Audio;
+using IdleBattle.Ads;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -285,11 +286,41 @@ namespace IdleBattle.UI
             PopupService.Toast($"오프라인 {OfflineRewardService.Describe(reward.Offline)} 보상을 받았습니다.");
         }
 
-        /// <summary>광고 SDK가 아직 붙어 있지 않습니다. 붙이면 보상을 2배로 만들어 ClaimAsync에 넘기면 됩니다.</summary>
         private void OnDoubleClicked()
         {
-            AudioManager.Play(SfxId.UiDenied);
-            PopupService.Toast("광고는 아직 준비 중입니다.");
+            if (claiming || pending == null) return;
+            claiming = true;
+            SetButtonsInteractable(false);
+            AdMobService.Instance.ShowRewarded(OnDoubleAdCompleted);
+        }
+
+        private void OnDoubleAdCompleted(bool earned)
+        {
+            if (this == null) return;
+            if (!earned)
+            {
+                claiming = false;
+                SetButtonsInteractable(true);
+                AudioManager.Play(SfxId.UiDenied);
+                PopupService.Toast("리워드 광고가 아직 준비되지 않았습니다.");
+                return;
+            }
+
+            var original = pending;
+            if (original == null) return;
+            var doubledItems = new List<OfflineRewardService.RewardItem>(original.Items.Count);
+            foreach (var item in original.Items)
+                doubledItems.Add(new OfflineRewardService.RewardItem(item.Item, item.Amount * 2));
+            pending = new OfflineRewardService.Reward
+            {
+                Offline = original.Offline,
+                RawOffline = original.RawOffline,
+                Monsters = original.Monsters,
+                Gold = original.Gold * 2L,
+                Items = doubledItems
+            };
+            claiming = false;
+            _ = ClaimAsync();
         }
 
         private void SetButtonsInteractable(bool interactable)

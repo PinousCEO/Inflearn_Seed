@@ -198,7 +198,7 @@ namespace IdleBattle.Audio
             AudioClip clip = null;
             if (target.Length > 0)
             {
-                clip = Resources.Load<AudioClip>(ResourceRoot + target);
+                clip = AddressableContent.Load<AudioClip>(ResourceRoot + target);
                 if (clip == null)
                 {
                     Debug.LogWarning($"[BGM] Resources/{ResourceRoot}{target} 을 찾지 못했습니다.", this);

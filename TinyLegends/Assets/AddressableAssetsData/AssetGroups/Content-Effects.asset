@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Content-Effects
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Content-Effects
+  m_GUID: bb11b806fc822fd488586c5e7153e231
+  m_SerializeEntries:
+  - m_GUID: 0987c1eee721b4c5f86fce810e3ccd09
+    m_Address: 01_Prefabs/Effects/9
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ad89d0bee4014868a43076d63de4df3
+    m_Address: 01_Prefabs/Effects/Stun
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ea2eaf35e0ecab428d5762bcedf32a2
+    m_Address: 01_Prefabs/Effects/Loot_Common
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23a76698b63bd80449fa59bf5574816e
+    m_Address: 01_Prefabs/Effects/Row
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 280caea6b911f43288c1e77a210ae7f0
+    m_Address: 01_Prefabs/Effects/Aura_slowdown
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 29503e6fa55354fe1b997a7c79cc1a10
+    m_Address: 01_Prefabs/Effects/EarthQuake
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47aeae97204fbc34baede887015d1d5a
+    m_Address: 01_Prefabs/Effects/Tornado_snow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 523a021211227134f8669b2148c9cd9a
+    m_Address: 01_Prefabs/Effects/Loot_pick_up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 911d60ed997ef7f499d751e3d29cb708
+    m_Address: 01_Prefabs/Effects/Hit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95b8bd2fe0ce9e140b9d87c58585f1df
+    m_Address: 01_Prefabs/Effects/Loot_Rare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a20ef7b7bef7ad541811cc6d722d00f2
+    m_Address: 01_Prefabs/Effects/Loot_Epic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1d2470e65f87461389fd4fd1efd5786
+    m_Address: 01_Prefabs/Effects/Monsterzone
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9671eff2c863c345ac9e22c052431df
+    m_Address: 01_Prefabs/Effects/Loot_Legendary
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d2bfb34fdeda8224c9b097cc8f0d83fe
+    m_Address: 01_Prefabs/Effects/Tornado_sand
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dddf1ad0697704fae8919f38cc0e29d5
+    m_Address: 01_Prefabs/Effects/8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de9872693ec2bfe4b940cb22643606ff
+    m_Address: 01_Prefabs/Effects/Loot_Uncommon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - content.effects
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: e98bcec90ae13dc47886f213266c330a, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 649e147435e23d14393adc0ac7354037, type: 2}
+    - {fileID: 11400000, guid: c0c2be717b52df44ea72356009f19646, type: 2}
